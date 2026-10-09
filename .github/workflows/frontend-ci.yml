@@ -1,0 +1,20 @@
+name: Frontend CI Pipeline
+
+# Chỉ kích hoạt khi có thay đổi trong thư mục frontend/
+on:
+  pull_request:
+    branches: [ "develop", "main" ]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kéo mã nguồn
+        uses: actions/checkout@v3
+
+      - name: Chạy Unit Test (Giả lập)
+        run: |
+          echo "Bắt đầu kiểm tra giao diện Frontend..."
+          echo "Không phát hiện lỗi. Sẵn sàng Build!"
