@@ -2,14 +2,14 @@
 
 - **Dự án**: Quản Lý Chi Tiêu (Monorepo)
 - **Ngày lập**: 2026-10-09
-- **Trạng thái**: Đã phê duyệt (Approved)
-- **Tác giả / Phụ trách**: Đội ngũ phát triển Fullstack & Pair Programming
+- **Tác giả / Phụ trách**: Backend Developer (Team BE)
 
 ---
 
 ## 1. Mục Tiêu & Phạm Vi (Goals & Scope)
 
 ### 1.1. Mục tiêu
+
 - Xây dựng hệ thống Backend hoàn chỉnh sử dụng **Node.js + Express** tại thư mục `backend/`.
 - Cung cấp toàn bộ các API Endpoints chuẩn RESTful để kết nối với Frontend (`frontend/js/api.js` và `frontend/js/app.js`).
 - Thiết lập khung kết nối Client - Server mượt mà, cấu hình CORS, xử lý lỗi mạng và cấu hình gọi API thật (`window.APP_CONFIG.useMock = false`).
@@ -17,6 +17,7 @@
 - Hỗ trợ cơ chế **Lưu trữ linh hoạt (Flexible Storage)**: Khi chưa bật MySQL, Backend tự động lưu trữ dữ liệu vào file JSON cục bộ (`backend/data/db.json`), cho phép chạy và kiểm thử ngay lập tức 100% tính năng mà không bị nghẽn do thiếu MySQL. Khi bật MySQL, chỉ cần đổi `USE_DATABASE=true` trong `backend/.env`.
 
 ### 1.2. Ngoài phạm vi (Out of Scope)
+
 - Không can thiệp hoặc thay đổi giao diện thẩm mỹ HTML/CSS vốn có của Frontend.
 - Không ép buộc cài đặt phần mềm bên thứ 3 phức tạp.
 
@@ -61,7 +62,9 @@
 ## 3. Thiết Kế Cơ Sở Dữ Liệu (`database/init.sql`)
 
 ### 3.1. Bảng `users`
+
 Lưu trữ thông tin tài khoản người dùng:
+
 ```sql
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -72,7 +75,9 @@ CREATE TABLE IF NOT EXISTS users (
 ```
 
 ### 3.2. Bảng `categories`
+
 Lưu trữ danh mục thu nhập và chi tiêu:
+
 ```sql
 CREATE TABLE IF NOT EXISTS categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,7 +90,9 @@ CREATE TABLE IF NOT EXISTS categories (
 ```
 
 ### 3.3. Bảng `transactions`
+
 Lưu trữ chi tiết các khoản thu chi:
+
 ```sql
 CREATE TABLE IF NOT EXISTS transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -102,7 +109,9 @@ CREATE TABLE IF NOT EXISTS transactions (
 ```
 
 ### 3.4. Dữ liệu Danh Mục Mặc Định (Seed Data)
+
 Nạp sẵn 12 danh mục đồng bộ với icon và màu sắc của giao diện:
+
 - **Chi tiêu (expense)**:
   - Ăn uống (icon: `utensils`, color: `amber`)
   - Nhà cửa & Phòng trọ (icon: `home`, color: `blue`)
@@ -126,9 +135,11 @@ Nạp sẵn 12 danh mục đồng bộ với icon và màu sắc của giao di�
 Toàn bộ response tuân thủ quy chuẩn định dạng JSON, status code chuẩn REST.
 
 ### 4.1. `GET /api/health`
+
 - **Mục đích**: Kiểm tra tình trạng server, chế độ lưu trữ và CSDL.
 - **Header**: Không yêu cầu.
 - **Response**:
+
 ```json
 {
   "status": "ok",
@@ -139,20 +150,24 @@ Toàn bộ response tuân thủ quy chuẩn định dạng JSON, status code chu
 ```
 
 ### 4.2. `POST /api/auth/register`
+
 - **Mục đích**: Đăng ký tài khoản người dùng mới.
 - **Body**:
+
 ```json
 {
   "username": "sinhvien2026",
   "password": "Password123"
 }
 ```
+
 - **Xử lý**:
   - Kiểm tra `username` tối thiểu 3 ký tự, `password` tối thiểu 8 ký tự.
   - Kiểm tra xem `username` đã tồn tại chưa.
   - Băm mật khẩu bằng `bcryptjs` (salt rounds: 10).
   - Tạo tài khoản, sinh JWT token (hạn 7 ngày).
 - **Response (201)**:
+
 ```json
 {
   "token": "eyJhbGciOi...",
@@ -165,19 +180,23 @@ Toàn bộ response tuân thủ quy chuẩn định dạng JSON, status code chu
 ```
 
 ### 4.3. `POST /api/auth/login`
+
 - **Mục đích**: Đăng nhập tài khoản.
 - **Body**:
+
 ```json
 {
   "username": "sinhvien2026",
   "password": "Password123"
 }
 ```
+
 - **Xử lý**:
   - Tìm kiếm user theo `username`.
   - So khớp mật khẩu với hash `bcryptjs`.
   - Sinh JWT token (hạn 7 ngày).
 - **Response (200)**:
+
 ```json
 {
   "token": "eyJhbGciOi...",
@@ -190,9 +209,11 @@ Toàn bộ response tuân thủ quy chuẩn định dạng JSON, status code chu
 ```
 
 ### 4.4. `GET /api/categories`
+
 - **Mục đích**: Lấy danh sách các danh mục thu/chi.
 - **Query param (tùy chọn)**: `?type=income` hoặc `?type=expense`.
 - **Response (200)**:
+
 ```json
 [
   {
@@ -213,9 +234,11 @@ Toàn bộ response tuân thủ quy chuẩn định dạng JSON, status code chu
 ```
 
 ### 4.5. `GET /api/dashboard`
+
 - **Mục đích**: Trả về số liệu thống kê thu, chi, số dư trong tháng hiện tại và danh sách giao dịch gần nhất của người dùng đăng nhập.
 - **Header**: `Authorization: Bearer <token>`
 - **Response (200)**:
+
 ```json
 {
   "total_income": 8500000,
@@ -236,9 +259,11 @@ Toàn bộ response tuân thủ quy chuẩn định dạng JSON, status code chu
 ```
 
 ### 4.6. `POST /api/transactions`
+
 - **Mục đích**: Thêm mới một khoản thu hoặc chi.
 - **Header**: `Authorization: Bearer <token>`
 - **Body**:
+
 ```json
 {
   "category_id": 1,
@@ -247,12 +272,14 @@ Toàn bộ response tuân thủ quy chuẩn định dạng JSON, status code chu
   "transaction_date": "2026-10-09"
 }
 ```
+
 - **Xử lý**:
   - Kiểm tra `amount > 0`.
   - Kiểm tra `category_id` tồn tại trong bảng danh mục.
   - Kiểm tra `transaction_date` đúng định dạng `YYYY-MM-DD`.
   - Ghi bản ghi liên kết với `user_id` từ token.
 - **Response (201)**:
+
 ```json
 {
   "transaction_id": 1,
@@ -294,12 +321,14 @@ backend/
 
 1. **`frontend/js/config.js`**:
    Khai báo biến toàn cục:
+
    ```javascript
    window.APP_CONFIG = {
      apiBaseUrl: "http://localhost:8080",
      useMock: false // Chuyển sang kết nối Backend thật
    };
    ```
+
 2. **`frontend/index.html`**:
    Thêm thẻ nạp script `js/config.js` trước `js/api.js`.
 3. **CORS & Fallback**:
