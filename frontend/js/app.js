@@ -206,6 +206,14 @@
     document.body.classList.remove("is-auth");
   }
 
+  function validateUsername(value) {
+    return /^[A-Za-z0-9_.-]{3,30}$/.test(value.trim());
+  }
+
+  function validatePassword(value) {
+    return value.length >= 8 && value.length <= 128;
+  }
+
   function updatePasswordSpotlightText() {
     const characters = Array.from(byId("passwordInput").value);
     const mask = byId("passwordMask");
@@ -300,9 +308,18 @@
       const amount = Number(byId("amountInput").value);
       const categoryId = byId("categoryInput").value;
       const date = byId("dateInput").value;
+      const note = byId("noteInput").value.trim();
+
       byId("amountError").textContent = amount > 0 ? "" : "Số tiền phải lớn hơn 0.";
       byId("categoryError").textContent = categoryId ? "" : "Hãy chọn một danh mục.";
       if (!(amount > 0) || !categoryId || !date) return;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        byId("amountError").textContent = "Ngày giao dịch không hợp lệ.";
+        return;
+      }
+      if (note.length > 255) {
+        byId("noteInput").value = note.slice(0, 255);
+      }
       const saveButton = byId("saveTransaction");
       saveButton.disabled = true;
       try {
@@ -355,10 +372,17 @@
       const username = byId("usernameInput").value.trim();
       const password = byId("passwordInput").value;
       const registering = byId("authForm").dataset.mode === "register";
-      if (username.length < 3 || password.length < 8) {
-        byId("authError").textContent = "Tên đăng nhập cần ít nhất 3 ký tự, mật khẩu ít nhất 8 ký tự.";
+
+      if (!validateUsername(username)) {
+        byId("authError").textContent = "Tên đăng nhập từ 3-30 ký tự, chỉ gồm chữ, số, dấu gạch dưới, gạch ngang hoặc chấm.";
         return;
       }
+
+      if (!validatePassword(password)) {
+        byId("authError").textContent = "Mật khẩu phải dài từ 8 đến 128 ký tự.";
+        return;
+      }
+
       const submitButton = byId("authSubmit");
       submitButton.disabled = true;
       try {

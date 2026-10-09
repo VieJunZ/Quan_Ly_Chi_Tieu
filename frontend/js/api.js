@@ -1,6 +1,6 @@
 (function () {
   const apiBaseUrl = window.APP_CONFIG?.apiBaseUrl || "http://localhost:8080";
-  const useMock = window.APP_CONFIG?.useMock !== false;
+  const useMock = window.APP_CONFIG?.useMock ?? false;
   const storageKeys = {
     transactions: "sochi_demo_transactions",
     token: "sochi_session_token",
@@ -62,19 +62,29 @@
 
   async function request(path, options = {}) {
     const token = localStorage.getItem(storageKeys.token);
-    const response = await fetch(`${apiBaseUrl}${path}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(options.headers || {})
-      }
-    });
+    let response;
+    try {
+      response = await fetch(`${apiBaseUrl}${path}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(options.headers || {})
+        }
+      });
+    } catch (networkError) {
+      const error = new Error(`Không thể kết nối máy chủ tại ${apiBaseUrl}. Vui lòng kiểm tra xem Backend đã khởi động chưa.`);
+      error.status = 0;
+      error.code = "NETWORK_ERROR";
+      throw error;
+    }
+
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const error = new Error(payload.message || "Không thể kết nối máy chủ.");
+      const message = payload?.message || payload?.error?.message || payload?.error || "Yêu cầu không thành công.";
+      const error = new Error(message);
       error.status = response.status;
-      error.code = payload.error_code;
+      error.code = payload?.error_code || payload?.error?.code || "REQUEST_FAILED";
       throw error;
     }
     return payload.data ?? payload;
@@ -149,8 +159,13 @@
     },
     async createTransaction(transaction) {
       if (useMock) return demoApi.createTransaction(transaction);
-      const { type, ...contract } = transaction;
-      return request("/api/transactions", { method: "POST", body: JSON.stringify(contract) });
+      return request("/api/transactions", {
+        method: "POST",
+        body: JSON.stringify({
+          ...transaction,
+          type: transaction.type || (Number(transaction.category_id) ? "expense" : "income")
+        })
+      });
     },
     getCurrentUser() {
       try { return JSON.parse(localStorage.getItem(storageKeys.user) || "null"); } catch { return null; }
