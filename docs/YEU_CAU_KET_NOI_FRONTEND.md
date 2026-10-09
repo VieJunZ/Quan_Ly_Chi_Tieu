@@ -1,8 +1,8 @@
 # 📋 Yêu Cầu & Hướng Dẫn Kết Nối API Dành Cho Team Frontend
 
-- **Người gửi**: Backend Developer (Team BE)
-- **Người nhận**: Frontend Developer (Team FE)
-- **Dự án**: Quản Lý Chi Tiêu (Monorepo)
+- **Người gửi**: Backend Developer
+- **Người nhận**: Frontend Developer
+- **Dự án**: Quản Lý Chi Tiêu
 - **Địa chỉ Backend API**: `http://localhost:8080`
 
 ---
