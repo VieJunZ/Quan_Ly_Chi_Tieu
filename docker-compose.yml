@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 1. Dịch vụ Cơ sở dữ liệu
   database:
@@ -12,6 +10,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - db_data:/var/lib/mysql
 
   # 2. Dịch vụ Backend
