@@ -10,3 +10,6 @@ backend/target/
 
 # File chứa mật khẩu
 **/.env
+
+# Local database runtime data
+backend/data/
