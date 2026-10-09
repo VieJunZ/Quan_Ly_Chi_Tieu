@@ -1,7 +1,11 @@
 /**
  * @file server.js
  * @description File khởi động chính của ứng dụng Backend (Server Entry Point).
- * Cấu hình Express, CORS, Middleware phân tích dữ liệu JSON, và gắn kết các Router API.
+ * Tích hợp các chuẩn bảo mật:
+ *   - Ẩn header X-Powered-By (Information Disclosure Prevention).
+ *   - Giới hạn kích thước payload (DoS Prevention).
+ *   - CORS kiểm soát linh hoạt trong môi trường dev.
+ *   - Định tuyến API, Middleware xử lý lỗi tập trung.
  */
 
 const express = require("express");
@@ -19,7 +23,10 @@ const { errorHandler, notFoundHandler } = require("./middlewares/error.middlewar
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// 1. Cấu hình CORS (Cross-Origin Resource Sharing)
+// 1. Bảo mật: Ẩn thông tin framework Express khỏi HTTP Header để chống quét lỗ hổng
+app.disable("x-powered-by");
+
+// 2. Cấu hình CORS (Cross-Origin Resource Sharing)
 // Cho phép Client từ các cổng khác (port 3000, Live Server 5500, file cục bộ) gọi API không bị chặn
 app.use(
   cors({
@@ -30,11 +37,11 @@ app.use(
   })
 );
 
-// 2. Middleware phân tích cú pháp dữ liệu (Body Parser)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// 3. Middleware phân tích cú pháp dữ liệu kèm giới hạn kích thước (Chống tấn công tràn bộ nhớ DoS)
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 
-// 3. Middleware ghi log các HTTP request vào console để theo dõi luồng
+// 4. Middleware ghi log các HTTP request vào console để theo dõi luồng
 app.use((req, res, next) => {
   if (process.env.NODE_ENV !== "test") {
     console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
@@ -42,14 +49,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// 4. Gắn kết các tuyến API (Routes Mounting)
+// 5. Gắn kết các tuyến API (Routes Mounting)
 app.use("/api", healthRoutes);               // GET /api/health
 app.use("/api/auth", authRoutes);           // POST /api/auth/register, POST /api/auth/login
 app.use("/api/categories", categoryRoutes); // GET /api/categories
 app.use("/api/transactions", transactionRoutes); // POST /api/transactions
 app.use("/api/dashboard", dashboardRoutes); // GET /api/dashboard
 
-// 5. Middleware xử lý lỗi (Bắt buộc đặt sau các routes)
+// 6. Middleware xử lý lỗi (Bắt buộc đặt sau các routes)
 app.use(notFoundHandler); // Bắt lỗi 404 Not Found
 app.use(errorHandler);    // Bắt lỗi 500 hoặc các lỗi nghiệp vụ nội bộ
 
