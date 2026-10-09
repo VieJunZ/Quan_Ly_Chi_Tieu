@@ -1,29 +1,40 @@
-// backend/src/server.js
+/**
+ * @file server.js
+ * @description File khởi động chính của ứng dụng Backend (Server Entry Point).
+ * Cấu hình Express, CORS, Middleware phân tích dữ liệu JSON, và gắn kết các Router API.
+ */
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
 const storage = require("./services/storage");
 const healthRoutes = require("./routes/health.routes");
+const authRoutes = require("./routes/auth.routes");
+const categoryRoutes = require("./routes/category.routes");
+const transactionRoutes = require("./routes/transaction.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 const { errorHandler, notFoundHandler } = require("./middlewares/error.middleware");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Cấu hình CORS mở rộng cho phép Frontend kết nối
+// 1. Cấu hình CORS (Cross-Origin Resource Sharing)
+// Cho phép Client từ các cổng khác (port 3000, Live Server 5500, file cục bộ) gọi API không bị chặn
 app.use(
   cors({
-    origin: true, // Cho phép mọi origin phát triển cục bộ (localhost:3000, Live Server 5500, file://, v.v.)
+    origin: true, // Chấp nhận mọi nguồn gốc gửi đến trong môi trường phát triển
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
+// 2. Middleware phân tích cú pháp dữ liệu (Body Parser)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Log request đơn giản
+// 3. Middleware ghi log các HTTP request vào console để theo dõi luồng
 app.use((req, res, next) => {
   if (process.env.NODE_ENV !== "test") {
     console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
@@ -31,51 +42,41 @@ app.use((req, res, next) => {
   next();
 });
 
-// Gắn route kiểm tra sức khỏe
-app.use("/api", healthRoutes);
+// 4. Gắn kết các tuyến API (Routes Mounting)
+app.use("/api", healthRoutes);               // GET /api/health
+app.use("/api/auth", authRoutes);           // POST /api/auth/register, POST /api/auth/login
+app.use("/api/categories", categoryRoutes); // GET /api/categories
+app.use("/api/transactions", transactionRoutes); // POST /api/transactions
+app.use("/api/dashboard", dashboardRoutes); // GET /api/dashboard
 
-// Khởi tạo các route tiếp theo (sẽ được bổ sung trong Task 5 & Task 6)
-try {
-  const authRoutes = require("./routes/auth.routes");
-  app.use("/api/auth", authRoutes);
-} catch (e) {
-  // Sẽ được kích hoạt khi hoàn thành Task 5
-}
-
-try {
-  const categoryRoutes = require("./routes/category.routes");
-  app.use("/api/categories", categoryRoutes);
-} catch (e) {}
-
-try {
-  const transactionRoutes = require("./routes/transaction.routes");
-  app.use("/api/transactions", transactionRoutes);
-} catch (e) {}
-
-try {
-  const dashboardRoutes = require("./routes/dashboard.routes");
-  app.use("/api/dashboard", dashboardRoutes);
-} catch (e) {}
-
-// Xử lý 404 và Error Middleware
-app.use(notFoundHandler);
-app.use(errorHandler);
+// 5. Middleware xử lý lỗi (Bắt buộc đặt sau các routes)
+app.use(notFoundHandler); // Bắt lỗi 404 Not Found
+app.use(errorHandler);    // Bắt lỗi 500 hoặc các lỗi nghiệp vụ nội bộ
 
 let serverInstance = null;
 
+/**
+ * Hàm khởi chạy Express Server và kết nối bộ lưu trữ CSDL.
+ * @async
+ * @returns {Promise<import('http').Server>} Trả về instance của HTTP server
+ */
 async function startServer() {
+  // Khởi động kết nối CSDL hoặc bộ lưu trữ cục bộ
   await storage.init();
+  
   return new Promise((resolve) => {
     serverInstance = app.listen(PORT, () => {
       console.log(`====================================================`);
       console.log(`  Sổ Chi Backend Server đang chạy tại port ${PORT}`);
-      console.log(`  Health API: http://localhost:${PORT}/api/health`);
+      console.log(`  Health API:     http://localhost:${PORT}/api/health`);
+      console.log(`  Categories API: http://localhost:${PORT}/api/categories`);
       console.log(`====================================================`);
       resolve(serverInstance);
     });
   });
 }
 
+// Nếu file được gọi trực tiếp bằng lệnh "node server.js", tự động khởi động server
 if (require.main === module) {
   startServer().catch((err) => {
     console.error("Không thể khởi động server:", err);

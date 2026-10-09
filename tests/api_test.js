@@ -1,11 +1,26 @@
-// tests/api_test.js
-// Kịch bản kiểm thử tự động toàn diện tích hợp Backend API (End-to-End Test Suite)
+/**
+ * @file api_test.js
+ * @description Kịch bản kiểm thử tích hợp tự động toàn diện (Integration End-to-End Test Suite).
+ * Kiểm tra tuần tự tất cả các API nghiệp vụ của hệ thống:
+ *   1. Health check & Trạng thái lưu trữ CSDL
+ *   2. Danh sách danh mục thu chi
+ *   3. Đăng ký tài khoản & Xử lý trùng lặp
+ *   4. Đăng nhập & Xác thực mật khẩu
+ *   5. Tạo giao dịch thu/chi & Xác thực dữ liệu đầu vào
+ *   6. Thống kê Dashboard & Tính toán số dư
+ */
 
 const http = require("http");
 const { startServer } = require("../backend/src/server");
 
 const BASE_URL = "http://localhost:8080";
 
+/**
+ * Gửi HTTP Request tới Backend Server và nhận kết quả JSON.
+ * @param {object} options - Cấu hình request (path, method, headers)
+ * @param {object} [body] - Dữ liệu payload gửi kèm
+ * @returns {Promise<{status: number, data: any, headers: object}>}
+ */
 function request(options, body) {
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : null;
@@ -46,6 +61,7 @@ function request(options, body) {
   });
 }
 
+// Bảng mã màu ANSI hiển thị trên terminal
 const colors = {
   reset: "\x1b[0m",
   green: "\x1b[32m",
@@ -58,6 +74,12 @@ const colors = {
 let passedCount = 0;
 let failedCount = 0;
 
+/**
+ * Hàm kiểm tra điều kiện (Assertion) và in kết quả kiểm thử.
+ * @param {boolean} condition - Điều kiện cần kiểm tra
+ * @param {string} testName - Tên bước kiểm thử
+ * @param {string} [details] - Thông tin chi tiết khi thất bại
+ */
 function assert(condition, testName, details = "") {
   if (condition) {
     passedCount++;
@@ -68,21 +90,52 @@ function assert(condition, testName, details = "") {
   }
 }
 
+/**
+ * Kiểm tra xem Backend Server đã đang chạy trên cổng 8080 chưa.
+ * @returns {Promise<boolean>}
+ */
+function checkServerRunning() {
+  return new Promise((resolve) => {
+    const req = http.get("http://localhost:8080/api/health", (res) => {
+      resolve(res.statusCode === 200);
+    });
+    req.on("error", () => resolve(false));
+    req.setTimeout(800, () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
 async function runTestSuite() {
   console.log(`\n${colors.bold}${colors.cyan}====================================================${colors.reset}`);
   console.log(`${colors.bold}${colors.cyan}  BẮT ĐẦU CHẠY KIỂM THỬ TÍCH HỢP TOÀN DIỆN (API E2E)${colors.reset}`);
   console.log(`${colors.bold}${colors.cyan}====================================================${colors.reset}\n`);
 
-  let server;
-  try {
-    server = await startServer();
-  } catch (err) {
-    console.error("Không thể khởi động server test:", err);
-    process.exit(1);
+  let server = null;
+  const alreadyRunning = await checkServerRunning();
+
+  if (alreadyRunning) {
+    console.log(`${colors.yellow} Phát hiện Server Backend đã đang chạy sẵn tại port 8080. Thực hiện test trực tiếp...${colors.reset}\n`);
+  } else {
+    try {
+      server = await startServer();
+    } catch (err) {
+      console.error("Không thể khởi động server test:", err);
+      process.exit(1);
+    }
+  }
+
+  function cleanExit(code) {
+    if (server) {
+      server.close(() => process.exit(code));
+    } else {
+      process.exit(code);
+    }
   }
 
   try {
-    // 1. Kiểm tra Health Check
+    // 1. Kiểm tra Health Check API
     console.log(`${colors.bold}1. Kiểm tra Health Check API (/api/health)${colors.reset}`);
     const health = await request({ path: "/api/health" });
     assert(health.status === 200, "Status HTTP 200 OK");
@@ -215,14 +268,10 @@ async function runTestSuite() {
     );
     console.log(`${colors.bold}${colors.cyan}----------------------------------------------------${colors.reset}\n`);
 
-    if (failedCount > 0) {
-      server.close(() => process.exit(1));
-    } else {
-      server.close(() => process.exit(0));
-    }
+    cleanExit(failedCount > 0 ? 1 : 0);
   } catch (error) {
     console.error("Lỗi trong quá trình chạy test:", error);
-    server.close(() => process.exit(1));
+    cleanExit(1);
   }
 }
 
