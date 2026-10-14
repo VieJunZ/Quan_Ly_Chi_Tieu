@@ -1,0 +1,2 @@
+# File .bat cần xuống dòng kiểu Windows (CRLF) để cmd chạy đúng nhãn goto
+*.bat text eol=crlf
