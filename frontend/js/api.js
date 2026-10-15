@@ -1,6 +1,7 @@
 (function () {
-  const apiBaseUrl = window.APP_CONFIG?.apiBaseUrl || "http://localhost:8080";
-  const useMock = window.APP_CONFIG?.useMock ?? false;
+  const host = window.location.hostname || "localhost";
+  const apiBaseUrl = window.APP_CONFIG?.apiBaseUrl || `http://${host}:8080`;
+  const useMock = window.APP_CONFIG?.useMock !== false;
   const storageKeys = {
     transactions: "sochi_demo_transactions",
     token: "sochi_session_token",
@@ -72,19 +73,16 @@
           ...(options.headers || {})
         }
       });
-    } catch (networkError) {
-      const error = new Error(`Không thể kết nối máy chủ tại ${apiBaseUrl}. Vui lòng kiểm tra xem Backend đã khởi động chưa.`);
+    } catch (netErr) {
+      const error = new Error(`Không thể kết nối đến máy chủ Backend (${apiBaseUrl}). Hãy chắc chắn bạn đã chạy npm start trong thư mục backend.`);
       error.status = 0;
-      error.code = "NETWORK_ERROR";
       throw error;
     }
-
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const message = payload?.message || payload?.error?.message || payload?.error || "Yêu cầu không thành công.";
-      const error = new Error(message);
+      const error = new Error(payload.message || payload.error?.message || "Không thể kết nối máy chủ.");
       error.status = response.status;
-      error.code = payload?.error_code || payload?.error?.code || "REQUEST_FAILED";
+      error.code = payload.error_code || payload.error?.code;
       throw error;
     }
     return payload.data ?? payload;
@@ -147,6 +145,17 @@
       localStorage.setItem(storageKeys.user, JSON.stringify({ id: result.user_id, username }));
       return result;
     },
+    async loginWithGoogle(credential, isMock = false) {
+      if (useMock) return demoApi.login("demo.google@gmail.com");
+      const result = await request("/api/auth/google", {
+        method: "POST",
+        body: JSON.stringify({ credential, is_mock: isMock })
+      });
+      if (result.token) localStorage.setItem(storageKeys.token, result.token);
+      const user = result.user || { id: result.user_id, username: "demo.google@gmail.com" };
+      localStorage.setItem(storageKeys.user, JSON.stringify(user));
+      return result;
+    },
     async getCategories(type) {
       if (useMock) return demoApi.getCategories(type);
       const result = await request("/api/categories");
@@ -159,13 +168,22 @@
     },
     async createTransaction(transaction) {
       if (useMock) return demoApi.createTransaction(transaction);
-      return request("/api/transactions", {
-        method: "POST",
-        body: JSON.stringify({
-          ...transaction,
-          type: transaction.type || (Number(transaction.category_id) ? "expense" : "income")
-        })
-      });
+      const { type, ...contract } = transaction;
+      return request("/api/transactions", { method: "POST", body: JSON.stringify(contract) });
+    },
+    async getTransactions(filter = {}) {
+      if (useMock) return readTransactions();
+      const params = new URLSearchParams();
+      if (filter.month) params.append("month", filter.month);
+      if (filter.type && filter.type !== "all") params.append("type", filter.type);
+      if (filter.category_id) params.append("category_id", filter.category_id);
+      const queryStr = params.toString() ? `?${params.toString()}` : "";
+      const result = await request(`/api/transactions${queryStr}`);
+      return Array.isArray(result) ? result : result.data || [];
+    },
+    logout() {
+      localStorage.removeItem(storageKeys.token);
+      localStorage.removeItem(storageKeys.user);
     },
     getCurrentUser() {
       try { return JSON.parse(localStorage.getItem(storageKeys.user) || "null"); } catch { return null; }

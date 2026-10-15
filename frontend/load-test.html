@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sổ Chi | Live Load Test Monitor & Stress Dashboard</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(17, 24, 39, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #06b6d4;
+      --primary-glow: rgba(6, 182, 212, 0.25);
+      --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --mono-font: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+    }
+
+    /* Top Navigation */
+    .navbar {
+      height: 64px;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(9, 13, 22, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 700;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent-green);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .btn-outline {
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      opacity: 0.8;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 800;
+      font-family: var(--mono-font);
+      letter-spacing: -1px;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .kpi-unit {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Layout Split */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+    }
+
+    /* Control Panel */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 22px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .form-label span.badge {
+      font-family: var(--mono-font);
+      color: var(--primary);
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    select:focus, input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    /* Slider Range */
+    .range-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.15);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--primary);
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .pills-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pill-btn:hover, .pill-btn.active {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Action Buttons */
+    .action-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #06b6d4, #2563eb);
+      color: #fff;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+
+    .btn-start:hover:not(:disabled) {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-stop {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      display: none;
+    }
+
+    .btn-stop:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Charts Section */
+    .charts-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .chart-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 200px;
+      width: 100%;
+    }
+
+    /* Live Stream Log */
+    .log-panel {
+      background: rgba(5, 8, 14, 0.95);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px;
+      font-family: var(--mono-font);
+      font-size: 12px;
+      height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 6px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    .log-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.02);
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .log-time { color: var(--text-muted); }
+    .log-status-200 { color: var(--accent-green); font-weight: 700; }
+    .log-status-err { color: var(--accent-red); font-weight: 700; }
+    .log-latency { color: var(--primary); }
+
+    .docker-tip {
+      background: rgba(6, 182, 212, 0.08);
+      border: 1px dashed rgba(6, 182, 212, 0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #93c5fd;
+      line-height: 1.5;
+    }
+
+    .docker-tip code {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #38bdf8;
+      font-family: var(--mono-font);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <div class="brand-badge">⚡</div>
+      <div>
+        <div class="brand-title">Sổ Chi Load Monitor</div>
+        <div class="brand-subtitle">Real-time Performance & Stress Lab</div>
+      </div>
+    </a>
+    <div class="nav-actions">
+      <div class="status-pill" id="gatewayStatusPill">
+        <div class="pulse-dot"></div>
+        <span id="gatewayStatusText">Gateway :8080 Online</span>
+      </div>
+      <a href="index.html" class="btn-outline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Về ứng dụng chính
+      </a>
+    </div>
+  </nav>
+
+  <div class="container">
+    
+    <!-- Top KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Thông lượng hiện tại (RPS)</div>
+        <div class="kpi-value" id="kpiRps">0 <span class="kpi-unit">req/s</span></div>
+        <div class="kpi-sub">Đỉnh (Peak): <strong id="kpiPeakRps" style="color: var(--primary);">0 req/s</strong></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Độ trễ trung bình (Avg)</div>
+        <div class="kpi-value" id="kpiLatency">0 <span class="kpi-unit">ms</span></div>
+        <div class="kpi-sub">p95: <strong id="kpiP95">0 ms</strong> | p99: <strong id="kpiP99">0 ms</strong></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Tổng Request đã gửi</div>
+        <div class="kpi-value" id="kpiTotal">0 <span class="kpi-unit">req</span></div>
+        <div class="kpi-sub">Thành công: <span id="kpiSuccess" style="color: var(--accent-green); font-weight: 600;">0</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Tỉ lệ lỗi (Error Rate)</div>
+        <div class="kpi-value" id="kpiErrorRate" style="color: var(--accent-green);">0.0 <span class="kpi-unit">%</span></div>
+        <div class="kpi-sub">Lỗi HTTP / Timeout: <span id="kpiErrorCount" style="color: var(--accent-red); font-weight: 600;">0</span></div>
+      </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="dashboard-layout">
+      
+      <!-- Left Panel: Controls -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>🎛️ Bảng điều khiển tải</span>
+        </div>
+
+        <!-- Target API -->
+        <div class="form-group">
+          <label class="form-label">Kịch bản Endpoint:</label>
+          <select id="scenarioSelect">
+            <option value="health">1. Gateway Health (GET /health) - Tối đa</option>
+            <option value="login">2. Auth Login (POST /api/auth/login) - Bcrypt CPU</option>
+            <option value="tx_read">3. Đọc Giao dịch (GET /api/transactions) - MySQL</option>
+            <option value="tx_write">4. Tạo Giao dịch (POST /api/transactions) - Ghi DB</option>
+            <option value="combo">5. Hỗn hợp (Xen kẽ Đọc + Ghi + Health)</option>
+          </select>
+        </div>
+
+        <!-- CCU Slider -->
+        <div class="form-group range-wrap">
+          <div class="form-label">
+            <span>Số kết nối đồng thời (CCU):</span>
+            <span class="badge" id="ccuValueBadge">50 CCU</span>
+          </div>
+          <input type="range" id="ccuRange" min="5" max="300" step="5" value="50" />
+          <div class="pills-group">
+            <button class="pill-btn" onclick="setCCU(10)">10</button>
+            <button class="pill-btn" onclick="setCCU(25)">25</button>
+            <button class="pill-btn active" onclick="setCCU(50)">50</button>
+            <button class="pill-btn" onclick="setCCU(100)">100</button>
+            <button class="pill-btn" onclick="setCCU(200)">200</button>
+            <button class="pill-btn" onclick="setCCU(300)">300</button>
+          </div>
+        </div>
+
+        <!-- Duration -->
+        <div class="form-group">
+          <label class="form-label">Thời gian test:</label>
+          <div class="pills-group">
+            <button class="pill-btn" onclick="setDuration(5)">5 giây</button>
+            <button class="pill-btn active" onclick="setDuration(15)">15 giây</button>
+            <button class="pill-btn" onclick="setDuration(30)">30 giây</button>
+            <button class="pill-btn" onclick="setDuration(60)">60 giây</button>
+            <button class="pill-btn" onclick="setDuration(0)">Liên tục</button>
+          </div>
+        </div>
+
+        <!-- Auth Token Helper -->
+        <div class="form-group">
+          <label class="form-label">
+            <span>JWT Bearer Token:</span>
+            <a href="javascript:void(0)" onclick="bootstrapTestToken()" style="color: var(--primary); text-decoration: none; font-size: 11px;">⚡ Tự tạo Token</a>
+          </label>
+          <input type="text" id="tokenInput" placeholder="Bấm 'Tự tạo Token' hoặc dán JWT..." />
+        </div>
+
+        <!-- Action Buttons -->
+        <button class="action-btn btn-start" id="startBtn" onclick="startLoadTest()">
+          <span>🚀 BẮT ĐẦU BẮN TẢI</span>
+        </button>
+        <button class="action-btn btn-stop" id="stopBtn" onclick="stopLoadTest()">
+          <span>⏹️ DỪNG TEST</span>
+        </button>
+        <button class="action-btn btn-secondary" onclick="cleanupCreatedData()">
+          <span>🧹 Dọn dẹp giao dịch test</span>
+        </button>
+
+        <!-- Docker stats hint -->
+        <div class="docker-tip">
+          💡 <strong>Mẹo quan sát thực tế:</strong> Mở PowerShell và chạy lệnh <code>docker stats</code> song song để thấy CPU của container nhảy vọt theo nhịp biểu đồ!
+        </div>
+
+      </div>
+
+      <!-- Right Panel: Real-time Charts & Live Stream -->
+      <div class="charts-grid">
+        
+        <!-- Throughput Chart -->
+        <div class="chart-panel">
+          <div class="chart-header">
+            <div class="chart-title">📈 Biểu đồ Thông lượng Thời gian thực (Requests / Second)</div>
+            <div style="font-size: 12px; color: var(--text-muted); font-family: var(--mono-font);" id="timerText">00:00</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="rpsChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Latency Chart -->
+        <div class="chart-panel">
+          <div class="chart-header">
+            <div class="chart-title">⏱️ Biểu đồ Độ trễ Phản hồi (Latency ms)</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="latencyChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Live Stream Logs -->
+        <div class="chart-panel" style="padding-bottom: 14px;">
+          <div class="chart-header">
+            <div class="chart-title">📡 Luồng Request Trực tiếp (Live Event Stream)</div>
+            <button class="btn-outline" style="padding: 3px 8px; font-size: 11px;" onclick="clearLogs()">Xóa log</button>
+          </div>
+          <div class="log-panel" id="logStream">
+            <div class="log-item" style="color: var(--text-muted);">Hệ thống đã sẵn sàng. Bấm "Bắt đầu Bắn Tải" để quan sát trực tiếp...</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const GATEWAY_URL = window.location.protocol + "//" + window.location.hostname + ":8080";
+    let isRunning = false;
+    let selectedCCU = 50;
+    let selectedDuration = 15; // in seconds, 0 = unlimited
+    let testToken = "";
+    let activeWorkers = [];
+    let testStartTime = 0;
+    let timerInterval = null;
+
+    // Metrics tracking
+    let totalReqs = 0;
+    let successReqs = 0;
+    let errorReqs = 0;
+    let currentSecondReqs = 0;
+    let currentSecondLatencies = [];
+    let peakRps = 0;
+
+    // Setup Charts
+    const MAX_DATA_POINTS = 30;
+    const chartLabels = Array(MAX_DATA_POINTS).fill("");
+    const rpsData = Array(MAX_DATA_POINTS).fill(0);
+    const latencyData = Array(MAX_DATA_POINTS).fill(0);
+
+    const rpsCtx = document.getElementById("rpsChart").getContext("2d");
+    const rpsChart = new Chart(rpsCtx, {
+      type: "line",
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          label: "RPS (Requests/sec)",
+          data: rpsData,
+          borderColor: "#06b6d4",
+          backgroundColor: "rgba(6, 182, 212, 0.15)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        scales: {
+          x: { display: false },
+          y: {
+            beginAtZero: true,
+            grid: { color: "rgba(255,255,255,0.06)" },
+            ticks: { color: "#9ca3af", font: { family: "JetBrains Mono" } }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    const latCtx = document.getElementById("latencyChart").getContext("2d");
+    const latencyChart = new Chart(latCtx, {
+      type: "line",
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          label: "Avg Latency (ms)",
+          data: latencyData,
+          borderColor: "#10b981",
+          backgroundColor: "rgba(16, 185, 129, 0.12)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        scales: {
+          x: { display: false },
+          y: {
+            beginAtZero: true,
+            grid: { color: "rgba(255,255,255,0.06)" },
+            ticks: { color: "#9ca3af", font: { family: "JetBrains Mono" } }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    // Control Handlers
+    const ccuRange = document.getElementById("ccuRange");
+    const ccuBadge = document.getElementById("ccuValueBadge");
+
+    ccuRange.addEventListener("input", (e) => {
+      setCCU(Number(e.target.value));
+    });
+
+    function setCCU(val) {
+      selectedCCU = val;
+      ccuRange.value = val;
+      ccuBadge.textContent = `${val} CCU`;
+      document.querySelectorAll(".pills-group .pill-btn").forEach(btn => {
+        if (btn.textContent.trim() === String(val)) {
+          btn.classList.add("active");
+        } else if (!isNaN(Number(btn.textContent.trim()))) {
+          btn.classList.remove("active");
+        }
+      });
+    }
+
+    function setDuration(val) {
+      selectedDuration = val;
+      document.querySelectorAll(".pills-group:nth-of-type(2) .pill-btn").forEach(btn => {
+        btn.classList.toggle("active", (val === 0 && btn.textContent.includes("Liên tục")) || btn.textContent.includes(String(val)));
+      });
+    }
+
+    // Logger
+    const logStream = document.getElementById("logStream");
+    function appendLog(status, method, url, ms) {
+      const item = document.createElement("div");
+      item.className = "log-item";
+      const isOk = status >= 200 && status < 300;
+      const statusClass = isOk ? "log-status-200" : "log-status-err";
+      const timeStr = new Date().toLocaleTimeString("vi-VN", { hour12: false });
+      
+      item.innerHTML = `
+        <span class="log-time">[${timeStr}]</span>
+        <span class="${statusClass}">${status}</span>
+        <span>${method} ${url}</span>
+        <span class="log-latency">${ms}ms</span>
+      `;
+      logStream.insertBefore(item, logStream.firstChild);
+      if (logStream.children.length > 50) {
+        logStream.removeChild(logStream.lastChild);
+      }
+    }
+
+    function clearLogs() {
+      logStream.innerHTML = "";
+    }
+
+    // Bootstrap Test Token
+    async function bootstrapTestToken() {
+      const tokenInput = document.getElementById("tokenInput");
+      tokenInput.value = "Đang tạo tài khoản test...";
+      try {
+        const username = "webtest_" + Math.random().toString(36).substring(2, 8);
+        const password = "Pass2026!#" + Math.floor(Math.random() * 1000);
+        const res = await fetch(`${GATEWAY_URL}/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        const token = data.data?.token || data.token;
+        if (token) {
+          testToken = token;
+          tokenInput.value = token;
+          appendLog(201, "POST", `/api/auth/register (User: ${username})`, 40);
+          return token;
+        } else {
+          tokenInput.value = "";
+          throw new Error(data.message || "Không nhận được token");
+        }
+      } catch (err) {
+        tokenInput.value = "";
+        appendLog(500, "AUTH", `Lỗi tạo token: ${err.message}`, 0);
+        alert("Lỗi khi kết nối API Gateway: " + err.message);
+        return null;
+      }
+    }
+
+    // Request Dispatcher per worker loop
+    async function requestWorker(workerId, initialToken) {
+      const scenario = document.getElementById("scenarioSelect").value;
+      const token = initialToken || document.getElementById("tokenInput").value.trim() || testToken;
+
+      while (isRunning) {
+        let url = `${GATEWAY_URL}/health`;
+        let method = "GET";
+        let headers = {};
+        let body = null;
+
+        if (scenario === "health") {
+          url = `${GATEWAY_URL}/health`;
+        } else if (scenario === "login") {
+          url = `${GATEWAY_URL}/api/auth/login`;
+          method = "POST";
+          headers["Content-Type"] = "application/json";
+          body = JSON.stringify({ username: "admin_test", password: "AdminPassword123!" });
+        } else if (scenario === "tx_read") {
+          url = `${GATEWAY_URL}/api/transactions`;
+          if (token) headers["Authorization"] = `Bearer ${token}`;
+        } else if (scenario === "tx_write") {
+          url = `${GATEWAY_URL}/api/transactions`;
+          method = "POST";
+          headers["Content-Type"] = "application/json";
+          if (token) headers["Authorization"] = `Bearer ${token}`;
+          body = JSON.stringify({
+            amount: 25000,
+            category_id: 1,
+            transaction_date: "2026-10-14",
+            note: "Live Web Load Test"
+          });
+        } else if (scenario === "combo") {
+          const rand = Math.random();
+          if (rand < 0.3) {
+            url = `${GATEWAY_URL}/health`;
+          } else if (rand < 0.7) {
+            url = `${GATEWAY_URL}/api/transactions`;
+            if (token) headers["Authorization"] = `Bearer ${token}`;
+          } else {
+            url = `${GATEWAY_URL}/api/transactions`;
+            method = "POST";
+            headers["Content-Type"] = "application/json";
+            if (token) headers["Authorization"] = `Bearer ${token}`;
+            body = JSON.stringify({
+              amount: 50000,
+              category_id: 1,
+              transaction_date: "2026-10-14",
+              note: "Combo Live Test"
+            });
+          }
+        }
+
+        const t0 = performance.now();
+        let status = 0;
+        let errMsg = "";
+        try {
+          const res = await fetch(url, {
+            method,
+            headers,
+            body,
+            signal: AbortSignal.timeout(6000)
+          });
+          status = res.status;
+          if (!res.ok) {
+            const errJson = await res.json().catch(() => null);
+            errMsg = errJson?.message || `HTTP ${res.status}`;
+          }
+        } catch (err) {
+          status = 504; // timeout/network error
+          errMsg = err.message || "Network Timeout";
+        }
+        const t1 = performance.now();
+        const duration = Math.round(t1 - t0);
+
+        if (!isRunning) break;
+
+        // Record metrics
+        totalReqs++;
+        currentSecondReqs++;
+        currentSecondLatencies.push(duration);
+
+        if (status >= 200 && status < 400) {
+          successReqs++;
+        } else {
+          errorReqs++;
+        }
+
+        if (Math.random() < 0.08 || status >= 400) {
+          appendLog(status, method, url.replace(GATEWAY_URL, "") + (errMsg ? ` [${errMsg}]` : ""), duration);
+        }
+
+        // Breather delay (10ms) per worker to keep browser UI smooth and responsive
+        await new Promise((r) => setTimeout(r, 10));
+      }
+    }
+
+    // Chart & KPI Tick (every 1 second)
+    function tickMetrics() {
+      const rps = currentSecondReqs;
+      currentSecondReqs = 0;
+
+      let avgLat = 0;
+      let p95Lat = 0;
+      let p99Lat = 0;
+      if (currentSecondLatencies.length > 0) {
+        currentSecondLatencies.sort((a, b) => a - b);
+        avgLat = Math.round(currentSecondLatencies.reduce((a, b) => a + b, 0) / currentSecondLatencies.length);
+        const p95Idx = Math.floor(currentSecondLatencies.length * 0.95);
+        const p99Idx = Math.floor(currentSecondLatencies.length * 0.99);
+        p95Lat = currentSecondLatencies[p95Idx] || avgLat;
+        p99Lat = currentSecondLatencies[p99Idx] || avgLat;
+        currentSecondLatencies = [];
+      }
+
+      if (rps > peakRps) {
+        peakRps = rps;
+        document.getElementById("kpiPeakRps").textContent = `${peakRps} req/s`;
+      }
+
+      // Update KPIs
+      document.getElementById("kpiRps").innerHTML = `${rps} <span class="kpi-unit">req/s</span>`;
+      document.getElementById("kpiLatency").innerHTML = `${avgLat} <span class="kpi-unit">ms</span>`;
+      document.getElementById("kpiP95").textContent = `${p95Lat} ms`;
+      document.getElementById("kpiP99").textContent = `${p99Lat} ms`;
+      document.getElementById("kpiTotal").innerHTML = `${totalReqs} <span class="kpi-unit">req</span>`;
+      document.getElementById("kpiSuccess").textContent = successReqs;
+      document.getElementById("kpiErrorCount").textContent = errorReqs;
+
+      const errRate = totalReqs > 0 ? ((errorReqs / totalReqs) * 100).toFixed(1) : "0.0";
+      const errElem = document.getElementById("kpiErrorRate");
+      errElem.innerHTML = `${errRate} <span class="kpi-unit">%</span>`;
+      if (Number(errRate) > 5) {
+        errElem.style.color = "var(--accent-red)";
+      } else if (Number(errRate) > 0) {
+        errElem.style.color = "var(--accent-yellow)";
+      } else {
+        errElem.style.color = "var(--accent-green)";
+      }
+
+      // Update Charts
+      rpsData.shift();
+      rpsData.push(rps);
+      rpsChart.update();
+
+      latencyData.shift();
+      latencyData.push(avgLat);
+      latencyChart.update();
+
+      // Check duration timer
+      if (selectedDuration > 0) {
+        const elapsed = Math.floor((Date.now() - testStartTime) / 1000);
+        const remaining = Math.max(0, selectedDuration - elapsed);
+        const mins = String(Math.floor(remaining / 60)).padStart(2, "0");
+        const secs = String(remaining % 60).padStart(2, "0");
+        document.getElementById("timerText").textContent = `Còn lại: ${mins}:${secs}`;
+        if (remaining <= 0) {
+          stopLoadTest();
+        }
+      } else {
+        const elapsed = Math.floor((Date.now() - testStartTime) / 1000);
+        const mins = String(Math.floor(elapsed / 60)).padStart(2, "0");
+        const secs = String(elapsed % 60).padStart(2, "0");
+        document.getElementById("timerText").textContent = `Đang chạy: ${mins}:${secs}`;
+      }
+    }
+
+    async function startLoadTest() {
+      if (isRunning) return;
+
+      const scenario = document.getElementById("scenarioSelect").value;
+      let token = document.getElementById("tokenInput").value.trim() || testToken;
+
+      if ((scenario === "tx_read" || scenario === "tx_write" || scenario === "combo") && !token) {
+        token = await bootstrapTestToken();
+        if (!token) {
+          return;
+        }
+      }
+
+      isRunning = true;
+      testStartTime = Date.now();
+      totalReqs = 0;
+      successReqs = 0;
+      errorReqs = 0;
+      peakRps = 0;
+      currentSecondReqs = 0;
+      currentSecondLatencies = [];
+
+      document.getElementById("startBtn").style.display = "none";
+      document.getElementById("stopBtn").style.display = "flex";
+
+      appendLog(200, "INIT", `Khởi động test: ${selectedCCU} kết nối đồng thời`, 0);
+
+      // Start tick interval
+      timerInterval = setInterval(tickMetrics, 1000);
+
+      // Spawn concurrent workers
+      for (let i = 0; i < selectedCCU; i++) {
+        requestWorker(i, token);
+      }
+    }
+
+    function stopLoadTest() {
+      if (!isRunning) return;
+      isRunning = false;
+      clearInterval(timerInterval);
+      document.getElementById("startBtn").style.display = "flex";
+      document.getElementById("stopBtn").style.display = "none";
+      document.getElementById("timerText").textContent = "Đã dừng";
+      appendLog(200, "STOP", `Kết thúc bài test. Tổng cộng: ${totalReqs} request`, 0);
+    }
+
+    // Cleanup data
+    async function cleanupCreatedData() {
+      const token = document.getElementById("tokenInput").value.trim() || testToken;
+      if (!token) {
+        alert("Cần có JWT token để dọn dẹp các giao dịch của user test.");
+        return;
+      }
+      appendLog(200, "CLEANUP", "Đang quét danh sách giao dịch để dọn dẹp...", 0);
+      try {
+        const res = await fetch(`${GATEWAY_URL}/api/transactions`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = await res.json();
+        const txs = Array.isArray(json) ? json : (json.data || []);
+        if (txs.length === 0) {
+          alert("Không có giao dịch nào cần xóa.");
+          return;
+        }
+        let delCount = 0;
+        for (const tx of txs) {
+          await fetch(`${GATEWAY_URL}/api/transactions/${tx.id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          delCount++;
+        }
+        appendLog(200, "CLEANUP", `Đã xóa thành công ${delCount} giao dịch.`, 0);
+        alert(`Đã xóa ${delCount} giao dịch test sạch sẽ!`);
+      } catch (err) {
+        alert("Lỗi dọn dẹp: " + err.message);
+      }
+    }
+
+    // Health check on load
+    (async () => {
+      try {
+        const res = await fetch(`${GATEWAY_URL}/health`);
+        if (res.ok) {
+          document.getElementById("gatewayStatusText").textContent = "Gateway :8080 Online";
+        }
+      } catch {
+        document.getElementById("gatewayStatusText").textContent = "Gateway Offline";
+        document.getElementById("gatewayStatusPill").style.color = "var(--accent-red)";
+      }
+    })();
+  </script>
+</body>
+</html>

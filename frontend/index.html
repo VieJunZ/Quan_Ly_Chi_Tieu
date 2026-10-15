@@ -1,236 +1,663 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#15392f" />
-    <meta name="description" content="Sổ Chi giúp sinh viên theo dõi thu nhập, chi tiêu và số dư mỗi ngày." />
-    <title>Sổ Chi | Quản lý chi tiêu cá nhân</title>
+    <meta name="theme-color" content="#080c14" />
+    <meta name="description" content="Sổ Chi - Ứng dụng quản lý tài chính và chi tiêu cá nhân thông minh, bảo mật và trực quan." />
+    <title>Sổ Chi | Quản Lý Chi Tiêu Cá Nhân</title>
+
+    <!-- Google Fonts (Chuẩn tiếng Việt không lỗi dấu) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Style -->
     <link rel="stylesheet" href="css/style.css" />
-    <script>
-      window.APP_CONFIG = {
-        apiBaseUrl: "http://localhost:8080",
-        useMock: false
-      };
-    </script>
-    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
-    <script src="js/api.js" defer></script>
+
+    <!-- Local Lucide Icons (Tải ngay trong 0ms) -->
+    <script src="js/lucide.min.js"></script>
+
+    <!-- App Configuration -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/app.js" defer></script>
   </head>
   <body>
-    <div class="app-shell" id="appShell">
-      <aside class="sidebar" aria-label="Điều hướng chính">
-        <a class="brand" href="#overview" aria-label="Sổ Chi, về tổng quan">
-          <span class="brand-mark"><i data-lucide="wallet-cards"></i></span>
-          <span class="brand-copy"><strong>sổ <span>chi</span></strong><small>tiền của bạn, rõ ràng</small></span>
-        </a>
-
-        <div class="workspace-label">KHÔNG GIAN CỦA BẠN</div>
-        <nav class="main-nav">
-          <button class="nav-link is-active" type="button" data-scroll="overview" aria-current="page">
-            <i data-lucide="layout-dashboard"></i><span>Tổng quan</span><kbd>01</kbd>
-          </button>
-          <button class="nav-link" type="button" data-scroll="transactions">
-            <i data-lucide="arrow-left-right"></i><span>Giao dịch</span><kbd>02</kbd>
-          </button>
-        </nav>
-
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section-label">THÁNG NÀY</div>
-        <div class="month-card">
-          <div class="month-card-top"><span class="month-spark"><i data-lucide="sparkles"></i></span><span class="month-caption">Đang theo dõi</span></div>
-          <strong id="sidebarMonth">Tháng 10</strong>
-          <span id="sidebarMonthYear">2026</span>
-          <div class="month-meter"><span id="monthMeter"></span></div>
-          <small><span id="monthDayLabel">8</span> ngày đã ghi chép</small>
-        </div>
-
-        <div class="sidebar-spacer"></div>
-        <div class="sidebar-tip">
-          <i data-lucide="lightbulb"></i>
-          <p>Ghi lại một khoản nhỏ hôm nay, cảm ơn bạn của tháng sau.</p>
-        </div>
-        <div class="sidebar-divider"></div>
-        <div class="profile-wrap">
-          <button class="profile-button" id="profileButton" type="button" aria-expanded="false" aria-controls="profileMenu">
-            <span class="avatar" id="profileAvatar">B</span>
-            <span class="profile-copy"><strong id="profileName">Bạn</strong><small>Tài khoản</small></span>
-            <i data-lucide="chevrons-up-down" class="profile-chevron"></i>
-          </button>
-          <div class="profile-menu" id="profileMenu" hidden>
-            <button type="button" data-auth-open="login"><i data-lucide="user-round"></i>Đổi tài khoản</button>
-            <button type="button" data-auth-open="register"><i data-lucide="user-plus"></i>Tạo tài khoản</button>
+    <!-- ==========================================
+         VIEW A: AUTH VIEW (MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ)
+         ========================================== -->
+    <section class="auth-view" id="authView" style="display: none;">
+      <!-- Auth Topbar Navigation -->
+      <header class="auth-header">
+        <div class="brand" style="margin-bottom: 0;">
+          <div class="brand-mark">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="4"></rect>
+              <path d="M2 10h20"></path>
+              <circle cx="16" cy="15" r="1.5" fill="currentColor"></circle>
+            </svg>
+          </div>
+          <div class="brand-copy">
+            <strong class="brand-title">Sổ Chi</strong>
+            <small class="brand-sub">Quản lý chi tiêu</small>
           </div>
         </div>
-      </aside>
 
-      <div class="main-shell">
-        <header class="topbar">
-          <div class="breadcrumbs"><span>Không gian của bạn</span><i data-lucide="chevron-right"></i><strong>Tổng quan</strong></div>
-          <div class="topbar-actions">
-            <label class="search-box" for="transactionSearch">
-              <i data-lucide="search"></i>
-              <input id="transactionSearch" type="search" placeholder="Tìm giao dịch" autocomplete="off" />
-              <kbd>/</kbd>
-            </label>
-            <button class="top-avatar" id="topAvatar" type="button" data-auth-open="login" aria-label="Đổi tài khoản" title="Đổi tài khoản">B</button>
-          </div>
-        </header>
+        <div class="auth-header-actions">
+          <button class="icon-btn" id="authThemeToggleBtn" type="button" title="Chuyển chế độ Sáng / Tối">
+            <i data-lucide="moon" id="authThemeIcon"></i>
+          </button>
+          <button class="button button-brand" id="authNavToDashBtn" type="button">
+            <span>Khám phá giao diện</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </header>
 
-        <main class="dashboard" id="overview">
-          <div class="page-heading">
+      <!-- Auth Body Container -->
+      <div class="auth-body-container">
+        <div class="auth-box">
+          <!-- Left Hero Showcase -->
+          <div class="auth-hero-side">
             <div>
-              <p class="eyebrow"><span class="eyebrow-line"></span><span id="todayLabel">THỨ NĂM, 08 THÁNG 10</span></p>
-              <h1>Tổng quan <span>tài chính</span></h1>
-              <p class="page-subtitle">Một cái nhìn rõ ràng. Một tháng chủ động hơn.</p>
-            </div>
-            <button class="button button-primary" id="openTransaction" type="button">
-              <i data-lucide="plus"></i><span>Thêm giao dịch</span>
-            </button>
-          </div>
-
-          <section class="summary-grid" aria-label="Tóm tắt tài chính tháng này">
-            <article class="summary-card balance-card">
-              <div class="summary-top"><span class="summary-label">SỐ DƯ HIỆN TẠI</span><span class="summary-icon balance-icon"><i data-lucide="wallet"></i></span></div>
-              <div class="summary-value" id="balanceValue">—</div>
-              <div class="summary-foot"><span class="trend" id="balanceTrend"><i data-lucide="circle-dot"></i>Chưa có giao dịch</span><span class="summary-note" id="balanceNote">Số dư sẽ hiển thị khi bạn ghi chép</span></div>
-              <span class="balance-stamp">VND</span>
-            </article>
-            <article class="summary-card">
-              <div class="summary-top"><span class="summary-label">TỔNG THU</span><span class="summary-icon income-icon"><i data-lucide="arrow-down-left"></i></span></div>
-              <div class="summary-value" id="incomeValue">—</div>
-              <div class="summary-foot"><span class="summary-dot income-dot"></span><span class="summary-note">Tiền vào tháng này</span></div>
-              <div class="mini-sparkline income-spark"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            </article>
-            <article class="summary-card">
-              <div class="summary-top"><span class="summary-label">TỔNG CHI</span><span class="summary-icon expense-icon"><i data-lucide="arrow-up-right"></i></span></div>
-              <div class="summary-value" id="expenseValue">—</div>
-              <div class="summary-foot"><span class="summary-dot expense-dot"></span><span class="summary-note">Tiền ra tháng này</span></div>
-              <div class="mini-sparkline expense-spark"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            </article>
-          </section>
-
-          <div class="dashboard-grid">
-            <section class="panel flow-panel" aria-labelledby="flowTitle">
-              <div class="panel-heading">
-                <div><p class="panel-kicker">NHỊP CHI TIÊU</p><h2 id="flowTitle">Dòng tiền 7 ngày</h2></div>
-                <button class="select-control" type="button" disabled aria-label="Khoảng thời gian: 7 ngày"><span>7 ngày</span><i data-lucide="chevron-down"></i></button>
-              </div>
-              <div class="chart-legend"><span><i class="legend-dot legend-income"></i>Tiền vào</span><span><i class="legend-dot legend-expense"></i>Tiền ra</span><span class="chart-unit">Đơn vị: triệu đồng</span></div>
-              <div class="flow-chart" id="flowChart" role="img" aria-label="Biểu đồ thu chi trong 7 ngày gần nhất"></div>
-              <div class="chart-baseline"><span>7 ngày gần nhất</span><span id="chartTotalLabel">Dữ liệu theo giao dịch gần đây</span></div>
-            </section>
-
-            <section class="panel category-panel" aria-labelledby="categoryTitle">
-              <div class="panel-heading">
-                <div><p class="panel-kicker">CHI TIÊU</p><h2 id="categoryTitle">Theo danh mục</h2></div>
-                <span class="period-label" id="categoryTotalLabel">Tháng này</span>
-              </div>
-              <div class="category-list" id="categoryList"></div>
-              <div class="category-footer"><span class="category-footer-mark"><i data-lucide="circle-help"></i></span><span>Danh mục giúp bạn nhận ra tiền đang đi đâu.</span></div>
-            </section>
-          </div>
-
-          <section class="panel transactions-panel" id="transactions" aria-labelledby="transactionsTitle">
-            <div class="panel-heading transactions-heading">
-              <div><p class="panel-kicker">SỔ GHI CHÉP</p><h2 id="transactionsTitle">Giao dịch gần đây</h2></div>
-              <div class="transaction-tools">
-                <div class="filter-tabs" role="group" aria-label="Lọc giao dịch">
-                  <button type="button" class="filter-tab is-selected" data-filter="all" aria-pressed="true">Tất cả</button>
-                  <button type="button" class="filter-tab" data-filter="income" aria-pressed="false">Khoản thu</button>
-                  <button type="button" class="filter-tab" data-filter="expense" aria-pressed="false">Khoản chi</button>
+              <div class="brand" style="padding: 0; margin-bottom: 12px;">
+                <div class="brand-mark">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="4"></rect>
+                    <path d="M2 10h20"></path>
+                    <circle cx="16" cy="15" r="1.5" fill="currentColor"></circle>
+                  </svg>
                 </div>
-                <button class="text-button" id="transactionsAdd" type="button"><i data-lucide="plus"></i>Thêm mới</button>
+                <div class="brand-copy">
+                  <strong class="brand-title">Sổ Chi</strong>
+                  <small class="brand-sub">Quản lý tài chính cá nhân</small>
+                </div>
+              </div>
+
+              <div class="auth-hero-copy">
+                <h2>Quản lý tài chính cá nhân<br />thông minh & hiệu quả</h2>
+                <p>Theo dõi thu chi, kiểm soát ngân sách và xây dựng thói quen tài chính vững vàng mỗi ngày với giao diện trực quan, rõ ràng.</p>
               </div>
             </div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th scope="col">GIAO DỊCH</th><th scope="col">DANH MỤC</th><th scope="col">NGÀY</th><th scope="col" class="amount-heading">SỐ TIỀN</th></tr></thead>
-                <tbody id="transactionsBody"></tbody>
-              </table>
-              <div class="empty-state" id="emptyState" hidden><span class="empty-icon"><i data-lucide="notebook-pen"></i></span><strong>Chưa tìm thấy giao dịch</strong><span>Thử đổi từ khóa hoặc ghi thêm một khoản mới.</span></div>
+
+            <!-- Floating Showcase Pills -->
+            <div class="auth-floating-showcase">
+              <div class="floating-pill pill-1">
+                <div class="floating-pill-icon" style="background: rgba(244, 63, 94, 0.25); color: #f43f5e;">
+                  <i data-lucide="coffee"></i>
+                </div>
+                <div class="floating-pill-text">
+                  <strong>Cà phê & Đồ uống</strong>
+                  <small>-45.000 ₫ · Ăn uống</small>
+                </div>
+              </div>
+
+              <div class="floating-pill pill-2">
+                <div class="floating-pill-icon" style="background: rgba(16, 185, 129, 0.25); color: #10b981;">
+                  <i data-lucide="wallet"></i>
+                </div>
+                <div class="floating-pill-text">
+                  <strong>Nhận lương định kỳ</strong>
+                  <small>+18.500.000 ₫ · Thu nhập</small>
+                </div>
+              </div>
             </div>
-            <div class="table-footer"><span id="transactionCount">—</span><button type="button" class="view-all-button" id="viewAllButton">Xem tất cả <i data-lucide="arrow-right"></i></button></div>
-          </section>
 
-          <footer class="dashboard-footer"><span>Ghi chép nhỏ, an tâm lớn.</span></footer>
-        </main>
-      </div>
-    </div>
-
-    <nav class="mobile-nav" aria-label="Điều hướng mobile">
-      <button type="button" class="mobile-nav-link is-active" data-scroll="overview"><i data-lucide="layout-dashboard"></i><span>Tổng quan</span></button>
-      <button type="button" class="mobile-nav-link" data-scroll="transactions"><i data-lucide="arrow-left-right"></i><span>Giao dịch</span></button>
-      <button type="button" class="mobile-add" id="mobileAdd" aria-label="Thêm giao dịch"><i data-lucide="plus"></i></button>
-      <button type="button" class="mobile-nav-link" data-auth-open="login"><i data-lucide="user-round"></i><span>Tài khoản</span></button>
-    </nav>
-
-    <dialog class="transaction-dialog" id="transactionDialog" aria-labelledby="transactionDialogTitle">
-      <form id="transactionForm" class="transaction-form" novalidate>
-        <div class="dialog-heading">
-          <div><p class="panel-kicker">GHI LẠI NGAY</p><h2 id="transactionDialogTitle">Thêm giao dịch</h2></div>
-          <button class="icon-button dialog-close" type="button" id="closeTransaction" aria-label="Đóng"><i data-lucide="x"></i></button>
-        </div>
-        <div class="type-switch" role="radiogroup" aria-label="Loại giao dịch">
-          <label class="type-option is-active" data-type-option="expense"><input type="radio" name="type" value="expense" checked /><i data-lucide="arrow-up-right"></i><span>Khoản chi</span></label>
-          <label class="type-option" data-type-option="income"><input type="radio" name="type" value="income" /><i data-lucide="arrow-down-left"></i><span>Khoản thu</span></label>
-        </div>
-        <label class="field-label" for="amountInput">Số tiền <span>*</span></label>
-        <div class="amount-input-wrap"><input id="amountInput" name="amount" type="number" inputmode="numeric" min="1" step="1000" placeholder="0" required /><span>VND</span></div>
-        <p class="field-error" id="amountError" aria-live="polite"></p>
-        <div class="form-row">
-          <div class="form-field"><label class="field-label" for="categoryInput">Danh mục <span>*</span></label><div class="select-wrap"><i data-lucide="shapes"></i><select id="categoryInput" name="category_id" required><option value="">Chọn danh mục</option></select><i data-lucide="chevron-down" class="select-chevron"></i></div><p class="field-hint" id="categoryHint" hidden>Chưa có danh mục từ backend nên chưa thể lưu giao dịch.</p><p class="field-error" id="categoryError" aria-live="polite"></p></div>
-          <div class="form-field"><label class="field-label" for="dateInput">Ngày giao dịch <span>*</span></label><div class="date-wrap"><i data-lucide="calendar-days"></i><input id="dateInput" name="transaction_date" type="date" required /></div></div>
-        </div>
-        <label class="field-label" for="noteInput">Ghi chú <span class="optional">Không bắt buộc</span></label>
-        <textarea id="noteInput" name="note" rows="3" maxlength="140" placeholder="Ví dụ: Ăn trưa cùng bạn"></textarea>
-        <div class="dialog-actions"><button class="button button-quiet" type="button" id="cancelTransaction">Hủy</button><button class="button button-primary" type="submit" id="saveTransaction"><i data-lucide="check"></i>Lưu giao dịch</button></div>
-      </form>
-    </dialog>
-
-    <section class="auth-screen" id="authScreen" hidden aria-label="Đăng nhập tài khoản">
-      <div class="auth-visual">
-        <a class="brand auth-brand" href="#overview"><span class="brand-mark"><i data-lucide="wallet-cards"></i></span><span class="brand-copy"><strong>sổ <span>chi</span></strong><small>tiền của bạn, rõ ràng</small></span></a>
-        <div class="auth-art" aria-hidden="true">
-          <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
-          <div class="art-card art-card-back"><span class="art-card-line"></span><span class="art-card-line short"></span><span class="art-card-chip"><i data-lucide="arrow-down-left"></i></span></div>
-          <div class="art-card art-card-front"><span class="art-card-label">SỔ THU CHI CÁ NHÂN</span><strong>Thu · Chi · Số dư</strong><span class="art-card-rule"></span><span class="art-card-caption"><i data-lucide="trending-up"></i>Theo dõi chủ động mỗi ngày</span></div>
-          <span class="art-note note-one">Thu</span><span class="art-note note-two">Chi</span>
-        </div>
-        <div class="auth-copy"><p class="eyebrow"><span class="eyebrow-line"></span>CHỦ ĐỘNG VỚI TIỀN</p><h1>Mỗi khoản đều<br />có một câu chuyện.</h1><p>Ghi lại điều quan trọng. Để dành điều mình muốn.</p></div>
-        <span class="auth-visual-foot">SỔ CHI · TÀI CHÍNH CÁ NHÂN</span>
-      </div>
-      <div class="auth-panel">
-        <button class="auth-back" id="authBack" type="button"><i data-lucide="arrow-left"></i>Về tổng quan</button>
-        <div class="auth-card">
-          <p class="panel-kicker">CHÀO MỪNG BẠN</p>
-          <h2 id="authTitle">Đăng nhập</h2>
-          <p class="auth-subtitle" id="authSubtitle">Tiếp tục hành trình quản lý chi tiêu của bạn.</p>
-          <div class="auth-tabs" role="tablist" aria-label="Chọn đăng nhập hoặc đăng ký">
-            <button type="button" class="auth-tab is-active" data-auth-mode="login" role="tab" aria-selected="true">Đăng nhập</button>
-            <button type="button" class="auth-tab" data-auth-mode="register" role="tab" aria-selected="false">Tạo tài khoản</button>
+            <div class="auth-features-list">
+              <span class="auth-feat-tag"><i data-lucide="shield-check" style="width: 14px; height: 14px; color: var(--accent-income);"></i> Bảo mật riêng tư</span>
+              <span class="auth-feat-tag"><i data-lucide="zap" style="width: 14px; height: 14px; color: var(--accent-cyan);"></i> Cập nhật tức thì</span>
+              <span class="auth-feat-tag"><i data-lucide="sun-moon" style="width: 14px; height: 14px; color: var(--accent-amber);"></i> Chế độ Sáng / Tối</span>
+            </div>
           </div>
-          <form id="authForm" novalidate>
-            <label class="field-label" for="usernameInput">Tên đăng nhập</label>
-            <div class="auth-input-wrap"><i data-lucide="user-round"></i><input id="usernameInput" name="username" type="text" autocomplete="username" placeholder="Ví dụ: minh_nguyen" required minlength="3" /></div>
-            <label class="field-label" for="passwordInput">Mật khẩu</label>
-            <div class="auth-input-wrap password-field" id="passwordField">
-              <i data-lucide="lock-keyhole"></i>
-              <input class="password-input" id="passwordInput" name="password" type="password" autocomplete="current-password" placeholder="Ít nhất 8 ký tự" required minlength="8" />
-              <span class="password-spotlight" id="passwordSpotlight" aria-hidden="true"><span class="password-mask" id="passwordMask"></span></span>
-              <button class="password-toggle" id="passwordToggle" type="button" aria-label="Bật đèn pin soi mật khẩu" aria-pressed="false" title="Bật đèn pin soi mật khẩu"><i data-lucide="flashlight"></i></button>
+
+          <!-- Right Auth Form -->
+          <div class="auth-form-side">
+            <div class="auth-tabs" role="tablist">
+              <button class="auth-tab active" type="button" id="tabLogin" data-auth-mode="login">Đăng nhập</button>
+              <button class="auth-tab" type="button" id="tabRegister" data-auth-mode="register">Tạo tài khoản</button>
             </div>
-            <p class="auth-error" id="authError" role="alert"></p>
-            <button class="button button-primary auth-submit" type="submit" id="authSubmit">Đăng nhập <i data-lucide="arrow-right"></i></button>
-          </form>
+
+            <!-- 1-Click Quick Demo Button -->
+            <button type="button" class="quick-demo-fill-btn" id="btnQuickDemo">
+              <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+              <span>Điền tài khoản mẫu (demo_user)</span>
+            </button>
+
+            <form id="authForm" novalidate>
+              <div class="auth-field">
+                <label for="authUsername">Tên đăng nhập</label>
+                <div class="auth-input-container">
+                  <i data-lucide="user"></i>
+                  <input type="text" id="authUsername" placeholder="Nhập tên đăng nhập..." autocomplete="username" required minlength="3" />
+                </div>
+              </div>
+
+              <div class="auth-field">
+                <label for="authPassword">Mật khẩu</label>
+                <div class="auth-input-container">
+                  <i data-lucide="lock"></i>
+                  <input type="password" id="authPassword" placeholder="Nhập mật khẩu (tối thiểu 8 ký tự)..." autocomplete="current-password" required minlength="8" />
+                  <button type="button" class="pw-peek-btn" id="pwPeekBtn" title="Xem mật khẩu"><i data-lucide="eye"></i></button>
+                </div>
+              </div>
+
+              <div class="auth-err-msg" id="authErrorMsg"></div>
+
+              <button class="button button-primary" type="submit" id="authSubmitBtn" style="width: 100%; padding: 13px;">
+                <span id="authSubmitText">Đăng nhập vào hệ thống</span>
+                <i data-lucide="arrow-right"></i>
+              </button>
+
+              <div class="auth-divider">
+                <span>hoặc tiếp tục với</span>
+              </div>
+
+              <button type="button" class="google-auth-btn" id="btnGoogleAuth">
+                <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span>Tiếp tục với Google</span>
+                <span class="auth-pill-badge" id="googleMockBadge">Demo</span>
+              </button>
+            </form>
+
+            <div style="margin-top: 18px; text-align: center;">
+              <button type="button" class="button button-secondary" id="authGuestBtn" style="width: 100%; font-size: 0.85rem;">
+                <i data-lucide="compass"></i>
+                <span>Xem thử giao diện (Chế độ khách)</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <span class="auth-panel-foot">Bảo mật và quyền riêng tư luôn được ưu tiên.</span>
       </div>
     </section>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"><i data-lucide="check-circle-2"></i><span id="toastMessage"></span></div>
+    <!-- ==========================================
+         VIEW B: APP SHELL (KHÔNG GIAN LÀM VIỆC CHÍNH)
+         ========================================== -->
+    <div class="app-shell" id="appShell">
+      <!-- 1. SIDEBAR -->
+      <aside class="sidebar" aria-label="Điều hướng chính">
+        <a class="brand" href="#" data-navigate="dashboard" aria-label="Sổ Chi trang chủ">
+          <div class="brand-mark">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="4"></rect>
+              <path d="M2 10h20"></path>
+              <circle cx="16" cy="15" r="1.5" fill="currentColor"></circle>
+            </svg>
+          </div>
+          <div class="brand-copy">
+            <strong class="brand-title">Sổ Chi</strong>
+            <small class="brand-sub">Quản lý chi tiêu</small>
+          </div>
+        </a>
+
+        <div class="sidebar-label">DANH MỤC CHÍNH</div>
+        <nav class="main-nav">
+          <button class="nav-link is-active" type="button" data-navigate="dashboard">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Tổng quan</span>
+          </button>
+          <button class="nav-link" type="button" data-navigate="transactions">
+            <i data-lucide="arrow-left-right"></i>
+            <span>Sổ giao dịch</span>
+          </button>
+          <button class="nav-link" type="button" data-navigate="analytics">
+            <i data-lucide="pie-chart"></i>
+            <span>Phân tích</span>
+          </button>
+          <button class="nav-link" type="button" data-navigate="profile">
+            <i data-lucide="user"></i>
+            <span>Tài khoản</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-spacer"></div>
+
+        <!-- Backend Status Indicator -->
+        <div class="sidebar-status-pill">
+          <span class="status-dot-pulse"></span>
+          <span>Máy chủ: Đang kết nối (Cổng 8080)</span>
+        </div>
+
+        <!-- Sidebar Profile -->
+        <div class="profile-card" id="sidebarProfileCard" data-navigate="profile" title="Xem tài khoản">
+          <div class="avatar" id="sidebarAvatar">K</div>
+          <div class="profile-details">
+            <strong id="sidebarUsername">Khách xem thử</strong>
+            <small id="sidebarUserSub">Chưa đăng nhập</small>
+          </div>
+          <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-dim);"></i>
+        </div>
+      </aside>
+
+      <!-- 2. MAIN SHELL -->
+      <div class="main-shell">
+        <!-- Topbar -->
+        <header class="topbar">
+          <div class="breadcrumbs">
+            <span>Sổ Chi</span>
+            <i data-lucide="chevron-right"></i>
+            <strong id="breadcrumbCurrent">Tổng quan</strong>
+          </div>
+
+          <div class="topbar-actions">
+            <!-- Theme Toggle Button -->
+            <button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Đổi giao diện Sáng / Tối" title="Đổi giao diện Sáng / Tối">
+              <i data-lucide="sun" id="themeIcon"></i>
+            </button>
+
+            <!-- Privacy Toggle Button -->
+            <button class="icon-btn" id="privacyToggleBtn" type="button" aria-label="Ẩn / Hiện số dư" title="Ẩn / Hiện số dư">
+              <i data-lucide="eye" id="privacyIcon"></i>
+            </button>
+
+            <!-- Quick Add Button -->
+            <button class="button button-primary" id="topbarAddBtn" type="button">
+              <i data-lucide="plus"></i>
+              <span>Ghi chép mới</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Views Container -->
+        <div class="views-container">
+          <!-- VIEW 1: DASHBOARD (TỔNG QUAN TÀI CHÍNH) -->
+          <section class="view-pane active" id="dashboardView">
+            <div class="page-header">
+              <div class="page-title-wrap">
+                <h1 id="dashGreeting">Xin chào bạn 👋</h1>
+                <p>Tổng quan tình hình thu chi và số dư trong tháng.</p>
+              </div>
+            </div>
+
+            <!-- Demo Live Notice Banner -->
+            <div class="demo-banner" id="dashDemoBanner">
+              <div class="demo-banner-content">
+                <i data-lucide="sparkles"></i>
+                <span>Đang hiển thị dữ liệu mẫu trực quan. Bạn có thể bấm nút bên phải để nạp dữ liệu này vào hệ thống thật.</span>
+              </div>
+              <button type="button" class="demo-seed-btn" id="btnSeedDemoData">
+                Nạp dữ liệu mẫu vào hệ thống
+              </button>
+            </div>
+
+            <!-- Bento Grid -->
+            <div class="bento-grid">
+              <!-- Bento Card 1: Virtual Card & Stats (Span 8) -->
+              <div class="bento-card bento-col-8">
+                <div class="hero-card-grid">
+                  <!-- The Virtual Card -->
+                  <div class="virtual-card">
+                    <div class="card-top-row">
+                      <div class="card-logo">
+                        <span></span>
+                        <strong>SỔ CHI</strong>
+                      </div>
+                      <div class="card-chip-group">
+                        <div class="emv-chip"></div>
+                        <span class="contactless-wave">
+                          <i data-lucide="wifi" style="width: 18px; height: 18px; transform: rotate(90deg);"></i>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="card-balance-block">
+                      <div class="card-balance-label">
+                        <span>SỐ DƯ KHẢ DỤNG</span>
+                        <span class="privacy-toggle-btn" id="dashPrivacyToggle" title="Ẩn / Hiện số dư"><i data-lucide="eye"></i></span>
+                      </div>
+                      <div class="card-balance-val tabular" id="dashBalanceDisplay">18.450.000&nbsp;₫</div>
+                    </div>
+
+                    <div class="card-bottom-row">
+                      <div class="card-holder">
+                        <small>CHỦ THẺ</small>
+                        <strong id="cardHolderName">THÀNH VIÊN</strong>
+                      </div>
+                      <div class="card-meta-right">
+                        <div class="card-expiry">
+                          <small>HẠN DÙNG</small>
+                          <strong>12/28</strong>
+                        </div>
+                        <div class="card-tier-pill">VÍ CHÍNH</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quick Stats Column -->
+                  <div class="hero-stats-side">
+                    <div class="hero-stat-box income">
+                      <div class="hero-stat-top">
+                        <span class="hero-stat-title">Tổng Thu Nhập</span>
+                        <div class="hero-stat-icon income"><i data-lucide="arrow-down-left"></i></div>
+                      </div>
+                      <strong class="tabular hero-stat-val" id="dashIncomeDisplay">+24.500.000&nbsp;₫</strong>
+                    </div>
+
+                    <div class="hero-stat-box expense">
+                      <div class="hero-stat-top">
+                        <span class="hero-stat-title">Tổng Chi Tiêu</span>
+                        <div class="hero-stat-icon expense"><i data-lucide="arrow-up-right"></i></div>
+                      </div>
+                      <strong class="tabular hero-stat-val" id="dashExpenseDisplay">-6.050.000&nbsp;₫</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bento Card 2: Quick Action (Span 4) -->
+              <div class="bento-card quick-action-card bento-col-4">
+                <div>
+                  <div class="quick-action-badge">
+                    <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+                    <span>Ghi chép nhanh</span>
+                  </div>
+                  <h3>Thêm giao dịch mới</h3>
+                  <p>Ghi lại kịp thời các khoản thu chi hàng ngày để luôn nắm rõ và kiểm soát tốt dòng tiền cá nhân.</p>
+                </div>
+                <button class="button button-primary" id="dashQuickAddBtn" type="button" style="width: 100%; padding: 13px;">
+                  <i data-lucide="plus-circle"></i>
+                  <span>Thêm giao dịch ngay</span>
+                </button>
+              </div>
+
+              <!-- Bento Card 3: 7-Day Flow Sparkline (Span 6) -->
+              <div class="bento-card bento-col-6">
+                <div class="card-header">
+                  <h3>Biểu đồ thu chi 7 ngày</h3>
+                  <span class="card-link" data-navigate="transactions">Xem chi tiết <i data-lucide="arrow-right"></i></span>
+                </div>
+                <div class="chart-container" id="dashFlowChart">
+                  <!-- Flow bars injected by JS -->
+                </div>
+              </div>
+
+              <!-- Bento Card 4: Top Categories (Span 6) -->
+              <div class="bento-card bento-col-6">
+                <div class="card-header">
+                  <h3>Chi tiêu theo danh mục</h3>
+                  <span class="card-link" data-navigate="analytics">Xem phân tích <i data-lucide="arrow-right"></i></span>
+                </div>
+                <div class="category-bars" id="dashTopCategories">
+                  <!-- Top categories injected by JS -->
+                </div>
+              </div>
+
+              <!-- Bento Card 5: Recent Transactions (Span 12) -->
+              <div class="bento-card bento-col-12">
+                <div class="card-header">
+                  <h3>Lịch sử giao dịch gần đây</h3>
+                  <span class="card-link" data-navigate="transactions">Xem toàn bộ sổ <i data-lucide="arrow-right"></i></span>
+                </div>
+                <div class="mini-trans-list" id="dashRecentTrans">
+                  <!-- Recent transactions injected by JS -->
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 2: FULL TRANSACTIONS MANAGER -->
+          <section class="view-pane" id="transactionsView">
+            <div class="page-header">
+              <div class="page-title-wrap">
+                <h1>Sổ Giao Dịch</h1>
+                <p>Lịch sử chi tiết toàn bộ các khoản thu nhập và chi tiêu.</p>
+              </div>
+              <button class="button button-primary" id="transAddBtn" type="button">
+                <i data-lucide="plus"></i>
+                <span>Thêm giao dịch</span>
+              </button>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="filters-bar">
+              <div class="search-input-wrap">
+                <i data-lucide="search"></i>
+                <input type="text" id="transSearchInput" placeholder="Tìm kiếm theo ghi chú hoặc danh mục..." autocomplete="off" />
+              </div>
+
+              <div class="filter-pills" role="radiogroup">
+                <button type="button" class="pill-btn active" data-type-filter="all">Tất cả</button>
+                <button type="button" class="pill-btn" data-type-filter="income">Thu nhập</button>
+                <button type="button" class="pill-btn" data-type-filter="expense">Chi tiêu</button>
+              </div>
+
+              <select class="filter-select" id="transCategoryFilter">
+                <option value="">Tất cả danh mục</option>
+              </select>
+
+              <select class="filter-select" id="transMonthFilter">
+                <option value="">Tháng hiện tại</option>
+              </select>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>DANH MỤC</th>
+                    <th>GHI CHÚ</th>
+                    <th>NGÀY GIAO DỊCH</th>
+                    <th style="text-align: right;">SỐ TIỀN</th>
+                  </tr>
+                </thead>
+                <tbody id="transTableBody">
+                  <!-- Table rows injected by JS -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- VIEW 3: SPENDING ANALYTICS -->
+          <section class="view-pane" id="analyticsView">
+            <div class="page-header">
+              <div class="page-title-wrap">
+                <h1>Phân Tích Tài Chính</h1>
+                <p>Báo cáo chi tiết cơ cấu thu chi và tỷ lệ tích lũy ngân sách.</p>
+              </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="analytics-kpis">
+              <div class="kpi-card income">
+                <small>Tổng Thu Nhập Tháng Này</small>
+                <strong class="tabular" id="analyticsIncome">— ₫</strong>
+              </div>
+              <div class="kpi-card expense">
+                <small>Tổng Chi Tiêu Tháng Này</small>
+                <strong class="tabular" id="analyticsExpense">— ₫</strong>
+              </div>
+              <div class="kpi-card savings">
+                <small>Tỷ Lệ Tiết Kiệm</small>
+                <strong class="tabular" id="analyticsSavingsRate">—%</strong>
+              </div>
+            </div>
+
+            <!-- Category Breakdown Detail -->
+            <div class="bento-card">
+              <div class="card-header">
+                <h3>Cơ cấu chi tiêu theo danh mục</h3>
+              </div>
+              <div class="category-bars" id="analyticsCategoryList">
+                <!-- Breakdown items injected by JS -->
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 4: PROFILE & SETTINGS -->
+          <section class="view-pane" id="profileView">
+            <div class="page-header">
+              <div class="page-title-wrap">
+                <h1>Tài Khoản & Cài Đặt</h1>
+                <p>Quản lý tài khoản, kết nối hệ thống và tùy chọn giao diện.</p>
+              </div>
+            </div>
+
+            <div class="profile-layout">
+              <div class="profile-card-large">
+                <div class="avatar-large" id="profileLargeAvatar">K</div>
+                <h2 id="profileLargeUsername">Khách xem thử</h2>
+                <div class="status-badge" id="profileStatusBadge">
+                  <span class="status-dot"></span>
+                  <span id="profileRoleText">Tài khoản xem thử</span>
+                </div>
+              </div>
+
+              <div class="settings-box">
+                <div class="setting-row">
+                  <div>
+                    <strong>Chế độ hiển thị (Theme)</strong>
+                    <small>Tùy chọn phong cách Sáng / Tối phù hợp với thị giác của bạn</small>
+                  </div>
+                  <button class="button button-secondary" id="profileThemeBtn" type="button">
+                    <i data-lucide="sun-moon"></i>
+                    <span id="profileThemeBtnText">Chuyển Chế Độ</span>
+                  </button>
+                </div>
+
+                <div class="setting-row">
+                  <div>
+                    <strong>Kết nối Backend API Server</strong>
+                    <small id="profileApiEndpoint">http://localhost:8080</small>
+                  </div>
+                  <span class="status-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Đang kết nối</span>
+                </div>
+
+                <div class="setting-row">
+                  <div>
+                    <strong>Nạp dữ liệu mẫu vào tài khoản</strong>
+                    <small>Thêm nhanh 5 giao dịch thực tế vào tài khoản để thử nghiệm các tính năng</small>
+                  </div>
+                  <button class="button button-secondary" id="profileSeedBtn" type="button">
+                    <i data-lucide="sparkles"></i>
+                    <span>Nạp dữ liệu</span>
+                  </button>
+                </div>
+
+                <div class="setting-row">
+                  <div>
+                    <strong>Chuyển đổi tài khoản</strong>
+                    <small>Đăng nhập tài khoản khác hoặc tạo tài khoản mới</small>
+                  </div>
+                  <button class="button button-secondary" id="switchAccountBtn" type="button">
+                    <i data-lucide="user-plus"></i>
+                    <span>Đổi tài khoản</span>
+                  </button>
+                </div>
+
+                <div class="setting-row" style="border-top: 1px solid var(--border-subtle); padding-top: 16px;">
+                  <div>
+                    <strong>Đăng xuất</strong>
+                    <small>Xóa phiên đăng nhập hiện tại khỏi trình duyệt</small>
+                  </div>
+                  <button class="button" id="logoutBtn" type="button" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">
+                    <i data-lucide="log-out"></i>
+                    <span>Đăng xuất</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         3. TRANSACTION DIALOG (THÊM GIAO DỊCH MỚI)
+         ========================================== -->
+    <div class="dialog-overlay" id="transactionDialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+      <div class="dialog-card">
+        <div class="dialog-top">
+          <h2 id="dialogTitle">Thêm Giao Dịch Mới</h2>
+          <button class="icon-btn" id="dialogCloseBtn" type="button" title="Đóng"><i data-lucide="x"></i></button>
+        </div>
+
+        <form id="transactionForm" novalidate>
+          <!-- Type Switch -->
+          <div class="type-toggle-pills">
+            <button type="button" class="type-btn active expense" data-tx-type="expense">
+              <i data-lucide="arrow-up-right"></i>
+              <span>Chi tiêu</span>
+            </button>
+            <button type="button" class="type-btn income" data-tx-type="income">
+              <i data-lucide="arrow-down-left"></i>
+              <span>Thu nhập</span>
+            </button>
+          </div>
+
+          <!-- Amount Input -->
+          <div class="amount-input-box">
+            <input type="number" id="txAmount" placeholder="0" min="1000" step="1000" required />
+            <span>₫</span>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="preset-amounts">
+            <button type="button" class="preset-chip" data-preset="50000">+50k</button>
+            <button type="button" class="preset-chip" data-preset="100000">+100k</button>
+            <button type="button" class="preset-chip" data-preset="200000">+200k</button>
+            <button type="button" class="preset-chip" data-preset="500000">+500k</button>
+            <button type="button" class="preset-chip" data-preset="1000000">+1Tr</button>
+          </div>
+
+          <!-- Category Selector -->
+          <div class="dialog-field">
+            <label for="txCategory">Danh mục</label>
+            <select id="txCategory" required>
+              <option value="">-- Chọn danh mục --</option>
+            </select>
+          </div>
+
+          <!-- Note Input -->
+          <div class="dialog-field">
+            <label for="txNote">Ghi chú (Tùy chọn)</label>
+            <input type="text" id="txNote" placeholder="Ví dụ: Ăn trưa cùng đồng nghiệp" />
+          </div>
+
+          <!-- Date Input -->
+          <div class="dialog-field">
+            <label for="txDate">Ngày giao dịch</label>
+            <input type="date" id="txDate" required />
+          </div>
+
+          <button class="button button-primary" type="submit" id="txSubmitBtn" style="width: 100%; padding: 13px; margin-top: 10px;">
+            <i data-lucide="check"></i>
+            <span>Lưu giao dịch</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-notice" id="toastNotice">
+      <i data-lucide="check-circle-2"></i>
+      <span id="toastMsg">Thành công!</span>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+      <button class="mobile-nav-btn active" type="button" data-navigate="dashboard">
+        <i data-lucide="layout-dashboard"></i>
+        <span>Tổng quan</span>
+      </button>
+      <button class="mobile-nav-btn" type="button" data-navigate="transactions">
+        <i data-lucide="arrow-left-right"></i>
+        <span>Giao dịch</span>
+      </button>
+      <button class="mobile-nav-btn" type="button" data-navigate="analytics">
+        <i data-lucide="pie-chart"></i>
+        <span>Phân tích</span>
+      </button>
+      <button class="mobile-nav-btn" type="button" data-navigate="profile">
+        <i data-lucide="user"></i>
+        <span>Tài khoản</span>
+      </button>
+    </nav>
   </body>
 </html>
