@@ -1,0 +1,23 @@
+name: Backend CI Pipeline
+
+# Chỉ kích hoạt khi có Pull Request gộp vào develop hoặc main,
+# VÀ có sự thay đổi file bên trong thư mục backend/
+on:
+  pull_request:
+    branches: [ "develop", "main" ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      # Bước 1: Tải mã nguồn về máy chủ của GitHub
+      - name: Kéo mã nguồn
+        uses: actions/checkout@v3
+
+      # Bước 2: Giả lập chạy Test (Sẽ thay bằng lệnh thật khi có code)
+      - name: Chạy Unit Test (Giả lập)
+        run: |
+          echo "Bắt đầu quét code thư mục Backend..."
+          echo "Mọi thứ hoàn hảo! Sẵn sàng cho bước Deploy sau này."
