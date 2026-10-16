@@ -1,0 +1,57 @@
+Tái hiện lỗi Sprint 1 – http://localhost:8080 – 02:51:52 15/10/2026
+
+BUG-01  Giả mạo token bằng khóa JWT mặc định trong mã nguồn để xem dữ liệu người khác
+  Token tự ký với khóa "supersecretjwtkey_sprint1" cho user id=8 (không cần mật khẩu)
+  Request : GET /api/dashboard
+  Response: HTTP 200  {"total_income":2500000,"total_expense":0,"balance":2500000,"recent_transactions":[{"id":77,"user_id":8,"category_id":12,"amount":2500000,"note":"Học bổng (dữ liệu riêng tư)","transaction_date":"2026-10-15","created_at":"2026-10-14T19:51:52.734Z","type":"income","category_name":"Trợ cấp & Học bổng",… (355 ký tự)
+  => VẪN CÒN LỖI
+
+BUG-02  Backend chưa lưu dữ liệu vào SQL Server
+  Request : GET /api/health
+  Response: HTTP 200  {"status":"ok","storage_mode":"local","use_database_config":false,"db_connected":false,"timestamp":"2026-10-14T19:51:52.232Z"}
+  => VẪN CÒN LỖI
+
+BUG-03  Chưa có API tạo danh mục cá nhân
+  Request : POST /api/categories  body={"name":"Trà sữa","type":"expense"}
+  Response: HTTP 404  {"success":false,"message":"Không tìm thấy endpoint: POST /api/categories","error_code":"NOT_FOUND"}
+  => VẪN CÒN LỖI
+
+BUG-05  Chấp nhận ngày giao dịch không có thật
+  Request : POST /api/transactions  body={"amount":10000,"category_id":1,"transaction_date":"2026-13-45","note":"kiểm thử"}
+  Response: HTTP 201  {"transaction_id":78,"amount":10000,"message":"Tạo giao dịch thành công"}
+  Request : POST /api/transactions  body={"amount":10000,"category_id":1,"transaction_date":"2026-02-30","note":"kiểm thử"}
+  Response: HTTP 201  {"transaction_id":79,"amount":10000,"message":"Tạo giao dịch thành công"}
+  => VẪN CÒN LỖI
+
+BUG-06  Không giới hạn độ dài ghi chú ở server (CSDL chỉ cho 500 ký tự)
+  Request : POST /api/transactions  body={"amount":10000,"category_id":1,"transaction_date":"2026-10-15","note":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… (5074 ký tự)
+  Response: HTTP 201  {"transaction_id":80,"amount":10000,"message":"Tạo giao dịch thành công"}
+  => VẪN CÒN LỖI
+
+BUG-07  Không giới hạn số tiền tối đa (CSDL DECIMAL(15,2) tối đa 9.999.999.999.999,99)
+  Request : POST /api/transactions  body={"amount":10000000000000000,"category_id":1,"transaction_date":"2026-10-15","note":"kiểm thử"}
+  Response: HTTP 201  {"transaction_id":81,"amount":10000000000000000,"message":"Tạo giao dịch thành công"}
+  => VẪN CÒN LỖI
+
+BUG-08  Nhật ký chỉ trả 30 giao dịch gần nhất, không xem được toàn bộ
+  Tài khoản có ít nhất 31 giao dịch, GET /api/dashboard trả 30 giao dịch
+  Request : GET /api/transactions
+  Response: HTTP 404  {"success":false,"message":"Không tìm thấy endpoint: GET /api/transactions","error_code":"NOT_FOUND"}
+  => VẪN CÒN LỖI
+
+BUG-09  JSON hỏng / payload quá lớn trả mã lỗi INTERNAL_SERVER_ERROR và lộ thông báo nội bộ
+  Request : POST /api/transactions  body={amount: 1000,
+  Response: HTTP 400  {"success":false,"message":"Expected property name or '}' in JSON at position 1 (line 1 column 2)","error_code":"INTERNAL_SERVER_ERROR"}
+  Request : POST /api/transactions  body=(ghi chú 120KB)
+  Response: HTTP 413  {"success":false,"message":"request entity too large","error_code":"INTERNAL_SERVER_ERROR"}
+  => VẪN CÒN LỖI
+
+TÓM TẮT
+  BUG-01  VẪN CÒN LỖI  Giả mạo token bằng khóa JWT mặc định
+  BUG-02  VẪN CÒN LỖI  Backend chưa kết nối SQL Server
+  BUG-03  VẪN CÒN LỖI  Chưa có API tạo danh mục cá nhân
+  BUG-05  VẪN CÒN LỖI  Chấp nhận ngày không có thật
+  BUG-06  VẪN CÒN LỖI  Không giới hạn độ dài ghi chú
+  BUG-07  VẪN CÒN LỖI  Không giới hạn số tiền tối đa
+  BUG-08  VẪN CÒN LỖI  Nhật ký chỉ có 30 giao dịch gần nhất
+  BUG-09  VẪN CÒN LỖI  Mã lỗi INTERNAL_SERVER_ERROR cho lỗi phía client

@@ -1,0 +1,446 @@
+{
+  "base_url": "http://localhost:8080",
+  "run_at": "2026-10-14T19:46:17.336Z",
+  "results": [
+    {
+      "id": "TC-REG-01",
+      "group": "Đăng ký",
+      "title": "Đăng ký tài khoản hợp lệ",
+      "expected": "201, có token và user.id, không trả mật khẩu",
+      "actual": "HTTP 201, token: có, có trường mật khẩu: không",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-REG-02",
+      "group": "Đăng ký",
+      "title": "Đăng ký trùng tên đăng nhập",
+      "expected": "409 USER_ALREADY_EXISTS",
+      "actual": "HTTP 409 USER_ALREADY_EXISTS",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-REG-03",
+      "group": "Đăng ký",
+      "title": "Đăng ký trùng tên nhưng khác hoa/thường",
+      "expected": "409 (không tạo tài khoản trùng)",
+      "actual": "HTTP 409 USER_ALREADY_EXISTS",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-REG-04",
+      "group": "Đăng ký",
+      "title": "Tên đăng nhập dưới 3 ký tự",
+      "expected": "400",
+      "actual": "HTTP 400 VALIDATION_ERROR",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-REG-05",
+      "group": "Đăng ký",
+      "title": "Mật khẩu dưới 8 ký tự",
+      "expected": "400",
+      "actual": "HTTP 400 VALIDATION_ERROR",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-REG-06",
+      "group": "Đăng ký",
+      "title": "Mật khẩu trên 128 ký tự",
+      "expected": "400 PASSWORD_TOO_LONG",
+      "actual": "HTTP 400 PASSWORD_TOO_LONG",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-REG-07",
+      "group": "Đăng ký",
+      "title": "Tên đăng nhập chứa ký tự đặc biệt / mã độc",
+      "expected": "400 INVALID_USERNAME_FORMAT",
+      "actual": "HTTP 400 INVALID_USERNAME_FORMAT",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-REG-08",
+      "group": "Đăng ký",
+      "title": "Tên đăng nhập dạng SQL injection",
+      "expected": "400",
+      "actual": "HTTP 400 INVALID_USERNAME_FORMAT",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-REG-09",
+      "group": "Đăng ký",
+      "title": "Gửi thiếu dữ liệu (body rỗng)",
+      "expected": "400",
+      "actual": "HTTP 400 VALIDATION_ERROR",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-LOG-01",
+      "group": "Đăng nhập",
+      "title": "Đăng nhập đúng thông tin",
+      "expected": "200, có token, không trả mật khẩu",
+      "actual": "HTTP 200, token: có",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-LOG-02",
+      "group": "Đăng nhập",
+      "title": "Đăng nhập sai mật khẩu",
+      "expected": "401 INVALID_CREDENTIALS",
+      "actual": "HTTP 401 INVALID_CREDENTIALS",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-LOG-03",
+      "group": "Đăng nhập",
+      "title": "Đăng nhập tài khoản không tồn tại",
+      "expected": "401, thông báo giống sai mật khẩu",
+      "actual": "HTTP 401 INVALID_CREDENTIALS, thông báo giống nhau: có",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-LOG-04",
+      "group": "Đăng nhập",
+      "title": "Đăng nhập bỏ trống mật khẩu",
+      "expected": "400 MISSING_CREDENTIALS",
+      "actual": "HTTP 400 MISSING_CREDENTIALS",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-LOG-05",
+      "group": "Đăng nhập",
+      "title": "Đăng nhập không phân biệt hoa/thường tên đăng nhập",
+      "expected": "200",
+      "actual": "HTTP 200",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-CAT-01",
+      "group": "Danh mục",
+      "title": "Lấy danh mục mặc định",
+      "expected": "200, 13 danh mục (4 thu, 9 chi), đủ id/name/type/icon/color",
+      "actual": "HTTP 200, 13 danh mục (4 thu, 9 chi), đủ trường: có",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-CAT-02",
+      "group": "Danh mục",
+      "title": "Lọc danh mục loại thu (?type=income)",
+      "expected": "Chỉ trả 4 danh mục thu",
+      "actual": "4 danh mục",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-CAT-03",
+      "group": "Danh mục",
+      "title": "Lọc danh mục loại chi (?type=expense)",
+      "expected": "Chỉ trả 9 danh mục chi",
+      "actual": "9 danh mục",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-CAT-04",
+      "group": "Danh mục",
+      "title": "Tạo danh mục cá nhân",
+      "expected": "201, danh mục mới chỉ người tạo thấy",
+      "actual": "HTTP 404 NOT_FOUND – Không tìm thấy endpoint: POST /api/categories",
+      "result": "Không đạt"
+    },
+    {
+      "id": "TC-TRX-01",
+      "group": "Thêm thu/chi",
+      "title": "Thêm khoản chi hợp lệ",
+      "expected": "201, có transaction_id",
+      "actual": "HTTP 201, transaction_id: 1",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-02",
+      "group": "Thêm thu/chi",
+      "title": "Thêm khoản thu hợp lệ",
+      "expected": "201",
+      "actual": "HTTP 201",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-03",
+      "group": "Thêm thu/chi",
+      "title": "Số tiền = 0",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 400 INVALID_AMOUNT",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-04",
+      "group": "Thêm thu/chi",
+      "title": "Số tiền âm",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 400 INVALID_AMOUNT",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-05",
+      "group": "Thêm thu/chi",
+      "title": "Số tiền không phải số (\"abc\")",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 400 INVALID_AMOUNT",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-06",
+      "group": "Thêm thu/chi",
+      "title": "Thiếu số tiền",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 400 INVALID_AMOUNT",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-07",
+      "group": "Thêm thu/chi",
+      "title": "Thiếu danh mục",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 400 INVALID_CATEGORY",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-08",
+      "group": "Thêm thu/chi",
+      "title": "Danh mục không tồn tại (9999)",
+      "expected": "404, không lưu giao dịch",
+      "actual": "HTTP 404 CATEGORY_NOT_FOUND",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-09",
+      "group": "Thêm thu/chi",
+      "title": "Thiếu ngày giao dịch",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 400 INVALID_DATE",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-10",
+      "group": "Thêm thu/chi",
+      "title": "Ngày sai định dạng (15/10/2026)",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 400 INVALID_DATE",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-11",
+      "group": "Thêm thu/chi",
+      "title": "Ngày không có thật (2026-13-45)",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 201",
+      "result": "Không đạt"
+    },
+    {
+      "id": "TC-TRX-12",
+      "group": "Thêm thu/chi",
+      "title": "Ngày không có thật (2026-02-30)",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 201",
+      "result": "Không đạt"
+    },
+    {
+      "id": "TC-TRX-13",
+      "group": "Thêm thu/chi",
+      "title": "Ghi chú quá dài (5.000 ký tự)",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 201",
+      "result": "Không đạt"
+    },
+    {
+      "id": "TC-TRX-14",
+      "group": "Thêm thu/chi",
+      "title": "Số tiền vượt giới hạn lưu trữ (10^16)",
+      "expected": "400, không lưu giao dịch",
+      "actual": "HTTP 201",
+      "result": "Không đạt"
+    },
+    {
+      "id": "TC-TRX-15",
+      "group": "Thêm thu/chi",
+      "title": "Thêm giao dịch khi chưa đăng nhập",
+      "expected": "401 UNAUTHORIZED",
+      "actual": "HTTP 401 UNAUTHORIZED",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-TRX-16",
+      "group": "Thêm thu/chi",
+      "title": "Gửi kèm user_id của người khác trong body",
+      "expected": "Giao dịch vẫn thuộc người đang đăng nhập",
+      "actual": "HTTP 201, xuất hiện ở tài khoản B: không",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-DSH-01",
+      "group": "Tổng quan & nhật ký",
+      "title": "Tài khoản chưa có giao dịch",
+      "expected": "Tổng thu = tổng chi = số dư = 0, danh sách rỗng",
+      "actual": "HTTP 200, thu=0, chi=0, dư=0, 0 giao dịch",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-DSH-02",
+      "group": "Tổng quan & nhật ký",
+      "title": "Tổng thu/chi/số dư tháng này của B",
+      "expected": "thu=500000, chi=20000, dư=480000 (khoản tháng trước không tính)",
+      "actual": "thu=500000, chi=20000, dư=480000",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-DSH-03",
+      "group": "Tổng quan & nhật ký",
+      "title": "Số dư = tổng thu − tổng chi",
+      "expected": "balance = total_income − total_expense",
+      "actual": "500000 − 20000 = 480000",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-DSH-04",
+      "group": "Tổng quan & nhật ký",
+      "title": "Nhật ký B có đủ 3 giao dịch (kể cả tháng trước)",
+      "expected": "3 giao dịch",
+      "actual": "3 giao dịch",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-DSH-05",
+      "group": "Tổng quan & nhật ký",
+      "title": "Nhật ký sắp xếp ngày mới nhất trước",
+      "expected": "Ngày giảm dần",
+      "actual": "2026-10-15, 2026-10-15, 2026-09-20",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-DSH-06",
+      "group": "Tổng quan & nhật ký",
+      "title": "Mỗi dòng nhật ký có đủ ngày, số tiền, loại, danh mục, ghi chú",
+      "expected": "Đủ trường, ngày dạng YYYY-MM-DD",
+      "actual": "Đủ trường",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-DSH-07",
+      "group": "Tổng quan & nhật ký",
+      "title": "Dữ liệu cập nhật ngay sau khi thêm giao dịch",
+      "expected": "Tổng chi tăng đúng số tiền vừa thêm",
+      "actual": "chi: 20000 → 35000",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-DSH-08",
+      "group": "Tổng quan & nhật ký",
+      "title": "Tách biệt dữ liệu: A không thấy giao dịch của B",
+      "expected": "Không có giao dịch nào của B",
+      "actual": "3 giao dịch, của người khác: 0",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-DSH-09",
+      "group": "Tổng quan & nhật ký",
+      "title": "Nhật ký hiển thị đủ khi có hơn 30 giao dịch",
+      "expected": "Thấy đủ 31/31 giao dịch (hoặc có phân trang)",
+      "actual": "Bảng tổng quan trả 30/31 giao dịch; GET /api/transactions: HTTP 404 NOT_FOUND",
+      "result": "Không đạt"
+    },
+    {
+      "id": "TC-DSH-10",
+      "group": "Tổng quan & nhật ký",
+      "title": "Xem tổng quan khi chưa đăng nhập",
+      "expected": "401 UNAUTHORIZED",
+      "actual": "HTTP 401 UNAUTHORIZED",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-SEC-01",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Token sai chữ ký",
+      "expected": "Bị từ chối (401/403)",
+      "actual": "HTTP 403 FORBIDDEN",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-SEC-02",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Token đã hết hạn",
+      "expected": "Bị từ chối (401/403)",
+      "actual": "HTTP 403 FORBIDDEN",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-SEC-03",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Token không ký (alg = none)",
+      "expected": "Bị từ chối (401/403)",
+      "actual": "HTTP 403 FORBIDDEN",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-SEC-04",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Tự tạo token bằng khóa bí mật mặc định có sẵn trong mã nguồn để xem dữ liệu của B",
+      "expected": "Bị từ chối, không lộ dữ liệu B",
+      "actual": "HTTP 200, đọc được 4 giao dịch của B",
+      "result": "Không đạt"
+    },
+    {
+      "id": "TC-SEC-05",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Header Authorization sai dạng (không có Bearer)",
+      "expected": "401",
+      "actual": "HTTP 401 UNAUTHORIZED",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-SEC-06",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Body JSON hỏng",
+      "expected": "400 kèm mã lỗi rõ ràng",
+      "actual": "HTTP 400 INTERNAL_SERVER_ERROR – Expected property name or '}' in JSON at position 1 (line 1 column 2)",
+      "result": "Không đạt"
+    },
+    {
+      "id": "TC-SEC-07",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Payload quá lớn (> 100KB)",
+      "expected": "413",
+      "actual": "HTTP 413 INTERNAL_SERVER_ERROR",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-SEC-08",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Không lộ header X-Powered-By",
+      "expected": "Không có header",
+      "actual": "Không có",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-SEC-09",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Gọi endpoint không tồn tại",
+      "expected": "404 JSON NOT_FOUND",
+      "actual": "HTTP 404 NOT_FOUND",
+      "result": "Đạt"
+    },
+    {
+      "id": "TC-INT-01",
+      "group": "Tích hợp CSDL",
+      "title": "Backend lưu dữ liệu vào SQL Server",
+      "expected": "storage_mode là CSDL, db_connected = true",
+      "actual": "storage_mode=local, db_connected=false",
+      "result": "Không đạt"
+    },
+    {
+      "id": "TC-SEC-10",
+      "group": "Bảo mật & truy cập trái phép",
+      "title": "Đăng nhập sai liên tục > 30 lần/phút",
+      "expected": "Bị chặn 429 RATE_LIMIT_EXCEEDED",
+      "actual": "429 ở lần thử thứ 13",
+      "result": "Đạt"
+    }
+  ]
+}
