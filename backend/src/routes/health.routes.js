@@ -1,25 +1,26 @@
 /**
  * @file health.routes.js
- * @description Tuyến API kiểm tra sức khỏe và tình trạng kết nối của Server & Database.
- * Endpoint: GET /api/health
+ * @description GET /api/health: máy chủ còn chạy không, kết nối CSDL có ổn không.
  */
 
 const express = require("express");
-const router = express.Router();
-const storage = require("../services/storage");
+const db = require("../config/db");
+const ocr = require("../services/ocr.service");
+const { asyncRoute } = require("../lib/http");
 
-/**
- * @route   GET /api/health
- * @desc    Kiểm tra trạng thái hoạt động của server và chế độ lưu trữ dữ liệu
- * @access  Public
- */
-router.get("/health", async (req, res, next) => {
-  try {
-    const status = await storage.getHealthStatus();
-    res.json(status);
-  } catch (error) {
-    next(error);
-  }
-});
+const router = express.Router();
+
+router.get("/health", asyncRoute(async (req, res) => {
+  const database = await db.testDbConnection();
+  res.status(database.connected ? 200 : 503).json({
+    status: database.connected ? "ok" : "degraded",
+    storage: "sqlserver",
+    database: database.connected
+      ? { connected: true, name: database.database_name, server_time: database.server_time }
+      : { connected: false, message: "Không kết nối được SQL Server." },
+    ocr_language_data: ocr.languageDataReady(),
+    uptime_seconds: Math.round(process.uptime())
+  });
+}));
 
 module.exports = router;
