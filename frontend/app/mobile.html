@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quản lý thu chi trên điện thoại</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #f4eefc;
+      --ink: #2b2140;
+      --muted: #6f6488;
+      --frame: #1c1726;
+      --chip: #ffffff;
+      --chip-on: #8b6cff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #120e1c;
+        --ink: #f3eefe;
+        --muted: #a99fc2;
+        --frame: #000000;
+        --chip: #241d36;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Be Vietnam Pro", system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 16px 32px;
+    }
+    h1 { margin: 0; font-size: 1.2rem; }
+    p { margin: 0; color: var(--muted); font-size: 0.9rem; text-align: center; }
+    .bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .bar button, .bar a {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: var(--chip);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(43, 33, 64, 0.08);
+    }
+    .bar button[aria-pressed="true"] { background: var(--chip-on); color: #fff; font-weight: 600; }
+    .phone {
+      position: relative;
+      padding: 14px;
+      border-radius: 54px;
+      background: var(--frame);
+      box-shadow: 0 30px 60px rgba(43, 33, 64, 0.35), inset 0 0 0 2px #3a3348;
+      max-width: 100%;
+    }
+    .phone::before {
+      content: "";
+      position: absolute;
+      top: 22px;
+      left: 50%;
+      width: 96px;
+      height: 26px;
+      margin-left: -48px;
+      border-radius: 20px;
+      background: var(--frame);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .phone.no-notch::before { display: none; }
+    iframe {
+      display: block;
+      border: 0;
+      border-radius: 40px;
+      background: #fff;
+      max-width: calc(100vw - 60px);
+    }
+  </style>
+</head>
+<body>
+  <h1>Quản lý thu chi trên điện thoại</h1>
+  <p>Xem thử app như trên điện thoại thật. Muốn mở trên máy thật: điện thoại và máy tính chung wifi, mở địa chỉ IP của máy tính.</p>
+  <div class="bar" role="group" aria-label="Chọn kích thước máy">
+    <button type="button" data-size="375x667" data-notch="0">iPhone SE</button>
+    <button type="button" data-size="390x844" data-notch="1">iPhone 14</button>
+    <button type="button" data-size="412x915" data-notch="0">Android</button>
+    <button type="button" id="reload">Tải lại</button>
+    <a href="./" target="_blank" rel="noopener">Mở toàn màn hình</a>
+  </div>
+  <div class="phone" id="phone">
+    <iframe id="screen" src="./" title="Quản lý thu chi" allow="microphone; camera; clipboard-read; clipboard-write"></iframe>
+  </div>
+  <script>
+    var frame = document.getElementById("screen");
+    var phone = document.getElementById("phone");
+    var buttons = document.querySelectorAll("[data-size]");
+    function pick(btn) {
+      var size = btn.dataset.size.split("x");
+      frame.width = size[0];
+      frame.height = size[1];
+      phone.classList.toggle("no-notch", btn.dataset.notch !== "1");
+      buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
+      try { localStorage.setItem("sochi.mobile.size", btn.dataset.size); } catch (e) {}
+    }
+    buttons.forEach(function (b) { b.addEventListener("click", function () { pick(b); }); });
+    document.getElementById("reload").addEventListener("click", function () { frame.contentWindow.location.reload(); });
+    var saved = null;
+    try { saved = localStorage.getItem("sochi.mobile.size"); } catch (e) {}
+    pick(document.querySelector('[data-size="' + saved + '"]') || buttons[1]);
+  </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Quản lý thu chi - ghi chi tiêu bằng giọng nói, ảnh bill, SMS ngân hàng</title>
+  <meta name="description" content="Quản lý thu chi miễn phí cho sinh viên: nói một câu, up ảnh bill hoặc dán SMS ngân hàng là ghi xong. Đặt ngân sách, chia tiền nhóm, sổ nợ, đối soát ví và thú cưng ví tiền nhắc bạn tiêu vừa đủ.">
+  <meta name="keywords" content="quản lý thu chi, quản lý chi tiêu, ghi chép chi tiêu, sổ thu chi, app chi tiêu sinh viên, chia tiền nhóm, sổ nợ, ngân sách tháng">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="application-name" content="Thu Chi">
+  <meta name="apple-mobile-web-app-title" content="Thu Chi">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#ffd6ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1d1530" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="__SITE_URL__/app/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="vi_VN">
+  <meta property="og:site_name" content="Quản lý thu chi">
+  <meta property="og:title" content="Quản lý thu chi - tiêu gì cũng nhớ hết">
+  <meta property="og:description" content="Nói một câu, up ảnh bill hay dán SMS ngân hàng là ghi xong. Chia tiền nhóm, sổ nợ, ngân sách và thú cưng ví tiền.">
+  <meta property="og:url" content="__SITE_URL__/app/">
+  <meta property="og:image" content="__SITE_URL__/app/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Giao diện app Quản lý thu chi">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Quản lý thu chi - tiêu gì cũng nhớ hết">
+  <meta name="twitter:description" content="Nói một câu, up ảnh bill hay dán SMS ngân hàng là ghi xong.">
+  <meta name="twitter:image" content="__SITE_URL__/app/og.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Quản lý thu chi",
+    "alternateName": "Thu Chi",
+    "url": "__SITE_URL__/app/",
+    "image": "__SITE_URL__/app/og.png",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Mọi trình duyệt (Android, iOS, Windows, macOS)",
+    "inLanguage": "vi",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" },
+    "description": "Ghi chi tiêu bằng giọng nói, ảnh bill và SMS ngân hàng; ngân sách tháng, chia tiền nhóm, sổ nợ, đối soát ví.",
+    "featureList": ["Nói để ghi", "Up ảnh bill", "Dán SMS ngân hàng", "Ghi một chạm", "Chia tiền nhóm", "Sổ nợ và nhắc khéo", "Ngân sách tháng", "Đối soát ví tiền", "Dùng được khi mất mạng"]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Phông chữ tải song song, không chặn lần vẽ đầu (trong lúc chờ dùng phông hệ thống) -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="modulepreload" href="js/app.js">
+  <link rel="modulepreload" href="js/api.js">
+  <link rel="modulepreload" href="js/ui.js">
+  <link rel="modulepreload" href="js/icons.js">
+  <script>
+    // Chạy trước khi vẽ: áp sáng/tối, màu chủ đạo và cỡ chữ đã chọn, đánh dấu máy yếu để tắt hiệu ứng nặng,
+    // và ẩn phần giới thiệu tĩnh nếu đã đăng nhập (app vẽ thẳng trang chủ).
+    (function () {
+      var root = document.documentElement;
+      try {
+        var theme = localStorage.getItem("sochi.theme");
+        if (theme === "dark" || theme === "light") root.dataset.theme = theme;
+        var accent = localStorage.getItem("sochi.accent");
+        if (/^(ocean|mint|sunset)$/.test(accent)) root.dataset.accent = accent;
+        var font = localStorage.getItem("sochi.font");
+        if (font === "sm" || font === "lg") root.dataset.font = font;
+        if (localStorage.getItem("sochi.token")) root.classList.add("has-session");
+      } catch (e) {}
+      var nav = navigator, conn = nav.connection || {};
+      if ((nav.hardwareConcurrency && nav.hardwareConcurrency <= 4) || (nav.deviceMemory && nav.deviceMemory <= 4) || conn.saveData) {
+        root.classList.add("lite");
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="candy-bg" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+  <div id="app">
+    <!-- Nội dung tĩnh cho công cụ tìm kiếm và lần vẽ đầu; app.js thay bằng màn hình thật -->
+    <main class="welcome seo-intro">
+      <div class="brand"><span class="logo">₫</span>Quản lý thu chi</div>
+      <div>
+        <h1 class="hero-title">Tiêu gì cũng <span class="gradient-text">nhớ hết</span> ✦</h1>
+        <p class="muted mt-8">Nói một câu, up ảnh bill / ảnh chuyển khoản hay dán tin nhắn ngân hàng là xong. Thú cưng ví tiền canh ngân sách giúp bạn.</p>
+      </div>
+      <ul class="seo-features">
+        <li><strong>Nói để ghi</strong>: "trà sữa 35k, gửi xe 5 nghìn" thành hai khoản chi.</li>
+        <li><strong>Up ảnh</strong>: chọn tối đa 10 ảnh bill hoặc ảnh chuyển khoản một lần.</li>
+        <li><strong>Dán SMS ngân hàng</strong>: tự lấy số tiền và nội dung.</li>
+        <li><strong>Chia tiền nhóm và sổ nợ</strong>: chia đều hóa đơn, nhắc nợ khéo léo.</li>
+        <li><strong>Ngân sách và đối soát ví</strong>: biết mỗi ngày được tiêu bao nhiêu, tìm ra tiền "bốc hơi".</li>
+      </ul>
+      <div class="stack">
+        <a class="btn block" href="#/welcome">Bắt đầu miễn phí</a>
+        <p class="center muted">Đã có tài khoản? <a class="link" href="#/login">Đăng nhập</a></p>
+      </div>
+    </main>
+  </div>
+  <noscript><p class="center">Quản lý thu chi cần bật JavaScript để chạy.</p></noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
