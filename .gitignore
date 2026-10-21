@@ -12,4 +12,7 @@ backend/target/
 **/.env
 
 # Local database runtime data
-backend/data/
+backend/data/
+
+# Dữ liệu OCR tải về khi chạy
+backend/.cache/
