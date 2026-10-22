@@ -123,12 +123,25 @@ router.get("/mini", asyncRoute(async (req, res) => {
   const today = v.clientDate(req.query.today);
   const now = v.clientTime(req.query.now);
   const userId = req.user.id;
-  const [dayRows, budget, streakRow] = await Promise.all([
+  const [dayRows, budget, streakRow, userRows, equippedRows] = await Promise.all([
     db.execRows("dbo.sp_get_day_summary", { user_id: userId, day: today }),
     budgetStatus(userId, today),
-    streak(userId, today)
+    streak(userId, today),
+    db.query("SELECT coins, pet_fullness FROM dbo.users WHERE id = @user_id", { user_id: userId }),
+    db.query(`
+      SELECT s.slot, s.id AS item_id, s.name, s.rarity
+      FROM dbo.user_inventory AS i
+      JOIN dbo.pet_shop_items AS s ON s.id = i.item_id
+      WHERE i.user_id = @user_id AND i.is_equipped = 1`, { user_id: userId })
   ]);
   const day = dayRows[0];
+  const petStats = petMood({ today, now, nudgeHour: nudgeHour(), streak: streakRow, budget });
+  const user = userRows[0] || { coins: 100, pet_fullness: 80 };
+  const equipped = {};
+  for (const item of equippedRows) {
+    equipped[item.slot] = { id: item.item_id, name: item.name, rarity: item.rarity };
+  }
+
   res.json({
     date: today,
     spent_today: day.spent,
@@ -147,7 +160,12 @@ router.get("/mini", asyncRoute(async (req, res) => {
       }
       : null,
     streak: streakRow,
-    pet: petMood({ today, now, nudgeHour: nudgeHour(), streak: streakRow, budget })
+    pet: {
+      ...petStats,
+      coins: user.coins,
+      pet_fullness: user.pet_fullness,
+      equipped
+    }
   });
 }));
 

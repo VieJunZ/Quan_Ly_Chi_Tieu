@@ -43,6 +43,16 @@ function readTransaction(body = {}) {
 
 async function addTransaction(userId, item, scope) {
   const rows = await db.execRows("dbo.sp_add_transaction_ex", { user_id: userId, ...item }, scope);
+  try {
+    // Thưởng xu cho thú cưng khi ghi chép (+10 xu)
+    await db.exec("dbo.sp_add_pet_coins", {
+      user_id: userId,
+      amount: 10,
+      reason: "Thưởng ghi chép giao dịch (+10 xu)"
+    }, scope);
+  } catch {
+    // Không chặn việc ghi chép nếu có lỗi khi cộng xu
+  }
   return rows[0];
 }
 

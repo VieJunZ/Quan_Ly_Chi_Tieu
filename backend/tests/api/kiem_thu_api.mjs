@@ -446,7 +446,47 @@ ok(JSON.stringify(r.data).includes("phở"), "Tiếng Anh: Nội dung ghi chú t
 r = await call("/transactions", { token: "abc.def.ghi" });
 ok(r.status === 401, "Token giả mạo hoặc hết hạn bị từ chối 401 Unauthorized", r.status);
 
-// 12.5 Đăng xuất và vô hiệu hóa phiên
+/* ===========================================================================
+   PHẦN 13: TIỆM ĐỒ THÚ CƯNG & GAMIFICATION (PET SHOP, INVENTORY, EQUIPPING)
+   =========================================================================== */
+
+// 13.1 Lấy danh sách vật phẩm cửa hàng kèm số xu và độ no ban đầu
+r = await call("/pet-shop/items", { token });
+ok(r.status === 200 && r.data.items && r.data.items.length >= 30, "Pet Shop: Lấy danh sách hơn 30 vật phẩm cửa hàng", r.status);
+
+// 13.2 Mua vật phẩm khi đủ xu (mũ cử nhân 50 xu) -> tự động trang bị
+r = await call("/pet-shop/buy", { method: "POST", token, body: { item_id: "hat_grad" } });
+ok(r.status === 200 && r.data.item_id === "hat_grad", "Pet Shop: Mua mũ cử nhân 50 xu thành công", JSON.stringify(r.data));
+
+// 13.3 Chặn mua trùng vật phẩm thời trang đã sở hữu
+r = await call("/pet-shop/buy", { method: "POST", token, body: { item_id: "hat_grad" } });
+ok(r.status === 409, "Pet Shop: Chặn mua trùng vật phẩm thời trang đã sở hữu", r.status);
+
+// 13.4 Mua thêm mầm cây 30 xu -> tự động chuyển sang mũ mầm cây
+r = await call("/pet-shop/buy", { method: "POST", token, body: { item_id: "hat_sprout" } });
+ok(r.status === 200, "Pet Shop: Mua mầm cây 30 xu thành công", r.status);
+
+// 13.5 Trang bị lại mũ cử nhân
+r = await call("/pet-shop/equip", { method: "POST", token, body: { item_id: "hat_grad", equip: true } });
+ok(r.status === 200 && r.data.is_equipped === true, "Pet Shop: Mặc lại mũ cử nhân thành công", JSON.stringify(r.data));
+
+// 13.6 Mua thức ăn mì tôm thanh long 15 xu
+r = await call("/pet-shop/buy", { method: "POST", token, body: { item_id: "food_noddles_dragon" } });
+ok(r.status === 200, "Pet Shop: Mua mì tôm thanh long thành công", r.status);
+
+// 13.7 Tiêu thụ thức ăn tăng độ no thú cưng
+r = await call("/pet-shop/use", { method: "POST", token, body: { item_id: "food_noddles_dragon" } });
+ok(r.status === 200 && r.data.pet_fullness > 0, "Pet Shop: Cho thú cưng ăn mì tôm thanh long tăng độ no", JSON.stringify(r.data));
+
+// 13.8 Xem hồ sơ thú cưng kèm vật phẩm đang mặc
+r = await call(`/pet-shop/pet?today=${today}&now=${now}`, { token });
+ok(r.status === 200 && r.data.pet?.equipped?.head?.id === "hat_grad", "Pet Shop: Hồ sơ hiển thị đúng phụ kiện đang mặc (head: hat_grad)", JSON.stringify(r.data.pet?.equipped));
+
+// 13.9 Xem lịch sử biến động xu
+r = await call("/pet-shop/history", { token });
+ok(r.status === 200 && Array.isArray(r.data.history) && r.data.history.length >= 3, "Pet Shop: Xem lịch sử giao dịch xu", len(r.data.history));
+
+// 13.10 Đăng xuất và vô hiệu hóa phiên
 r = await call("/auth/logout", { method: "POST", token });
 r = await call("/auth/me", { token });
 ok(r.status === 401, "Sau khi đăng xuất, token cũ hoàn toàn hết hiệu lực", r.status);
