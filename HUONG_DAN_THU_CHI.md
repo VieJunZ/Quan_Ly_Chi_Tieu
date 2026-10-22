@@ -195,14 +195,13 @@ Quan_Ly_Chi_Tieu/
 │       ├── mo_rong_thu_tuc.sql       # Thủ tục lưu trữ mở rộng cho tính năng nâng cao
 │       └── kiem_thu_mo_rong.sql      # Kịch bản kiểm thử toàn bộ ràng buộc và logic trong CSDL
 │
-├── docs/                             # 📚 HỒ SƠ TÀI LIỆU KỸ THUẬT & ĐẶC TẢ HỆ THỐNG
-│   └── database/
-│       ├── README.md                 # Đặc tả chi tiết lược đồ CSDL, sơ đồ quan hệ ERD
-│       └── KET_QUA_KIEM_TRA.md       # Biên bản nghiệm thu kiểm thử ràng buộc CSDL
-│
-└── bao cao hinh thanh y tuong/       # 📑 TÀI LIỆU KHẢO SÁT & ĐỀ TÀI
-    ├── Bao_cao_hinh_thanh_y_tuong... # Báo cáo hình thành ý tưởng đề tài (Microsoft Word)
-    └── KHAO SAT THOI QUEN VA NHU...  # Dữ liệu khảo sát nhu cầu quản lý chi tiêu (Microsoft Excel)
+└── docs/                             # 📚 HỒ SƠ TÀI LIỆU KỸ THUẬT, BÁO CÁO & ĐẶC TẢ HỆ THỐNG
+    ├── database/                     # Đặc tả cơ sở dữ liệu và kịch bản quan hệ
+    │   ├── README.md                 # Đặc tả chi tiết lược đồ CSDL, sơ đồ quan hệ ERD
+    │   └── KET_QUA_KIEM_TRA.md       # Biên bản nghiệm thu kiểm thử ràng buộc CSDL
+    └── bao_cao/                      # 📑 HỒ SƠ BÁO CÁO ĐỀ TÀI & DỮ LIỆU KHẢO SÁT
+        ├── Bao_cao_hinh_thanh_y_tuong... # Báo cáo hình thành ý tưởng đề tài (Microsoft Word)
+        └── KHAO SAT THOI QUEN VA NHU...  # Dữ liệu khảo sát nhu cầu quản lý chi tiêu (Microsoft Excel)
 ```
 
 ---
