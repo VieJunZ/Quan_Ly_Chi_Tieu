@@ -11,6 +11,17 @@
 
 ---
 
+## 📚 DANH MỤC TÀI LIỆU DỰ ÁN (.MD)
+
+Dự án bao gồm hệ thống tài liệu kỹ thuật và hướng dẫn chuyên sâu:
+
+- 📌 **[README.md](./README.md)**: Trang giới thiệu tổng quan chính thức hiển thị tại trang chủ GitHub repository.
+- 📖 **[HUONG_DAN_THU_CHI.md](./HUONG_DAN_THU_CHI.md)**: Cẩm nang sử dụng chi tiết từng phân hệ (Giọng nói NLP, OCR hóa đơn, Thú cưng ví tiền, Chia nợ nhóm, Thử thách tài chính, PWA).
+- 🗄️ **[docs/database/README.md](./docs/database/README.md)**: Đặc tả chi tiết lược đồ CSDL Microsoft SQL Server, sơ đồ quan hệ ERD và mã lỗi Stored Procedures.
+- 🧪 **[docs/database/KET_QUA_KIEM_TRA.md](./docs/database/KET_QUA_KIEM_TRA.md)**: Biên bản nghiệm thu kiểm thử tự động toàn bộ 32 ràng buộc toàn vẹn dữ liệu.
+
+---
+
 ## 📑 MỤC LỤC ĐIỀU HƯỚNG NHANH
 
 1. [Kiến Trúc Hệ Thống & Sơ Đồ Kỹ Thuật](#1-kiến-trúc-hệ-thống--sơ-đồ-kỹ-thuật)
@@ -86,9 +97,10 @@ Toàn bộ mã nguồn, kịch bản khởi chạy, cơ sở dữ liệu và tà
 
 ```text
 Quan_Ly_Chi_Tieu/
+├── README.md                         # 📌 Tài liệu giới thiệu chính thức hiển thị tại trang chủ GitHub
+├── HUONG_DAN_THU_CHI.md              # 📖 Tài liệu kỹ thuật và cẩm nang hướng dẫn sử dụng chi tiết
 ├── chay_thu_chi.bat                  # 🚀 Script 1-click khởi chạy toàn bộ hệ thống trên Windows
 ├── kiem_thu_thu_chi.bat              # 🧪 Script chạy toàn bộ 3 cấp độ kiểm thử (Unit, DB, API)
-├── HUONG_DAN_THU_CHI.md              # 📖 Tài liệu kỹ thuật và hướng dẫn sử dụng chính thức
 ├── .gitignore                        # Cấu hình loại bỏ file rác, node_modules, cache OCR
 │
 ├── backend/                          # ⚙️ MÃ NGUỒN MÁY CHỦ & REST API (Node.js / Express)
