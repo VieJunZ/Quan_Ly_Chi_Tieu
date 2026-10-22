@@ -5,7 +5,7 @@
 [![SQL Server](https://img.shields.io/badge/Microsoft_SQL_Server-LocalDB-CC292B?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
 [![PWA Ready](https://img.shields.io/badge/PWA-Mobile--First-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 [![Offline First](https://img.shields.io/badge/Tesseract_OCR-Offline-FF6F00?style=for-the-badge)](https://tesseract.projectnaptha.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](#)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 > **Sổ Chi Tiêu** (tên hiển thị ngắn gọn: **Thu Chi**) là ứng dụng web định hướng **Mobile-First (Progressive Web App - PWA)** giúp sinh viên và người trẻ hình thành thói quen quản lý tài chính khoa học, nhẹ nhàng và tự nhiên. Ứng dụng tích hợp công nghệ nhận diện giọng nói tiếng Việt, đọc hóa đơn/chuyển khoản bằng OCR không cần mạng, bóc tách tin nhắn biến động số dư ngân hàng, cùng cơ chế gamification thú cưng tài chính và 25 thử thách tiết kiệm thực tế.
 
@@ -226,7 +226,9 @@ Trước khi khởi chạy, máy tính của bạn cần có các thành phần 
 ## 4. HƯỚNG DẪN KHỞI CHẠY ỨNG DỤNG (1-CLICK RUN)
 
 ### Khởi chạy tiêu chuẩn
+
 Chỉ cần **bấm đúp chuột vào file `chay_thu_chi.bat`** tại thư mục gốc của dự án. Script sẽ tự động thực hiện quy trình 4 bước:
+
 1. **Kiểm tra công cụ:** Đảm bảo Node.js và `sqlcmd` đã sẵn sàng.
 2. **Khởi động LocalDB:** Bật instance `MSSQLLocalDB`, tự động tạo CSDL `so_chi_tri_db` nếu chưa có (kèm toàn bộ bảng và stored procedure mở rộng).
 3. **Mở máy chủ Node.js:** Chạy server tại cổng **`8090`** trong cửa sổ console riêng mang tên *"ThuChi - May chu"*.
@@ -269,59 +271,68 @@ chay_thu_chi.bat chiutai
 ## 6. CẨM NANG SỬ DỤNG CHI TIẾT TỪNG PHÂN HỆ
 
 ### Ghi khoản đa phương thức
+
 Bấm nút tròn lớn mang biểu tượng dấu **+** ở giữa thanh điều hướng dưới cùng để mở menu ghi nhận chi tiêu:
 
-* 🎙️ **Nói để ghi (Speech-to-Text):** Bấm biểu tượng micro và nói tự nhiên bằng tiếng Việt (Ví dụ: *"sáng ăn bún bò 45k, chiều đổ xăng 50 nghìn"*). Thuật toán NLP nội bộ sẽ tự động bóc tách thành 2 khoản riêng biệt, suy đoán danh mục và gán thời gian chính xác để bạn duyệt chỉ với 1 click.
-* 📸 **Chụp ảnh / Quét hóa đơn (OCR Offline):** Cho phép chọn cùng lúc tối đa 10 ảnh (Hóa đơn mua sắm, biên lai siêu thị, ảnh chụp màn hình chuyển khoản ngân hàng Vietcombank, Techcombank, MB, MoMo...). Công nghệ OCR ngoại tuyến sẽ tự động trích xuất tổng tiền, ngày giờ và gợi ý danh mục tương ứng.
-* 📩 **Dán tin nhắn SMS ngân hàng:** Dán nguyên văn tin nhắn biến động số dư. Thuật toán sẽ thông minh nhận diện đúng khoản tiền bị trừ hoặc được cộng, tuyệt đối **không bị nhầm lẫn số dư khả dụng (SD)** thành số tiền giao dịch.
-* ⚡ **Ghi một chạm (Quick Shortcuts):** Các khoản chi lặp lại thường nhật như *Gửi xe (5k)*, *Cơm trưa (35k)*... chỉ cần chạm 1 lần là lưu ngay. Trang chủ sẽ tự học thói quen và đẩy các nút gợi ý này lên đầu theo khung giờ tương ứng.
-* ✍️ **Nhập tay truyền thống:** Nhập số tiền, chọn danh mục, ghi chú và tùy chỉnh ngày giờ theo ý muốn.
+- 🎙️ **Nói để ghi (Speech-to-Text):** Bấm biểu tượng micro và nói tự nhiên bằng tiếng Việt (Ví dụ: *"sáng ăn bún bò 45k, chiều đổ xăng 50 nghìn"*). Thuật toán NLP nội bộ sẽ tự động bóc tách thành 2 khoản riêng biệt, suy đoán danh mục và gán thời gian chính xác để bạn duyệt chỉ với 1 click.
+- 📸 **Chụp ảnh / Quét hóa đơn (OCR Offline):** Cho phép chọn cùng lúc tối đa 10 ảnh (Hóa đơn mua sắm, biên lai siêu thị, ảnh chụp màn hình chuyển khoản ngân hàng Vietcombank, Techcombank, MB, MoMo...). Công nghệ OCR ngoại tuyến sẽ tự động trích xuất tổng tiền, ngày giờ và gợi ý danh mục tương ứng.
+- 📩 **Dán tin nhắn SMS ngân hàng:** Dán nguyên văn tin nhắn biến động số dư. Thuật toán sẽ thông minh nhận diện đúng khoản tiền bị trừ hoặc được cộng, tuyệt đối **không bị nhầm lẫn số dư khả dụng (SD)** thành số tiền giao dịch.
+- ⚡ **Ghi một chạm (Quick Shortcuts):** Các khoản chi lặp lại thường nhật như *Gửi xe (5k)*, *Cơm trưa (35k)*... chỉ cần chạm 1 lần là lưu ngay. Trang chủ sẽ tự học thói quen và đẩy các nút gợi ý này lên đầu theo khung giờ tương ứng.
+- ✍️ **Nhập tay truyền thống:** Nhập số tiền, chọn danh mục, ghi chú và tùy chỉnh ngày giờ theo ý muốn.
 
 ### Trang Hôm Nay, Thú Cưng Ví Tiền & Mini-View Ghim Nổi
-* **Hạn mức chi tiêu ngày:** Hiển thị số tiền bạn đã tiêu trong ngày và số tiền tối đa bạn được phép tiêu mỗi ngày còn lại trong tháng dựa theo ngân sách đã đặt.
-* 🐾 **Thú cưng tài chính (Pet Mood):** Trực quan hóa tình trạng tài chính của bạn qua cảm xúc của thú cưng:
-  * *Vui vẻ, tăng cấp (Level up):* Khi bạn ghi chép đều tay và chi tiêu trong hạn mức.
-  * *Nhảy múa (Quẩy):* Khi bạn duy trì chuỗi ghi chép liên tiếp 7 ngày.
-  * *Buồn ngủ / Ngủ say:* Khi bạn lười ghi chép hoặc quên mở app.
-  * *Lo lắng / Bật khóc:* Khi bạn chi tiêu vượt hạn mức ngày hoặc làm thâm hụt ngân sách tháng.
-* 🔥 **Chuỗi ngày ghi chép (Streak):** Theo dõi số ngày liên tiếp bạn có ý thức tài chính. Những ngày không phát sinh chi tiêu vẫn được tính vào chuỗi nếu bạn đánh dấu.
-* 🌙 **Lời nhắc buổi tối (Evening Nudge):** Sau 20:00 mỗi tối, nếu bạn chưa ghi khoản nào, app sẽ nhẹ nhàng hỏi *"Hôm nay bạn có tiêu gì không?"*. Chỉ cần chọn *"Hôm nay không tiêu gì"* để bảo toàn chuỗi thói quen.
-* 📌 **Mini-View Ghim Nổi (Picture-in-Picture):** Bấm biểu tượng khung nổi cạnh ảnh đại diện. Một cửa sổ widget siêu nhỏ sẽ luôn ghim trên cùng (Always-on-top) màn hình máy tính, hiển thị tổng tiền đã chi hôm nay và có sẵn ô ghi nhanh (Ví dụ: gõ *"cà phê 25k"* rồi ấn Enter).
+
+- **Hạn mức chi tiêu ngày:** Hiển thị số tiền bạn đã tiêu trong ngày và số tiền tối đa bạn được phép tiêu mỗi ngày còn lại trong tháng dựa theo ngân sách đã đặt.
+- 🐾 **Thú cưng tài chính (Pet Mood):** Trực quan hóa tình trạng tài chính của bạn qua cảm xúc của thú cưng:
+  - *Vui vẻ, tăng cấp (Level up):* Khi bạn ghi chép đều tay và chi tiêu trong hạn mức.
+  - *Nhảy múa (Quẩy):* Khi bạn duy trì chuỗi ghi chép liên tiếp 7 ngày.
+  - *Buồn ngủ / Ngủ say:* Khi bạn lười ghi chép hoặc quên mở app.
+  - *Lo lắng / Bật khóc:* Khi bạn chi tiêu vượt hạn mức ngày hoặc làm thâm hụt ngân sách tháng.
+- 🔥 **Chuỗi ngày ghi chép (Streak):** Theo dõi số ngày liên tiếp bạn có ý thức tài chính. Những ngày không phát sinh chi tiêu vẫn được tính vào chuỗi nếu bạn đánh dấu.
+- 🌙 **Lời nhắc buổi tối (Evening Nudge):** Sau 20:00 mỗi tối, nếu bạn chưa ghi khoản nào, app sẽ nhẹ nhàng hỏi *"Hôm nay bạn có tiêu gì không?"*. Chỉ cần chọn *"Hôm nay không tiêu gì"* để bảo toàn chuỗi thói quen.
+- 📌 **Mini-View Ghim Nổi (Picture-in-Picture):** Bấm biểu tượng khung nổi cạnh ảnh đại diện. Một cửa sổ widget siêu nhỏ sẽ luôn ghim trên cùng (Always-on-top) màn hình máy tính, hiển thị tổng tiền đã chi hôm nay và có sẵn ô ghi nhanh (Ví dụ: gõ *"cà phê 25k"* rồi ấn Enter).
 
 ### Lịch Sử Giao Dịch & Heatmap Nhiệt Độ Chi Tiêu
-* **Bản đồ nhiệt chi tiêu (Calendar Heatmap):** Các ngày trong tháng được tô màu theo mức độ chi tiêu (ngày chi càng nhiều màu càng đậm, ngày không tiêu tiền có biểu tượng xanh lá nhẹ nhàng).
-* **Bộ lọc và tìm kiếm đa năng:** Tra cứu nhanh theo tháng, lọc riêng thu hoặc chi, tìm kiếm theo tên món đồ đã ghi chú hoặc theo danh mục.
-* 💡 **Tổng kết tuần của bạn (Weekly Wrap-up):** Luôn bắt đầu bằng những lời khen tích cực trước (Ví dụ: *"Tuần này bạn có 2 ngày không tiêu tiền và tiết kiệm hơn tuần trước 15%"*), sau đó mới khéo léo đưa ra 1 điểm cần chú ý. Tổng tiền tuần được ẩn sau nút bấm để tránh tạo áp lực tâm lý cho người dùng.
+
+- **Bản đồ nhiệt chi tiêu (Calendar Heatmap):** Các ngày trong tháng được tô màu theo mức độ chi tiêu (ngày chi càng nhiều màu càng đậm, ngày không tiêu tiền có biểu tượng xanh lá nhẹ nhàng).
+- **Bộ lọc và tìm kiếm đa năng:** Tra cứu nhanh theo tháng, lọc riêng thu hoặc chi, tìm kiếm theo tên món đồ đã ghi chú hoặc theo danh mục.
+- 💡 **Tổng kết tuần của bạn (Weekly Wrap-up):** Luôn bắt đầu bằng những lời khen tích cực trước (Ví dụ: *"Tuần này bạn có 2 ngày không tiêu tiền và tiết kiệm hơn tuần trước 15%"*), sau đó mới khéo léo đưa ra 1 điểm cần chú ý. Tổng tiền tuần được ẩn sau nút bấm để tránh tạo áp lực tâm lý cho người dùng.
 
 ### Thử Thách Tài Chính & Hệ Thống 25 Huy Hiệu Thói Quen
-* **Gợi ý cá nhân hóa dựa trên dữ liệu thật:** Hệ thống tự động phân tích 30 ngày gần nhất của bạn. Nếu phát hiện bạn chi nhiều cho *Cà phê, Trà sữa, GrabFood, Shopee, Mua sắm online hay Thuốc lá*, app sẽ tự động đề xuất thử thách tương ứng (Ví dụ: *"Cắt giảm 40% tiền trà sữa trong 14 ngày"*).
-* **3 Cấp độ & 3 Khung thời gian linh hoạt:**
-  * Cấp độ: **Nhẹ** (-20% chi phí) | **Vừa** (-40%) | **Gắt** (-60%).
-  * Thời hạn: **7 ngày** | **14 ngày** | **30 ngày**.
-  * Chạy tối đa **5 thử thách cùng lúc** với đồng hồ đếm ngược thời gian thực.
-* 🏆 **Bộ sưu tập 25 Huy hiệu thành tựu:** Chia làm 3 hạng Đồng, Bạc, Vàng khích lệ người dùng kiên trì (Ví dụ: *Chiến thần kiềm chế, Đứng dậy sau vấp ngã, Bàn tay vàng giữ lại 1 triệu đồng...*).
+
+- **Gợi ý cá nhân hóa dựa trên dữ liệu thật:** Hệ thống tự động phân tích 30 ngày gần nhất của bạn. Nếu phát hiện bạn chi nhiều cho *Cà phê, Trà sữa, GrabFood, Shopee, Mua sắm online hay Thuốc lá*, app sẽ tự động đề xuất thử thách tương ứng (Ví dụ: *"Cắt giảm 40% tiền trà sữa trong 14 ngày"*).
+- **3 Cấp độ & 3 Khung thời gian linh hoạt:**
+  - Cấp độ: **Nhẹ** (-20% chi phí) | **Vừa** (-40%) | **Gắt** (-60%).
+  - Thời hạn: **7 ngày** | **14 ngày** | **30 ngày**.
+  - Chạy tối đa **5 thử thách cùng lúc** với đồng hồ đếm ngược thời gian thực.
+- 🏆 **Bộ sưu tập 25 Huy hiệu thành tựu:** Chia làm 3 hạng Đồng, Bạc, Vàng khích lệ người dùng kiên trì (Ví dụ: *Chiến thần kiềm chế, Đứng dậy sau vấp ngã, Bàn tay vàng giữ lại 1 triệu đồng...*).
 
 ### Sổ Nợ, Chia Tiền Nhóm & Mẫu Tin Đòi Nợ Khéo Léo
-* **Sổ nợ 2 chiều:** Theo dõi rành mạch *Ai nợ mình* và *Mình nợ ai*. Hỗ trợ gom tổng nợ theo từng người và nút *"Đã trả hết"* để chốt sổ 1 chạm.
-* 🍕 **Chia tiền nhóm (Bill Splitter):** Đi ăn uống cùng bạn bè, bạn chỉ cần nhập tổng hóa đơn, tick chọn danh sách người tham gia và chọn ai là người đứng ra thanh toán. App sẽ tự động chia đều, ghi phần của bạn vào chi tiêu cá nhân và tự động tạo khoản nợ cho những người còn lại.
-* 💬 **Soạn sẵn tin nhắn nhắc nợ khéo léo:** Tích hợp tính năng sinh tin nhắn đòi nợ theo 3 phong cách:
-  * *Nhẹ nhàng:* Tế nhị, giữ hòa khí bạn bè.
-  * *Hài hước:* Vui vẻ, bắt trend hóm hỉnh.
-  * *Rõ ràng:* Minh bạch con số, chuyển khoản nhanh qua mã QR.
+
+- **Sổ nợ 2 chiều:** Theo dõi rành mạch *Ai nợ mình* và *Mình nợ ai*. Hỗ trợ gom tổng nợ theo từng người và nút *"Đã trả hết"* để chốt sổ 1 chạm.
+- 🍕 **Chia tiền nhóm (Bill Splitter):** Đi ăn uống cùng bạn bè, bạn chỉ cần nhập tổng hóa đơn, tick chọn danh sách người tham gia và chọn ai là người đứng ra thanh toán. App sẽ tự động chia đều, ghi phần của bạn vào chi tiêu cá nhân và tự động tạo khoản nợ cho những người còn lại.
+- 💬 **Soạn sẵn tin nhắn nhắc nợ khéo léo:** Tích hợp tính năng sinh tin nhắn đòi nợ theo 3 phong cách:
+  - *Nhẹ nhàng:* Tế nhị, giữ hòa khí bạn bè.
+  - *Hài hước:* Vui vẻ, bắt trend hóm hỉnh.
+  - *Rõ ràng:* Minh bạch con số, chuyển khoản nhanh qua mã QR.
 
 ### Đối Soát Ví Tiền Thực Tế ("Tiền Bốc Hơi")
+
 Nhiều khi bạn cảm thấy tiền trong túi cứ tự biến mất mà không rõ lý do. Chức năng **Tiền bốc hơi** (trong mục *Tôi*) giúp bạn:
+
 1. Nhập số tiền mặt thực tế trong ví (có công cụ hỗ trợ đếm nhanh từng mệnh giá tiền) và số dư tài khoản ngân hàng.
 2. Ứng dụng so khớp với số tiền lý thuyết theo sổ sách kế toán.
 3. Nếu phát hiện chênh lệch thiếu, chỉ cần tick chọn *"Ghi luôn phần chênh lệch"*, hệ thống sẽ tự động hạch toán khoản tiền mất tích này vào mục *"Chi không nhớ"* để số dư trong sổ lập tức khớp chuẩn 100% với thực tế.
 
 ### Cài Đặt, Tùy Biến Giao Diện, Đa Ngôn Ngữ (vi/en) & Khảo Sát
+
 Truy cập qua biểu tượng **Bánh răng cài đặt** ở góc trên cùng bên phải:
-* **Tùy biến hiển thị:** Chọn chế độ Sáng / Tối / Tự động theo hệ điều hành; 4 bộ màu chủ đạo (*Kẹo ngọt, Biển xanh, Bạc hà, Hoàng hôn*); điều chỉnh cỡ chữ (*Nhỏ, Vừa, Lớn*); bật/tắt phản hồi rung haptic khi chạm.
-* **Hỗ trợ 2 ngôn ngữ toàn diện (Tiếng Việt & English):** Chuyển đổi ngôn ngữ tức thì, dịch chuẩn xác cả giao diện, thông báo lỗi máy chủ và danh mục mặc định.
-* **Quản trị danh mục:** Cho phép tạo danh mục riêng; ẩn bớt danh mục không dùng (khoản cũ vẫn giữ nguyên, không sợ mất dữ liệu); hỗ trợ sắp xếp thứ tự ưu tiên đẩy danh mục hay dùng lên đầu.
-* **Bảo mật nhiều lớp:** Đổi mật khẩu, tạo mã khôi phục dự phòng (Recovery Code), xem danh sách các phiên thiết bị đang đăng nhập và đăng xuất từ xa.
-* 📋 **Khảo sát cảm nhận 1 phút:** Sau 24 giờ đăng ký, app sẽ hiện bảng hỏi ngắn để lắng nghe trải nghiệm của bạn nhằm tiếp tục nâng cấp sản phẩm.
+
+- **Tùy biến hiển thị:** Chọn chế độ Sáng / Tối / Tự động theo hệ điều hành; 4 bộ màu chủ đạo (*Kẹo ngọt, Biển xanh, Bạc hà, Hoàng hôn*); điều chỉnh cỡ chữ (*Nhỏ, Vừa, Lớn*); bật/tắt phản hồi rung haptic khi chạm.
+- **Hỗ trợ 2 ngôn ngữ toàn diện (Tiếng Việt & English):** Chuyển đổi ngôn ngữ tức thì, dịch chuẩn xác cả giao diện, thông báo lỗi máy chủ và danh mục mặc định.
+- **Quản trị danh mục:** Cho phép tạo danh mục riêng; ẩn bớt danh mục không dùng (khoản cũ vẫn giữ nguyên, không sợ mất dữ liệu); hỗ trợ sắp xếp thứ tự ưu tiên đẩy danh mục hay dùng lên đầu.
+- **Bảo mật nhiều lớp:** Đổi mật khẩu, tạo mã khôi phục dự phòng (Recovery Code), xem danh sách các phiên thiết bị đang đăng nhập và đăng xuất từ xa.
+- 📋 **Khảo sát cảm nhận 1 phút:** Sau 24 giờ đăng ký, app sẽ hiện bảng hỏi ngắn để lắng nghe trải nghiệm của bạn nhằm tiếp tục nâng cấp sản phẩm.
 
 ---
 
@@ -331,9 +342,11 @@ Bạn hoàn toàn có thể dùng điện thoại thật (iPhone, Android) để
 
 1. Đảm bảo điện thoại và máy tính chạy server đang **kết nối chung một mạng Wi-Fi**.
 2. Chạy `chay_thu_chi.bat`, console sẽ in ra dòng:
+
    ```text
    Điện thoại: http://192.168.x.x:8090/app/
    ```
+
 3. Mở trình duyệt trên điện thoại (Safari trên iOS hoặc Chrome trên Android) và gõ địa chỉ IP ở trên.
 4. Chọn tính năng **"Thêm vào màn hình chính" (Add to Home Screen)**. Biểu tượng ứng dụng Sổ Chi sẽ xuất hiện trên màn hình điện thoại, mở lên toàn màn hình không có thanh địa chỉ duyệt web như app native tải từ App Store/Google Play!
 
@@ -386,16 +399,19 @@ KỊCH BẢN KIỂM THỬ TOÀN DIỆN (AUTOMATED TEST SUITE)
 ## 9. TỐI ƯU HIỆU NĂNG, CHỊU TẢI CAO & CHUẨN HÓA SEO
 
 ### Tối ưu hóa giao diện cho thiết bị cấu hình yếu
-* **Render mượt mà 60-120 FPS:** Hiệu ứng chuyển động sử dụng CSS GPU-accelerated transform, tuyệt đối không gây reflow/repaint bố cục. Thú cưng tự động tạm dừng cử động khi nằm ngoài vùng nhìn thấy (Viewport) để tiết kiệm pin.
-* **Chế độ tiết kiệm tài nguyên (Low-spec Mode):** Ứng dụng tự động phát hiện thiết bị có dưới 4 nhân CPU hoặc RAM dưới 4GB để tắt bớt hoạt họa trang trí, ưu tiên tối đa độ phản hồi mượt mà cho các thao tác kế toán.
-* **Gói icon siêu nhẹ:** Bộ icon Lucide được biên dịch chọn lọc, chỉ nạp 118 biểu tượng ứng dụng cần (kích thước nén chỉ ~6 KB thay vì nạp toàn bộ thư viện 358 KB).
+
+- **Render mượt mà 60-120 FPS:** Hiệu ứng chuyển động sử dụng CSS GPU-accelerated transform, tuyệt đối không gây reflow/repaint bố cục. Thú cưng tự động tạm dừng cử động khi nằm ngoài vùng nhìn thấy (Viewport) để tiết kiệm pin.
+- **Chế độ tiết kiệm tài nguyên (Low-spec Mode):** Ứng dụng tự động phát hiện thiết bị có dưới 4 nhân CPU hoặc RAM dưới 4GB để tắt bớt hoạt họa trang trí, ưu tiên tối đa độ phản hồi mượt mà cho các thao tác kế toán.
+- **Gói icon siêu nhẹ:** Bộ icon Lucide được biên dịch chọn lọc, chỉ nạp 118 biểu tượng ứng dụng cần (kích thước nén chỉ ~6 KB thay vì nạp toàn bộ thư viện 358 KB).
 
 ### Tối ưu hóa máy chủ & Chịu tải cao
-* **In-memory Pre-compressed Cache:** Toàn bộ file giao diện được nén sẵn cả 2 định dạng **Brotli** và **Gzip** lưu trực tiếp trên RAM, kết hợp cơ chế kiểm tra `ETag` giúp trình duyệt tái sử dụng cache với mã phản hồi `304 Not Modified`, tiết kiệm 95% băng thông.
-* **Worker Threads cho Bcrypt:** Thao tác băm và kiểm tra mật khẩu được chuyển sang thực thi trên Worker Threads riêng biệt, đảm bảo các tác vụ CPU-intensive không gây nghẽn Event Loop của Node.js.
-* **Truy vấn gộp (Multi-resultset Query):** Trang chủ lấy toàn bộ 5 nhóm chỉ số tài chính chỉ trong **1 lần đi-về CSDL** (thay vì gọi 5 truy vấn rời rạc).
+
+- **In-memory Pre-compressed Cache:** Toàn bộ file giao diện được nén sẵn cả 2 định dạng **Brotli** và **Gzip** lưu trực tiếp trên RAM, kết hợp cơ chế kiểm tra `ETag` giúp trình duyệt tái sử dụng cache với mã phản hồi `304 Not Modified`, tiết kiệm 95% băng thông.
+- **Worker Threads cho Bcrypt:** Thao tác băm và kiểm tra mật khẩu được chuyển sang thực thi trên Worker Threads riêng biệt, đảm bảo các tác vụ CPU-intensive không gây nghẽn Event Loop của Node.js.
+- **Truy vấn gộp (Multi-resultset Query):** Trang chủ lấy toàn bộ 5 nhóm chỉ số tài chính chỉ trong **1 lần đi-về CSDL** (thay vì gọi 5 truy vấn rời rạc).
 
 ### Kết quả đo lường kiểm thử tải (Benchmark)
+
 Đo lường bằng công cụ `backend/tests/tai/kiem_thu_tai.mjs` với kịch bản mô phỏng **100 người dùng ảo đồng thời** trên máy tính cá nhân (SQL Server LocalDB):
 
 | Phân hệ kiểm thử | Chế độ 1 tiến trình (Single Core) | Chế độ đa tiến trình (Cluster 4 Cores) |
@@ -425,6 +441,4 @@ KỊCH BẢN KIỂM THỬ TOÀN DIỆN (AUTOMATED TEST SUITE)
 
 ---
 
-<div align="center">
-  <sub>Phát triển bởi Nhóm Dự Án Quản Lý Chi Tiêu © 2026. Mọi quyền được bảo lưu.</sub>
-</div>
+*Phát triển bởi Nhóm Dự Án Quản Lý Chi Tiêu © 2026. Mọi quyền được bảo lưu.*
