@@ -446,5 +446,154 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'ix_category_prefs_catego
     CREATE INDEX ix_category_prefs_category ON dbo.user_category_prefs (category_id);
 GO
 
+/* -----------------------------------------------------------------------------
+   15. pet_shop & gamification: Xu tích lũy, tủ đồ linh thú và lịch sử biến động
+       - users.coins: số xu người dùng tích lũy được (tặng 100 xu tân thủ)
+       - users.pet_fullness: độ no bụng (0 - 100), tăng khi cho ăn
+       - pet_shop_items: danh mục phụ kiện (head, face, emblem, held, skin, bg, pedestal, aura, consumable, utility)
+       - user_inventory: tủ đồ cá nhân (lưu số lượng và cờ đang mặc is_equipped)
+       - pet_coin_history: nhật ký cộng/trừ xu minh bạch
+   ----------------------------------------------------------------------------- */
+IF COL_LENGTH('dbo.users', 'coins') IS NULL
+BEGIN
+    ALTER TABLE dbo.users ADD
+        coins        INT NOT NULL CONSTRAINT df_users_coins DEFAULT 100,
+        pet_fullness INT NOT NULL CONSTRAINT df_users_pet_fullness DEFAULT 80;
+    PRINT N'Đã thêm cột coins và pet_fullness cho users.';
+END
+GO
+
+IF OBJECT_ID(N'dbo.ck_users_coins', N'C') IS NULL
+    ALTER TABLE dbo.users ADD
+        CONSTRAINT ck_users_coins CHECK (coins >= 0),
+        CONSTRAINT ck_users_pet_fullness CHECK (pet_fullness BETWEEN 0 AND 100);
+GO
+
+IF OBJECT_ID(N'dbo.pet_shop_items', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.pet_shop_items (
+        id             VARCHAR(50)   NOT NULL,
+        name           NVARCHAR(100) NOT NULL,
+        slot           VARCHAR(20)   NOT NULL,
+        price_coins    INT           NOT NULL CONSTRAINT df_pet_items_price DEFAULT 0,
+        rarity         VARCHAR(20)   NOT NULL CONSTRAINT df_pet_items_rarity DEFAULT 'common',
+        required_level INT           NOT NULL CONSTRAINT df_pet_items_level DEFAULT 1,
+        description    NVARCHAR(255) NULL,
+        effect_data    NVARCHAR(MAX) NULL,
+        is_active      BIT           NOT NULL CONSTRAINT df_pet_items_active DEFAULT 1,
+        created_at     DATETIME2(0)  NOT NULL CONSTRAINT df_pet_items_created DEFAULT SYSDATETIME(),
+
+        CONSTRAINT pk_pet_shop_items PRIMARY KEY (id),
+        CONSTRAINT ck_pet_items_slot CHECK (slot IN
+            ('head', 'face', 'emblem', 'held', 'skin', 'bg', 'pedestal', 'aura', 'consumable', 'utility')),
+        CONSTRAINT ck_pet_items_price CHECK (price_coins >= 0),
+        CONSTRAINT ck_pet_items_rarity CHECK (rarity IN ('common', 'rare', 'epic', 'legendary')),
+        CONSTRAINT ck_pet_items_level CHECK (required_level >= 1)
+    );
+    PRINT N'Đã tạo bảng pet_shop_items.';
+END
+GO
+
+IF OBJECT_ID(N'dbo.user_inventory', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.user_inventory (
+        id          INT          IDENTITY(1, 1) NOT NULL,
+        user_id     INT          NOT NULL,
+        item_id     VARCHAR(50)  NOT NULL,
+        quantity    INT          NOT NULL CONSTRAINT df_user_inventory_qty DEFAULT 1,
+        is_equipped BIT          NOT NULL CONSTRAINT df_user_inventory_equipped DEFAULT 0,
+        acquired_at DATETIME2(0) NOT NULL CONSTRAINT df_user_inventory_acquired DEFAULT SYSDATETIME(),
+
+        CONSTRAINT pk_user_inventory PRIMARY KEY (id),
+        CONSTRAINT fk_user_inventory_user FOREIGN KEY (user_id)
+            REFERENCES dbo.users (id) ON DELETE CASCADE,
+        CONSTRAINT fk_user_inventory_item FOREIGN KEY (item_id)
+            REFERENCES dbo.pet_shop_items (id) ON DELETE CASCADE,
+        CONSTRAINT uq_user_inventory UNIQUE (user_id, item_id),
+        CONSTRAINT ck_user_inventory_qty CHECK (quantity >= 0)
+    );
+
+    CREATE INDEX ix_user_inventory_user ON dbo.user_inventory (user_id, is_equipped);
+    PRINT N'Đã tạo bảng user_inventory.';
+END
+GO
+
+IF OBJECT_ID(N'dbo.pet_coin_history', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.pet_coin_history (
+        id            INT           IDENTITY(1, 1) NOT NULL,
+        user_id       INT           NOT NULL,
+        amount        INT           NOT NULL,
+        balance_after INT           NOT NULL,
+        reason        NVARCHAR(100) NOT NULL,
+        item_id       VARCHAR(50)   NULL,
+        created_at    DATETIME2(0)  NOT NULL CONSTRAINT df_coin_history_created DEFAULT SYSDATETIME(),
+
+        CONSTRAINT pk_pet_coin_history PRIMARY KEY (id),
+        CONSTRAINT fk_coin_history_user FOREIGN KEY (user_id)
+            REFERENCES dbo.users (id) ON DELETE CASCADE,
+        CONSTRAINT fk_coin_history_item FOREIGN KEY (item_id)
+            REFERENCES dbo.pet_shop_items (id),
+        CONSTRAINT ck_coin_history_balance CHECK (balance_after >= 0)
+    );
+
+    CREATE INDEX ix_coin_history_user ON dbo.pet_coin_history (user_id, created_at DESC);
+    PRINT N'Đã tạo bảng pet_coin_history.';
+END
+GO
+
+-- Nạp sẵn các vật phẩm mẫu ban đầu vào pet_shop_items
+IF NOT EXISTS (SELECT 1 FROM dbo.pet_shop_items WHERE id = 'hat_grad')
+BEGIN
+    INSERT INTO dbo.pet_shop_items (id, name, slot, price_coins, rarity, required_level, description, effect_data)
+    VALUES
+    -- Đầu (Headwear)
+    ('hat_grad', N'Mũ tốt nghiệp cử nhân', 'head', 50, 'common', 1, N'Mũ tốt nghiệp biểu tượng của tri thức đại học', N'{"icon":"🎓"}'),
+    ('hat_crown', N'Vương miện hoàng gia', 'head', 150, 'legendary', 5, N'Dành cho chiến thần quản lý tài chính thượng lưu', N'{"icon":"👑"}'),
+    ('hat_sprout', N'Mầm cây ăn đất', 'head', 30, 'common', 1, N'Hưởng ứng truyền thống sinh viên mọc mầm cuối tháng', N'{"icon":"🌱"}'),
+    ('hat_cat', N'Tai mèo đáng yêu', 'head', 60, 'rare', 2, N'Tai mèo vểnh tinh nghịch tạo nét dễ thương', N'{"icon":"🐱"}'),
+    ('hat_ribbon', N'Nơ hồng xinh xắn', 'head', 40, 'common', 1, N'Nơ thắt điệu đà trang nhã', N'{"icon":"🎀"}'),
+
+    -- Mắt & Mặt (Face)
+    ('face_pixel', N'Kính râm Deal with it', 'face', 80, 'epic', 3, N'Kính đen pixel cực ngầu thể hiện bản lĩnh kiềm chế chi tiêu', N'{"icon":"🕶️"}'),
+    ('face_glasses', N'Kính cận tri thức', 'face', 40, 'common', 1, N'Kính cận tròn dành cho chuyên gia kế toán sinh viên', N'{"icon":"👓"}'),
+    ('face_sleep', N'Mặt nạ ngủ êm ái', 'face', 50, 'common', 2, N'Ngủ ngon không lo nghĩ về các khoản chi tiêu quá tay', N'{"icon":"😴"}'),
+    ('face_patch', N'Miếng dán cá nhân', 'face', 35, 'common', 1, N'Chiến tích vượt qua những ngày thâm hụt ví tiền', N'{"icon":"🩹"}'),
+
+    -- Biểu tượng trán (Emblem)
+    ('emblem_coin', N'Đồng xu truyền thống', 'emblem', 0, 'common', 1, N'Biểu tượng đồng tiền Việt Nam chữ đ mặc định', N'{"icon":"🪙"}'),
+    ('emblem_flame', N'Ngọn lửa chuỗi ngày', 'emblem', 100, 'epic', 4, N'Bùng cháy ngọn lửa kiên trì ghi chép liên tiếp', N'{"icon":"🔥"}'),
+    ('emblem_diamond', N'Kim cương tài chính', 'emblem', 200, 'legendary', 7, N'Biểu tượng đỉnh cao của sự vững vàng kinh tế', N'{"icon":"💎"}'),
+    ('emblem_lightning', N'Tia sét năng lượng', 'emblem', 80, 'rare', 3, N'Nạp đầy năng lượng quản lý chi tiêu tích cực', N'{"icon":"⚡"}'),
+
+    -- Tay / Lơ lửng bên hông (Held / Floating)
+    ('held_boba', N'Trà sữa full topping', 'held', 45, 'common', 1, N'Cốc trà sữa ngọt ngào phần thưởng tự thưởng bản thân', N'{"icon":"🧋"}'),
+    ('held_calculator', N'Máy tính bỏ túi kế toán', 'held', 50, 'common', 2, N'Tính toán từng đồng chi li không bao giờ thất thoát', N'{"icon":"🮮"}'),
+    ('held_noddles', N'Cốc mì tôm cứu đói', 'held', 25, 'common', 1, N'Món ăn kinh điển đồng hành qua những mùa thi', N'{"icon":"🍜"}'),
+    ('held_card', N'Thẻ ngân hàng VIP đen', 'held', 120, 'epic', 5, N'Thẻ tín dụng hạng thương gia quyền lực', N'{"icon":"💳"}'),
+
+    -- Phông nền & Đế đứng (Background & Pedestal)
+    ('bg_dorm', N'Phòng trọ sinh viên', 'bg', 0, 'common', 1, N'Căn phòng trọ thân thương gắn liền kỷ niệm sinh viên', N'{"icon":"🏠"}'),
+    ('bg_cafe', N'Quán cafe học bài chill', 'bg', 80, 'rare', 2, N'Không gian cafe nhẹ nhàng ấm cúng đầy cảm hứng', N'{"icon":"☕"}'),
+    ('bg_beach', N'Bãi biển nghỉ dưỡng', 'bg', 120, 'epic', 4, N'Kỳ nghỉ hè xứng đáng sau những tháng ngày tiết kiệm', N'{"icon":"🏖️"}'),
+    ('bg_vault', N'Két sắt kho vàng', 'bg', 180, 'legendary', 6, N'Hầm chứa két sắt tiền vàng đầy ắp thịnh vượng', N'{"icon":"🏦"}'),
+    ('ped_redcarpet', N'Thảm đỏ vinh danh', 'pedestal', 70, 'rare', 2, N'Thảm đỏ sang trọng nâng tầm vị thế linh thú', N'{"icon":"🟥"}'),
+    ('ped_coins', N'Đống tiền vàng may mắn', 'pedestal', 90, 'epic', 3, N'Lót chân bằng đống tiền xu vàng óng ánh', N'{"icon":"💰"}'),
+
+    -- Màu da / Skin
+    ('skin_piggy', N'Skin Heo đất vàng', 'skin', 100, 'rare', 3, N'Chuyển đổi toàn thân linh thú sang màu vàng kim heo đất', N'{"icon":"🐷"}'),
+    ('skin_cyber', N'Skin Cyberpunk Neon', 'skin', 150, 'epic', 5, N'Phong cách tương lai với ánh sáng neon tím xanh', N'{"icon":"🤖"}'),
+    ('skin_ghost', N'Skin Bóng ma cháy túi', 'skin', 120, 'rare', 2, N'Linh thú hóa bóng ma trắng trong suốt lơ lửng khi hết tiền', N'{"icon":"👻"}'),
+
+    -- Vật phẩm chức năng & Tiêu hao (Utility & Consumable)
+    ('util_streak_freeze', N'Bùa Hộ Mệnh đóng băng chuỗi', 'utility', 60, 'epic', 1, N'Tự động kích hoạt cứu chuỗi ngày nếu lỡ quên ghi 1 hôm', N'{"type":"streak_freeze","stackable":true}'),
+    ('food_noddles_dragon', N'Mì tôm thanh long', 'consumable', 15, 'common', 1, N'Đặc sản cứu đói tăng 30 điểm no bụng cho linh thú', N'{"fullness":30}'),
+    ('food_wagyu', N'Bò dát vàng hoàng gia', 'consumable', 100, 'legendary', 3, N'Bữa tiệc thượng hạng hồi phục 100 điểm no bụng và tỏa sáng', N'{"fullness":100}'),
+    ('util_coffee', N'Cà phê sinh viên tăng EXP', 'consumable', 40, 'rare', 1, N'Tăng gấp đôi tốc độ thăng cấp thú cưng trong 24 giờ', N'{"exp_boost":2}'),
+    ('util_gacha_box', N'Rương Bí Ẩn may mắn', 'utility', 50, 'rare', 1, N'Mở ngẫu nhiên nhận phụ kiện hiếm hoặc lượng xu bất ngờ', N'{"type":"gacha"}');
+    PRINT N'Đã nạp danh mục vật phẩm mẫu vào pet_shop_items.';
+END
+GO
+
 PRINT N'Mở rộng bảng hoàn tất.';
 GO

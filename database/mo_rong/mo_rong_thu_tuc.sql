@@ -893,5 +893,249 @@ BEGIN
 END
 GO
 
+/* -----------------------------------------------------------------------------
+   19. sp_get_pet_shop_items: Lấy danh sách shop kèm trạng thái của người dùng
+   ----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.sp_get_pet_shop_items
+    @user_id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE id = @user_id)
+        THROW 50001, N'Người dùng không tồn tại.', 1;
+
+    -- Kết quả 1: Số xu và độ no của thú cưng
+    SELECT coins, pet_fullness
+    FROM dbo.users
+    WHERE id = @user_id;
+
+    -- Kết quả 2: Danh sách vật phẩm kèm số lượng sở hữu và trạng thái đang mặc
+    SELECT s.id,
+           s.name,
+           s.slot,
+           s.price_coins,
+           s.rarity,
+           s.required_level,
+           s.description,
+           s.effect_data,
+           ISNULL(i.quantity, 0) AS owned_quantity,
+           ISNULL(i.is_equipped, 0) AS is_equipped
+    FROM dbo.pet_shop_items AS s
+    LEFT JOIN dbo.user_inventory AS i
+           ON i.item_id = s.id AND i.user_id = @user_id
+    WHERE s.is_active = 1
+    ORDER BY CASE s.slot
+                WHEN 'head' THEN 1
+                WHEN 'face' THEN 2
+                WHEN 'emblem' THEN 3
+                WHEN 'held' THEN 4
+                WHEN 'skin' THEN 5
+                WHEN 'bg' THEN 6
+                WHEN 'pedestal' THEN 7
+                WHEN 'utility' THEN 8
+                WHEN 'consumable' THEN 9
+                ELSE 10 END,
+             s.price_coins ASC;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   20. sp_buy_pet_item: Mua vật phẩm bằng xu tích lũy
+   ----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.sp_buy_pet_item
+    @user_id INT,
+    @item_id VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE id = @user_id)
+        THROW 50001, N'Người dùng không tồn tại.', 1;
+
+    DECLARE @price INT, @slot VARCHAR(20), @name NVARCHAR(100);
+    SELECT @price = price_coins, @slot = slot, @name = name
+    FROM dbo.pet_shop_items
+    WHERE id = @item_id AND is_active = 1;
+
+    IF @price IS NULL
+        THROW 50060, N'Vật phẩm không tồn tại trong cửa hàng.', 1;
+
+    DECLARE @current_coins INT = (SELECT coins FROM dbo.users WHERE id = @user_id);
+    IF @current_coins < @price
+        THROW 50061, N'Không đủ xu để mua vật phẩm này.', 1;
+
+    -- Đồ thời trang (không phải consumable/utility) mỗi người chỉ mua 1 lần
+    IF @slot NOT IN ('consumable', 'utility')
+       AND EXISTS (SELECT 1 FROM dbo.user_inventory WHERE user_id = @user_id AND item_id = @item_id AND quantity > 0)
+        THROW 50062, N'Bạn đã sở hữu vật phẩm này rồi.', 1;
+
+    BEGIN TRANSACTION;
+
+    DECLARE @new_balance INT = @current_coins - @price;
+    UPDATE dbo.users SET coins = @new_balance WHERE id = @user_id;
+
+    IF EXISTS (SELECT 1 FROM dbo.user_inventory WHERE user_id = @user_id AND item_id = @item_id)
+    BEGIN
+        UPDATE dbo.user_inventory
+        SET quantity = quantity + 1
+        WHERE user_id = @user_id AND item_id = @item_id;
+    END
+    ELSE
+    BEGIN
+        DECLARE @auto_equip BIT = IIF(@slot NOT IN ('consumable', 'utility'), 1, 0);
+
+        IF @auto_equip = 1
+        BEGIN
+            UPDATE i
+            SET is_equipped = 0
+            FROM dbo.user_inventory AS i
+            JOIN dbo.pet_shop_items AS s ON s.id = i.item_id
+            WHERE i.user_id = @user_id AND s.slot = @slot;
+        END
+
+        INSERT INTO dbo.user_inventory (user_id, item_id, quantity, is_equipped)
+        VALUES (@user_id, @item_id, 1, @auto_equip);
+    END
+
+    INSERT INTO dbo.pet_coin_history (user_id, amount, balance_after, reason, item_id)
+    VALUES (@user_id, -@price, @new_balance, CONCAT(N'Mua: ', @name), @item_id);
+
+    COMMIT;
+
+    SELECT @new_balance AS coins, @item_id AS item_id;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   21. sp_equip_pet_item: Mặc / tháo phụ kiện linh thú
+   ----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.sp_equip_pet_item
+    @user_id INT,
+    @item_id VARCHAR(50),
+    @equip   BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE id = @user_id)
+        THROW 50001, N'Người dùng không tồn tại.', 1;
+
+    DECLARE @slot VARCHAR(20) = (SELECT slot FROM dbo.pet_shop_items WHERE id = @item_id);
+    IF @slot IS NULL OR @slot IN ('consumable', 'utility')
+        THROW 50063, N'Vật phẩm này không thể trang bị.', 1;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.user_inventory WHERE user_id = @user_id AND item_id = @item_id AND quantity > 0)
+        THROW 50064, N'Bạn chưa sở hữu vật phẩm này.', 1;
+
+    BEGIN TRANSACTION;
+
+    IF @equip = 1
+    BEGIN
+        UPDATE i
+        SET is_equipped = 0
+        FROM dbo.user_inventory AS i
+        JOIN dbo.pet_shop_items AS s ON s.id = i.item_id
+        WHERE i.user_id = @user_id AND s.slot = @slot;
+
+        UPDATE dbo.user_inventory
+        SET is_equipped = 1
+        WHERE user_id = @user_id AND item_id = @item_id;
+    END
+    ELSE
+    BEGIN
+        UPDATE dbo.user_inventory
+        SET is_equipped = 0
+        WHERE user_id = @user_id AND item_id = @item_id;
+    END
+
+    COMMIT;
+
+    SELECT item_id, is_equipped FROM dbo.user_inventory WHERE user_id = @user_id AND item_id = @item_id;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   22. sp_use_pet_consumable: Tiêu thụ thức ăn / bùa hộ mệnh
+   ----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.sp_use_pet_consumable
+    @user_id INT,
+    @item_id VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE id = @user_id)
+        THROW 50001, N'Người dùng không tồn tại.', 1;
+
+    DECLARE @slot VARCHAR(20) = (SELECT slot FROM dbo.pet_shop_items WHERE id = @item_id);
+    IF @slot NOT IN ('consumable', 'utility')
+        THROW 50065, N'Vật phẩm này không phải đồ tiêu hao.', 1;
+
+    DECLARE @qty INT = (SELECT quantity FROM dbo.user_inventory WHERE user_id = @user_id AND item_id = @item_id);
+    IF @qty IS NULL OR @qty <= 0
+        THROW 50066, N'Bạn không có vật phẩm này trong túi.', 1;
+
+    BEGIN TRANSACTION;
+
+    UPDATE dbo.user_inventory
+    SET quantity = quantity - 1
+    WHERE user_id = @user_id AND item_id = @item_id;
+
+    DECLARE @new_fullness INT;
+    IF @item_id = 'food_noddles_dragon'
+    BEGIN
+        UPDATE dbo.users SET pet_fullness = IIF(pet_fullness + 30 > 100, 100, pet_fullness + 30) WHERE id = @user_id;
+    END
+    ELSE IF @item_id = 'food_wagyu'
+    BEGIN
+        UPDATE dbo.users SET pet_fullness = 100 WHERE id = @user_id;
+    END
+
+    SELECT @new_fullness = pet_fullness FROM dbo.users WHERE id = @user_id;
+
+    COMMIT;
+
+    SELECT @item_id AS item_id, @qty - 1 AS remaining_qty, @new_fullness AS pet_fullness;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   23. sp_add_pet_coins: Cộng hoặc trừ xu có ghi lịch sử
+   ----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.sp_add_pet_coins
+    @user_id INT,
+    @amount  INT,
+    @reason  NVARCHAR(100),
+    @item_id VARCHAR(50) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE id = @user_id)
+        THROW 50001, N'Người dùng không tồn tại.', 1;
+
+    DECLARE @current INT = (SELECT coins FROM dbo.users WHERE id = @user_id);
+    DECLARE @new_balance INT = @current + @amount;
+    IF @new_balance < 0
+        THROW 50061, N'Số xu không đủ để thực hiện.', 1;
+
+    BEGIN TRANSACTION;
+
+    UPDATE dbo.users SET coins = @new_balance WHERE id = @user_id;
+
+    INSERT INTO dbo.pet_coin_history (user_id, amount, balance_after, reason, item_id)
+    VALUES (@user_id, @amount, @new_balance, @reason, @item_id);
+
+    COMMIT;
+
+    SELECT @new_balance AS coins;
+END
+GO
+
 PRINT N'Đã tạo các thủ tục mở rộng.';
 GO
