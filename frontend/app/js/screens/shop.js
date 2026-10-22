@@ -7,7 +7,7 @@
 import { tr } from "../i18n.js";
 import { api } from "../api.js";
 import { h, icon, haptic, toast, confetti, openSheet, busy } from "../ui.js";
-import { renderPet, pokeLine } from "../pet.js";
+import { renderPet, pokeLine, getStageTheme, renderStageBackdrop } from "../pet.js";
 
 const CATEGORIES = [
   ["all", "✨ " + tr("Tất cả")],
@@ -148,29 +148,32 @@ export async function shopScreen(ctx) {
     renderGrid();
   });
 
-  function refreshPetStage() {
-    petStageHolder.replaceChildren(renderPet({
-      mood: petData.pet?.mood || "happy",
-      level: petData.pet?.level || 1,
-      size: 156,
-      equipped: previewEquipped
-    }));
-    fullnessBarFill.style.width = `${Math.min(100, Math.max(0, fullness))}%`;
-    fullnessLabel.textContent = tr`Độ no: ${fullness}/100 🍖`;
-    coinBadge.textContent = `🪙 ${coins} xu`;
-    resetPreviewBtn.style.display = previewingItem ? "inline-flex" : "none";
-  }
-  refreshPetStage();
-
-  petStageHolder.addEventListener("click", () => {
-    const svg = petStageHolder.querySelector("svg");
-    if (svg) {
-      svg.classList.remove("poked");
-      void svg.getBoundingClientRect();
-      svg.classList.add("poked");
+  const stageBackdrop = h("div", {
+    class: "stage-backdrop",
+    style: {
+      position: "absolute",
+      inset: "0",
+      pointerEvents: "none",
+      zIndex: "0",
+      transition: "opacity 0.4s ease"
     }
-    speechBubble.textContent = pokeLine(petData.pet?.mood || "happy");
-    haptic([8, 30, 8]);
+  });
+
+  const stageSpotlight = h("div", {
+    class: "stage-spotlight",
+    style: {
+      position: "absolute",
+      top: "10%",
+      left: "50%",
+      transform: "translateX(-50%)",
+      width: "220px",
+      height: "220px",
+      borderRadius: "50%",
+      background: "radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%)",
+      pointerEvents: "none",
+      zIndex: "0",
+      transition: "background 0.4s ease"
+    }
   });
 
   const stageCard = h("section", {
@@ -181,23 +184,12 @@ export async function shopScreen(ctx) {
       borderRadius: "var(--radius)",
       padding: "18px 16px 14px",
       position: "relative",
-      overflow: "hidden"
+      overflow: "hidden",
+      transition: "background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease"
     }
   },
-  // Vầng sáng spotlight sau lưng thú cưng
-  h("div", {
-    style: {
-      position: "absolute",
-      top: "10%",
-      left: "50%",
-      transform: "translateX(-50%)",
-      width: "200px",
-      height: "200px",
-      borderRadius: "50%",
-      background: "radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%)",
-      pointerEvents: "none"
-    }
-  }),
+  stageBackdrop,
+  stageSpotlight,
   speechBubble,
   petStageHolder,
   h("div", {
@@ -214,12 +206,48 @@ export async function shopScreen(ctx) {
   h("div", { class: "row between items-center" }, fullnessLabel, resetPreviewBtn),
   h("div", {
     style: {
-      background: "rgba(0, 0, 0, 0.12)",
+      background: "rgba(0, 0, 0, 0.22)",
       borderRadius: "4px",
       overflow: "hidden",
       padding: "1px"
     }
   }, fullnessBarFill)));
+
+  function refreshPetStage() {
+    petStageHolder.replaceChildren(renderPet({
+      mood: petData.pet?.mood || "happy",
+      level: petData.pet?.level || 1,
+      size: 156,
+      equipped: previewEquipped
+    }));
+    fullnessBarFill.style.width = `${Math.min(100, Math.max(0, fullness))}%`;
+    fullnessLabel.textContent = tr`Độ no: ${fullness}/100 🍖`;
+    coinBadge.textContent = `🪙 ${coins} xu`;
+    resetPreviewBtn.style.display = previewingItem ? "inline-flex" : "none";
+
+    // Cập nhật phông nền phòng thử đồ theo vật phẩm 'bg' đang ướm thử hoặc đang mặc
+    const activeBg = previewEquipped.bg;
+    const theme = getStageTheme(activeBg);
+    stageCard.style.background = theme.cardBg;
+    stageCard.style.border = theme.cardBorder;
+    stageCard.style.boxShadow = `0 14px 34px -10px ${theme.glowColor}`;
+    stageSpotlight.style.background = theme.spotlight;
+
+    const backdropNode = renderStageBackdrop(activeBg);
+    stageBackdrop.replaceChildren(backdropNode || "");
+  }
+  refreshPetStage();
+
+  petStageHolder.addEventListener("click", () => {
+    const svg = petStageHolder.querySelector("svg");
+    if (svg) {
+      svg.classList.remove("poked");
+      void svg.getBoundingClientRect();
+      svg.classList.add("poked");
+    }
+    speechBubble.textContent = pokeLine(petData.pet?.mood || "happy");
+    haptic([8, 30, 8]);
+  });
 
   // Tabs danh mục
   const tabsRow = h("div", {
