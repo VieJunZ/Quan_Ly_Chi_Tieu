@@ -1,0 +1,18 @@
+# Thư mục IDE/Hệ thống
+.idea/
+.vscode/
+
+# Rác của Frontend & Backend (Tùy ngôn ngữ)
+frontend/node_modules/
+frontend/build/
+backend/node_modules/
+backend/target/
+
+# File chứa mật khẩu
+**/.env
+
+# Local database runtime data
+backend/data/
+
+# Dữ liệu OCR tải về khi chạy
+backend/.cache/
