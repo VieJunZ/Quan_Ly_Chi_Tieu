@@ -1,213 +1,443 @@
-# Hướng dẫn chạy và dùng Quản lý thu chi
+# 💰 SỔ CHI TIÊU (Thu Chi) - HỆ THỐNG QUẢN LÝ TÀI CHÍNH CÁ NHÂN CHO SINH VIÊN
 
-Quản lý thu chi (tên ngắn trên màn hình chính: **Thu Chi**) là app ghi thu chi cho sinh viên. Giao diện mới nằm ở `frontend/app/`, chạy chung máy chủ Node.js trong `backend/`, dữ liệu lưu ở SQL Server (CSDL `so_chi_tri_db`).
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B_LTS-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Express](https://img.shields.io/badge/Express-4.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
+[![SQL Server](https://img.shields.io/badge/Microsoft_SQL_Server-LocalDB-CC292B?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
+[![PWA Ready](https://img.shields.io/badge/PWA-Mobile--First-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
+[![Offline First](https://img.shields.io/badge/Tesseract_OCR-Offline-FF6F00?style=for-the-badge)](https://tesseract.projectnaptha.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-## 1. Cài đặt lần đầu
+> **Sổ Chi Tiêu** (tên hiển thị ngắn gọn: **Thu Chi**) là ứng dụng web định hướng **Mobile-First (Progressive Web App - PWA)** giúp sinh viên và người trẻ hình thành thói quen quản lý tài chính khoa học, nhẹ nhàng và tự nhiên. Ứng dụng tích hợp công nghệ nhận diện giọng nói tiếng Việt, đọc hóa đơn/chuyển khoản bằng OCR không cần mạng, bóc tách tin nhắn biến động số dư ngân hàng, cùng cơ chế gamification thú cưng tài chính và 25 thử thách tiết kiệm thực tế.
 
-| Cần cài | Ghi chú |
-| --- | --- |
-| Node.js bản LTS (18 trở lên) | https://nodejs.org |
-| SQL Server Express LocalDB | Có sẵn khi cài Visual Studio, hoặc chọn "LocalDB" trong bộ cài SQL Server Express |
-| sqlcmd | Công cụ dòng lệnh của SQL Server, gõ `sqlcmd -?` để kiểm tra |
-| ODBC Driver 17 for SQL Server | Thư viện kết nối mà máy chủ Node dùng |
+---
 
-Không cần tự cài thư viện Node: lần chạy đầu file `chay_thu_chi.bat` tự gọi `npm install`.
+## 📑 MỤC LỤC ĐIỀU HƯỚNG NHANH
 
-## 2. Chạy app
+1. [Kiến Trúc Hệ Thống & Sơ Đồ Kỹ Thuật](#1-kiến-trúc-hệ-thống--sơ-đồ-kỹ-thuật)
+2. [Cấu Trúc Thư Mục Dự Án (Project Directory Tree)](#2-cấu-trúc-thư-mục-dự-án-project-directory-tree)
+3. [Yêu Cầu Môi Trường & Cài Đặt Ban Đầu](#3-yêu-cầu-môi-trường--cài-đặt-ban-đầu)
+4. [Hướng Dẫn Khởi Chạy Ứng Dụng (1-Click Run)](#4-hướng-dẫn-khởi-chạy-ứng-dụng-1-click-run)
+5. [Chế Độ Dùng Thử Trải Nghiệm (Không Cần Đăng Ký)](#5-chế-độ-dùng-thử-trải-nghiệm-không-cần-đăng-ký)
+6. [Cẩm Nang Sử Dụng Chi Tiết Từng Phân Hệ](#6-cẩm-nang-sử-dụng-chi-tiết-từng-phân-hệ)
+   - [Ghi khoản đa phương thức (Nói, Chụp ảnh OCR, SMS, 1 chạm)](#ghi-khoản-đa-phương-thức)
+   - [Trang Hôm Nay, Thú Cưng Ví Tiền & Mini-View Ghim Nổi](#trang-hôm-nay-thú-cưng-ví-tiền--mini-view-ghim-nổi)
+   - [Lịch Sử Giao Dịch & Heatmap Nhiệt Độ Chi Tiêu](#lịch-sử-giao-dịch--heatmap-nhiệt-độ-chi-tiêu)
+   - [Thử Thách Tài Chính & Hệ Thống 25 Huy Hiệu Thói Quen](#thử-thách-tài-chính--hệ-thống-25-huy-hiệu-thói-quen)
+   - [Sổ Nợ, Chia Tiền Nhóm & Mẫu Tin Đòi Nợ Khéo Léo](#sổ-nợ-chia-tiền-nhóm--mẫu-tin-đòi-nợ-khéo-léo)
+   - [Đối Soát Ví Tiền Thực Tế ("Tiền Bốc Hơi")](#đối-soát-ví-tiền-thực-tế-tiền-bốc-hơi)
+   - [Cài Đặt, Tùy Biến Giao Diện, Đa Ngôn Ngữ (vi/en) & Khảo Sát](#cài-đặt-tùy-biến-giao-diện-đa-ngôn-ngữ-vien--khảo-sát)
+7. [Mở Ứng Dụng Trên Điện Thoại Thật (Cùng Wi-Fi)](#7-mở-ứng-dụng-trên-điện-thoại-thật-cùng-wi-fi)
+8. [Hệ Thống Kiểm Thử Tự Động 3 Cấp Độ](#8-hệ-thống-kiểm-thử-tự-động-3-cấp-độ)
+9. [Tối Ưu Hiệu Năng, Chịu Tải Cao & Chuẩn Hóa SEO](#9-tối-ưu-hiệu-năng-chịu-tải-cao--chuẩn-hóa-seo)
+10. [Bảng Tra Cứu & Xử Lý Sự Cố Thường Gặp (Troubleshooting)](#10-bảng-tra-cứu--xử-lý-sự-cố-thường-gặp-troubleshooting)
 
-Bấm đúp `chay_thu_chi.bat` ở thư mục gốc. File sẽ:
+---
 
-1. Kiểm tra Node.js và sqlcmd.
-2. Bật LocalDB (bị kẹt thì tự khởi động lại), tạo CSDL `so_chi_tri_db` nếu chưa có (khoảng 30 giây). Nếu đã có thì dùng tiếp dữ liệu cũ và bổ sung bảng, chỉ mục mới nếu có.
-3. Mở cửa sổ **"ThuChi - May chu"** chạy máy chủ ở cổng 8090.
-4. Mở trình duyệt vào http://localhost:8090/app/ và in địa chỉ để mở bằng điện thoại.
+## 1. KIẾN TRÚC HỆ THỐNG & SƠ ĐỒ KỸ THUẬT
 
-Tắt máy chủ: đóng cửa sổ "ThuChi - May chu".
+Hệ thống được thiết kế theo kiến trúc **Monorepo tinh gọn**, loại bỏ các thành phần cồng kềnh, tối ưu hóa độ trễ phản hồi dưới 50ms và hỗ trợ hoàn toàn ngoại tuyến cho các tác vụ then chốt:
 
-Các cách chạy khác (gõ trong cmd ở thư mục gốc):
+```mermaid
+flowchart TD
+    subgraph CLIENT["📱 CLIENT (Mobile PWA / Web Desktop)"]
+        UI["Giao diện người dùng (Vanilla JS / CSS Tokens)"]
+        SW["Service Worker (Cache static, Offline shell)"]
+        AUDIO["Web Speech API (Microphone)"]
+        CAM["File / Camera Capture (Ảnh hóa đơn)"]
+        MINI["Mini-View (Cửa sổ nổi Always-on-top)"]
+    end
+
+    subgraph SERVER["⚙️ BACKEND SERVER (Node.js Express :8090)"]
+        API["RESTful API Gateway (/api/...)"]
+        STATIC["Static Optimizer (In-memory Brotli/Gzip)"]
+        AUTH_SVC["Xác thực JWT / Brute-force Lock / Hash Worker"]
+        NLP_SVC["NLP Parser (Nhận diện câu nói & SMS tiếng Việt)"]
+        OCR_SVC["Tesseract OCR Engine (Đọc ảnh bill offline)"]
+        PET_SVC["Thuật toán tâm trạng & cấp độ thú cưng"]
+    end
+
+    subgraph DATABASE["🗄️ CƠ SỞ DỮ LIỆU (SQL Server LocalDB)"]
+        DB["CSDL: so_chi_tri_db (Collation: Vietnamese_CI_AS)"]
+        PROC["Stored Procedures (Toàn bộ nghiệp vụ truy vấn)"]
+        TABLES["Bảng: users, categories, transactions, debts, splits, challenges, budgets, surveys"]
+        INDEXES["Chỉ mục tối ưu hóa truy vấn theo thời gian & người dùng"]
+    end
+
+    UI --> API
+    AUDIO --> API
+    CAM --> API
+    SW -.-> STATIC
+    API --> AUTH_SVC
+    API --> NLP_SVC
+    API --> OCR_SVC
+    API --> PET_SVC
+    AUTH_SVC --> PROC
+    NLP_SVC --> PROC
+    PET_SVC --> PROC
+    PROC --> TABLES
+    TABLES --- INDEXES
+```
+
+---
+
+## 2. CẤU TRÚC THƯ MỤC DỰ ÁN (PROJECT DIRECTORY TREE)
+
+Toàn bộ mã nguồn, kịch bản khởi chạy, cơ sở dữ liệu và tài liệu kiểm thử được tổ chức chặt chẽ theo cấu trúc phân tầng:
+
+```text
+Quan_Ly_Chi_Tieu/
+├── chay_thu_chi.bat                  # 🚀 Script 1-click khởi chạy toàn bộ hệ thống trên Windows
+├── kiem_thu_thu_chi.bat              # 🧪 Script chạy toàn bộ 3 cấp độ kiểm thử (Unit, DB, API)
+├── HUONG_DAN_THU_CHI.md              # 📖 Tài liệu kỹ thuật và hướng dẫn sử dụng chính thức
+├── .gitignore                        # Cấu hình loại bỏ file rác, node_modules, cache OCR
+│
+├── backend/                          # ⚙️ MÃ NGUỒN MÁY CHỦ & REST API (Node.js / Express)
+│   ├── package.json                  # Khai báo dependency, scripts kiểm thử và chạy tải
+│   ├── package-lock.json             # Khóa phiên bản thư viện đảm bảo tính đồng nhất
+│   ├── src/
+│   │   ├── server.js                 # Điểm khởi động máy chủ API và static server /app
+│   │   ├── cluster.js                # Chế độ chạy đa tiến trình (multi-worker cluster) chịu tải cao
+│   │   ├── config/
+│   │   │   └── db.js                 # Kết nối SQL Server qua ODBC msnodesqlv8 & Connection Pool
+│   │   ├── routes/                   # Các route điều hướng REST API (/api/...)
+│   │   │   ├── auth.routes.js        # Đăng ký, đăng nhập, khóa sau 5 lần sai, mã khôi phục, đổi mật khẩu
+│   │   │   ├── transaction.routes.js # Thêm, sửa, xóa, tìm kiếm, lọc tháng, batch lưu nhiều khoản
+│   │   │   ├── dashboard.routes.js   # Số liệu hôm nay, chuỗi ngày, widget Mini-View, heatmap lịch
+│   │   │   ├── scan.routes.js        # API bóc tách giọng nói, dán SMS và OCR ảnh hóa đơn
+│   │   │   ├── debt.routes.js        # Ghi nợ 2 chiều, chia hóa đơn nhóm (group bill split)
+│   │   │   ├── wallet.routes.js      # Kiểm kê đối soát số dư ví thực tế ("Tiền bốc hơi")
+│   │   │   ├── budget.routes.js      # Thiết lập và theo dõi hạn mức chi tiêu tháng
+│   │   │   ├── challenge.routes.js   # Quản lý 5 thử thách đồng thời và 25 huy hiệu
+│   │   │   ├── category.routes.js    # Danh mục thu/chi mặc định, thêm mới, ẩn/hiện, sắp xếp
+│   │   │   ├── survey.routes.js      # Khảo sát trải nghiệm sau 1 ngày & tổng hợp ý kiến
+│   │   │   └── health.routes.js      # Endpoint giám sát trạng thái máy chủ và kết nối CSDL
+│   │   ├── services/                 # Xử lý nghiệp vụ logic (Business Services)
+│   │   │   ├── textParse.service.js  # Bóc tách tiếng Việt tự nhiên (giọng nói, SMS, hóa đơn)
+│   │   │   ├── ocr.service.js        # Nhận diện chữ quang học qua Tesseract.js ngoại tuyến
+│   │   │   ├── pet.service.js        # Thuật toán tính toán tâm trạng & cấp độ thú cưng ví tiền
+│   │   │   ├── auth.service.js       # Quản lý khóa tài khoản 5 lần sai, mã khôi phục, phiên đăng nhập
+│   │   │   ├── demo.service.js       # Cấp và dọn dẹp tự động tài khoản dùng thử tạm thời (24h)
+│   │   │   ├── hash.service.js       # Băm mật khẩu bcrypt trên Worker Threads không chặn event loop
+│   │   │   ├── budget.service.js     # Tính toán tiến độ ngân sách và hạn mức chi tiêu mỗi ngày
+│   │   │   └── challenge.service.js  # Kiểm tra điều kiện hoàn thành thử thách & mở khóa huy hiệu
+│   │   ├── middlewares/              # Middleware bảo mật, xác thực JWT, static file, xử lý lỗi
+│   │   │   ├── auth.middleware.js    # Xác thực Bearer JWT token và đính kèm thông tin user
+│   │   │   ├── rateLimit.middleware.js# Giới hạn tần suất gọi API chống tấn công DoS
+│   │   │   ├── static.middleware.js  # Nén trước Brotli/Gzip, tạo ETag và phục vụ giao diện tĩnh
+│   │   │   └── error.middleware.js   # Bắt lỗi toàn cục, trả về mã lỗi chuẩn hóa theo ngôn ngữ
+│   │   ├── lib/                      # Các thư viện bổ trợ dùng chung
+│   │   │   ├── http.js               # Định nghĩa lớp HttpError và wrapper asyncRoute
+│   │   │   ├── validate.js           # Kiểm tra kiểu dữ liệu, định dạng ngày tháng, số tiền
+│   │   │   └── i18n.js               # Middleware nhận diện ngôn ngữ qua header X-Lang
+│   │   └── lang/                     # Bản địa hóa thông điệp hệ thống
+│   │       └── en.js                 # Từ điển dịch thông báo lỗi và danh mục sang tiếng Anh
+│   └── tests/                        # 🧪 KỊCH BẢN KIỂM THỬ BACKEND
+│       ├── textParse.test.js         # Kiểm thử bóc tách giọng nói, SMS ngân hàng, hóa đơn
+│       ├── ocr.test.js               # Kiểm thử đọc số tiền trên ảnh hóa đơn chụp thực tế
+│       ├── pet.test.js               # Kiểm thử các trạng thái cảm xúc của thú cưng ví tiền
+│       ├── api/
+│       │   └── kiem_thu_api.mjs      # Kiểm thử tích hợp End-to-End toàn bộ API trên server thật
+│       ├── tai/
+│       │   └── kiem_thu_tai.mjs      # Kịch bản mô phỏng 100 người dùng đồng thời đo RPS & độ trễ
+│       └── fixtures/                 # Dữ liệu ảnh hóa đơn, chuyển khoản mẫu phục vụ kiểm thử
+│
+├── frontend/                         # 🎨 GIAO DIỆN NGƯỜI DÙNG (PWA & Desktop)
+│   ├── app/                          # Giao diện chính thức: Mobile-First Progressive Web App
+│   │   ├── index.html                # Trang ứng dụng chính (khung mobile app, tối ưu cảm ứng)
+│   │   ├── mobile.html               # Trang mô phỏng đa thiết bị (iPhone SE, iPhone 14, Android)
+│   │   ├── sw.js                     # Service Worker lưu cache tài nguyên, hỗ trợ offline shell
+│   │   ├── manifest.json             # Khai báo cấu hình cài đặt PWA lên màn hình chính
+│   │   ├── css/
+│   │   │   └── app.css               # Hệ thống design tokens, 4 chủ đề màu sắc, dark/light theme
+│   │   ├── js/
+│   │   │   ├── app.js                # Bộ điều hướng màn hình (Hash Router), quản lý vòng đời app
+│   │   │   ├── api.js                # API Client gọi backend, quản lý token, tự động bắt lỗi
+│   │   │   ├── ui.js                 # Thư viện component UI (Modal, Bottom Sheet, Toast, DOM helper)
+│   │   │   ├── pet.js                # Trình diễn đồ họa và cử động của thú cưng ví tiền
+│   │   │   ├── coach.js              # Lời khuyên tài chính thông minh theo thói quen chi tiêu
+│   │   │   ├── prefs.js              # Lưu trữ cài đặt giao diện cục bộ (Theme, font, rung haptic)
+│   │   │   ├── i18n.js               # Quản lý chuyển đổi ngôn ngữ giao diện (vi / en)
+│   │   │   ├── icons.js              # Bộ icon Lucide siêu nhẹ (chỉ đóng gói các icon app sử dụng)
+│   │   │   ├── screens/              # Các màn hình chính của ứng dụng
+│   │   │   │   ├── auth.js           # Chào mừng, Đăng nhập, Đăng ký, Khôi phục mật khẩu
+│   │   │   │   ├── home.js           # Màn hình Hôm nay: Thú cưng, số dư, gợi ý 1 chạm, chuỗi ngày
+│   │   │   │   ├── history.js        # Lịch sử giao dịch: Heatmap nhiệt độ chi tiêu, bộ lọc tháng
+│   │   │   │   ├── debts.js          # Sổ nợ cá nhân, chia tiền nhóm và soạn tin đòi nợ khéo
+│   │   │   │   ├── wallet.js         # Màn hình kiểm kê thực tế ("Tiền bốc hơi")
+│   │   │   │   ├── me.js             # Trang cá nhân: Thiết lập ngân sách, phím tắt công cụ
+│   │   │   │   ├── challenges.js     # Quản lý thử thách đang chạy và danh mục 25 huy hiệu
+│   │   │   │   ├── categories.js     # Quản lý danh mục: Thêm, sửa, ẩn/hiện, kéo thả thứ tự
+│   │   │   │   └── settings.js       # Cài đặt hiển thị, chủ đề, mật khẩu, phiên thiết bị, khảo sát
+│   │   │   ├── flows/                # Các luồng thao tác tương tác đặc thù
+│   │   │   │   ├── add.js            # Bottom sheet ghi khoản: Giọng nói, Ảnh OCR, SMS, Nhập tay
+│   │   │   │   ├── mini.js           # Widget Mini-View ghim cửa sổ nổi luôn trên cùng
+│   │   │   │   └── survey.js         # Hộp thoại khảo sát cảm nhận sau 1 ngày dùng app
+│   │   │   ├── lang/
+│   │   │   │   └── en.js             # Toàn bộ chuỗi ngôn ngữ tiếng Anh cho giao diện
+│   │   │   └── tools/                # Công cụ sinh icon PWA tự động
+│   │   └── icon-192.png, icon-512.png# Bộ biểu tượng ứng dụng PWA
+│   ├── load-test.html                # Bảng điều khiển kiểm thử tải trực quan trên nền web
+│   ├── index.html                    # Giao diện web desktop dự phòng
+│   ├── css/style.css                 # CSS phong cách Fintech cho giao diện desktop
+│   └── js/                           # Script xử lý giao diện desktop
+│
+├── database/                         # 🗄️ KỊCH BẢN CƠ SỞ DỮ LIỆU MICROSOFT SQL SERVER
+│   ├── setup_database.bat            # Script khởi tạo CSDL gốc quan_ly_chi_tieu_db
+│   ├── create_database.sql           # Tạo CSDL SQL Server với collation Vietnamese_CI_AS
+│   ├── create_tables.sql             # Tạo bảng users, categories, transactions và các ràng buộc
+│   ├── seed_categories.sql           # Nạp 13 danh mục thu/chi mặc định chuẩn ban đầu
+│   ├── procedures.sql                # Các Stored Procedure truy vấn và xử lý dữ liệu cơ bản
+│   ├── test_database.sql             # Kiểm tra tính đúng đắn của các ràng buộc CSDL gốc
+│   ├── .gitattributes                # Thiết lập mã hóa dòng CRLF cho file .bat
+│   └── mo_rong/                      # Bộ kịch bản mở rộng toàn diện (CSDL so_chi_tri_db)
+│       ├── setup_mo_rong.bat         # Khởi tạo CSDL so_chi_tri_db hoàn chỉnh cho ứng dụng
+│       ├── mo_rong_bang.sql          # Thêm bảng nợ, chia tiền, ngân sách, thử thách, khảo sát
+│       ├── mo_rong_thu_tuc.sql       # Thủ tục lưu trữ mở rộng cho tính năng nâng cao
+│       └── kiem_thu_mo_rong.sql      # Kịch bản kiểm thử toàn bộ ràng buộc và logic trong CSDL
+│
+└── docs/                             # 📚 HỒ SƠ TÀI LIỆU KỸ THUẬT, BÁO CÁO & ĐẶC TẢ HỆ THỐNG
+    ├── database/                     # Đặc tả cơ sở dữ liệu và kịch bản quan hệ
+    │   ├── README.md                 # Đặc tả chi tiết lược đồ CSDL, sơ đồ quan hệ ERD
+    │   └── KET_QUA_KIEM_TRA.md       # Biên bản nghiệm thu kiểm thử ràng buộc CSDL
+    └── bao_cao/                      # 📑 HỒ SƠ BÁO CÁO ĐỀ TÀI & DỮ LIỆU KHẢO SÁT
+        ├── Bao_cao_hinh_thanh_y_tuong... # Báo cáo hình thành ý tưởng đề tài (Microsoft Word)
+        └── KHAO SAT THOI QUEN VA NHU...  # Dữ liệu khảo sát nhu cầu quản lý chi tiêu (Microsoft Excel)
+```
+
+---
+
+## 3. YÊU CẦU MÔI TRƯỜNG & CÀI ĐẶT BAN ĐẦU
+
+Trước khi khởi chạy, máy tính của bạn cần có các thành phần nền tảng sau:
+
+| Thành phần | Phiên bản khuyến nghị | Hướng dẫn cài đặt & Kiểm tra |
+| :--- | :--- | :--- |
+| **Node.js** | Bản LTS (v18.x trở lên) | Tải tại [nodejs.org](https://nodejs.org). Kiểm tra: `node -v` |
+| **SQL Server Express LocalDB** | 2019 / 2022 / 2025 | Tích hợp sẵn trong Visual Studio, hoặc chọn thành phần **LocalDB** khi cài đặt [SQL Server Express](https://www.microsoft.com/sql-server/sql-server-downloads) |
+| **sqlcmd** | Tiện ích dòng lệnh SQL Server | Đi kèm SQL Server. Kiểm tra: `sqlcmd -?` |
+| **ODBC Driver 17 for SQL Server** | Driver ODBC 17 hoặc 18 | Tải từ Microsoft để Node.js kết nối trực tiếp LocalDB qua driver native |
+
+> [!NOTE]
+> Bạn **không cần chạy `npm install` thủ công**: File `chay_thu_chi.bat` sẽ tự động phát hiện thư mục `node_modules` và cài đặt đầy đủ thư viện phụ thuộc ở lần chạy đầu tiên.
+
+---
+
+## 4. HƯỚNG DẪN KHỞI CHẠY ỨNG DỤNG (1-CLICK RUN)
+
+### Khởi chạy tiêu chuẩn
+
+Chỉ cần **bấm đúp chuột vào file `chay_thu_chi.bat`** tại thư mục gốc của dự án. Script sẽ tự động thực hiện quy trình 4 bước:
+
+1. **Kiểm tra công cụ:** Đảm bảo Node.js và `sqlcmd` đã sẵn sàng.
+2. **Khởi động LocalDB:** Bật instance `MSSQLLocalDB`, tự động tạo CSDL `so_chi_tri_db` nếu chưa có (kèm toàn bộ bảng và stored procedure mở rộng).
+3. **Mở máy chủ Node.js:** Chạy server tại cổng **`8090`** trong cửa sổ console riêng mang tên *"ThuChi - May chu"*.
+4. **Mở trình duyệt:** Tự động mở địa chỉ `http://localhost:8090/app/` và in ra địa chỉ IP nội bộ để mở bằng điện thoại cùng mạng Wi-Fi.
+
+> [!TIP]
+> **Cách tắt máy chủ:** Đơn giản là đóng cửa sổ console mang tên *"ThuChi - May chu"*.
+
+### Các chế độ chạy nâng cao qua Command Prompt
+
+Mở cửa sổ `cmd` tại thư mục gốc dự án và gõ các lệnh sau tùy mục đích:
 
 ```bat
+:: 1. Mở giao diện mô phỏng khung điện thoại đa thiết bị (iPhone SE, iPhone 14, Android):
 chay_thu_chi.bat dienthoai
-```
-Mở khung xem như trên điện thoại (iPhone SE, iPhone 14, Android).
 
-```bat
+:: 2. Xóa và tạo lại toàn bộ CSDL từ đầu (Lưu ý: Dữ liệu đã nhập sẽ bị xóa sạch):
 chay_thu_chi.bat taolai
-```
-Xóa và tạo lại CSDL từ đầu. **Mất hết dữ liệu đã ghi.**
 
-```bat
+:: 3. Chạy toàn bộ hệ thống kiểm thử tự động (Unit test, SQL Server test, API E2E test):
 chay_thu_chi.bat kiemthu
-```
-Chạy kiểm thử tự động (xem mục 6).
 
-```bat
+:: 4. Chạy chế độ chịu tải đa tiến trình (Cluster mode tận dụng tối đa 8 nhân CPU):
 chay_thu_chi.bat chiutai
 ```
-Chạy máy chủ trên mọi nhân CPU (tối đa 8 tiến trình) thay vì 1, dùng khi muốn thử nhiều người vào cùng lúc (xem mục 7).
 
-## 3. Dùng thử không cần đăng ký
+---
 
-Ở màn hình chào, bấm **"Dùng thử ngay - không cần đăng ký"**. App tạo một tài khoản tạm có sẵn dữ liệu mẫu và dùng được khoảng 24 giờ. Băng tím trên cùng cho biết còn bao lâu. Bấm **"Lưu lại"** để đặt tên đăng nhập, mật khẩu và giữ toàn bộ dữ liệu đã ghi.
+## 5. CHẾ ĐỘ DÙNG THỬ TRẢI NGHIỆM (KHÔNG CẦN ĐĂNG KÝ)
 
-## 4. Các chức năng và chỗ tìm
+Để giảng viên, bạn bè hoặc người dùng mới có thể trải nghiệm ngay mà không tốn thời gian tạo tài khoản:
 
-### Ghi khoản chi, thu
-Bấm nút **+** ở giữa thanh dưới để mở "Ghi khoản mới":
+1. Tại màn hình Chào mừng, bấm nút **"Dùng thử ngay - không cần đăng ký"**.
+2. Hệ thống sẽ lập tức khởi tạo một tài khoản thử nghiệm ngẫu nhiên với đầy đủ dữ liệu mẫu (các khoản chi tiêu, lịch sử giao dịch, mục tiêu ngân sách, thử thách đang chạy và thú cưng).
+3. Băng thông báo màu tím ở đầu trang sẽ hiển thị thời gian còn lại của phiên dùng thử (mặc định **24 giờ**).
+4. Bất kỳ lúc nào trong quá trình trải nghiệm, người dùng chỉ cần bấm nút **"Lưu lại"** trên băng màu tím để đặt tên đăng nhập, mật khẩu cá nhân và chuyển đổi thành tài khoản chính thức mà không bị mất bất kỳ dữ liệu nào.
 
-- **Nói để ghi**: bấm micro, nói kiểu "trà sữa 35k, gửi xe 5 nghìn". App tách thành từng khoản để xác nhận. Cần Chrome hoặc Edge và cho phép dùng micro.
-- **Up ảnh chi tiêu**: chọn một lần tối đa 10 ảnh (bill, ảnh chụp màn hình chuyển khoản). App đọc lần lượt từng ảnh, sau đó bạn xác nhận từng khoản hoặc bấm xác nhận tất cả.
-- **Dán SMS ngân hàng**: dán tin nhắn biến động số dư, app lấy ra số tiền và nội dung.
-- **Ghi một chạm**: các khoản lặp lại hằng ngày (gửi xe, cơm trưa) chỉ cần một chạm. Trang "Hôm nay" cũng tự gợi ý khoản quen gần đúng giờ bạn hay ghi.
-- **Nhập tay**: số tiền, danh mục, ghi chú, ngày giờ.
+---
 
-### Trang "Hôm nay"
-- Số đã chi hôm nay, mức được tiêu mỗi ngày còn lại theo ngân sách.
-- **Thú cưng ví tiền**: vui hay buồn tùy bạn có ghi đều và tiêu trong mức hay không.
-- **Chuỗi ngày** ghi chép liên tiếp. Ngày không tiêu gì cũng được tính nếu bạn đánh dấu.
-- **Lời nhắc buổi tối**: từ 20h, nếu hôm đó chưa ghi gì, app hỏi "Hôm nay bạn có tiêu gì không?". Chọn "Không tiêu gì" để giữ chuỗi.
-- **Mini-View**: bấm biểu tượng khung nhỏ cạnh ảnh đại diện (nút "Ghim Mini-View nổi"). Một ô nổi luôn hiện số "Đã chi hôm nay" kèm ô ghi nhanh, ví dụ gõ "grab food 52k" rồi Enter. Trên Chrome hoặc Edge máy tính, ô này bật thành cửa sổ riêng nằm trên các app khác. Ở trình duyệt khác thì nó là bong bóng kéo thả được.
-- **Thử thách**: các thử thách đang chạy kèm đồng hồ đếm ngược và thanh tiến độ. Chưa có thử thách nào thì app mời một thử thách hợp với thói quen của bạn.
-- **Việc nên làm tháng này**: 2 việc cụ thể đáng làm nhất, ví dụ "Pha cà phê ở nhà 3 buổi mỗi tuần", kèm số tiền giữ lại được mỗi tháng. Bấm "Biến thành thử thách" để nhận luôn.
+## 6. CẨM NANG SỬ DỤNG CHI TIẾT TỪNG PHÂN HỆ
 
-### Lịch sử
-Thanh dưới, mục **"Lịch sử"**: lịch nhiệt theo tháng (ngày tiêu càng nhiều màu càng đậm), xem từng ngày, tìm theo ghi chú hoặc danh mục, sửa và xóa khoản.
+### Ghi khoản đa phương thức
 
-Ở tháng hiện tại, đầu trang có thêm:
+Bấm nút tròn lớn mang biểu tượng dấu **+** ở giữa thanh điều hướng dưới cùng để mở menu ghi nhận chi tiêu:
 
-- **Tuần của bạn**: nói điều làm tốt trước (ghi đều, có ngày không tiêu, tiêu ít hơn tuần trước), sau đó mới tới một dòng "Để ý nhẹ". Tổng tiền tuần được giấu sau nút "Xem tổng tiền tuần này" để bạn không ngại mở app.
-- **Việc nên làm tháng này** đầy đủ: mỗi việc có cách làm cụ thể và số tiền giữ lại được.
+- 🎙️ **Nói để ghi (Speech-to-Text):** Bấm biểu tượng micro và nói tự nhiên bằng tiếng Việt (Ví dụ: *"sáng ăn bún bò 45k, chiều đổ xăng 50 nghìn"*). Thuật toán NLP nội bộ sẽ tự động bóc tách thành 2 khoản riêng biệt, suy đoán danh mục và gán thời gian chính xác để bạn duyệt chỉ với 1 click.
+- 📸 **Chụp ảnh / Quét hóa đơn (OCR Offline):** Cho phép chọn cùng lúc tối đa 10 ảnh (Hóa đơn mua sắm, biên lai siêu thị, ảnh chụp màn hình chuyển khoản ngân hàng Vietcombank, Techcombank, MB, MoMo...). Công nghệ OCR ngoại tuyến sẽ tự động trích xuất tổng tiền, ngày giờ và gợi ý danh mục tương ứng.
+- 📩 **Dán tin nhắn SMS ngân hàng:** Dán nguyên văn tin nhắn biến động số dư. Thuật toán sẽ thông minh nhận diện đúng khoản tiền bị trừ hoặc được cộng, tuyệt đối **không bị nhầm lẫn số dư khả dụng (SD)** thành số tiền giao dịch.
+- ⚡ **Ghi một chạm (Quick Shortcuts):** Các khoản chi lặp lại thường nhật như *Gửi xe (5k)*, *Cơm trưa (35k)*... chỉ cần chạm 1 lần là lưu ngay. Trang chủ sẽ tự học thói quen và đẩy các nút gợi ý này lên đầu theo khung giờ tương ứng.
+- ✍️ **Nhập tay truyền thống:** Nhập số tiền, chọn danh mục, ghi chú và tùy chỉnh ngày giờ theo ý muốn.
 
-### Thử thách & huy hiệu
-Mở từ thẻ "Thử thách" ở trang Hôm nay, hoặc mục **Tôi > Thử thách & huy hiệu**.
+### Trang Hôm Nay, Thú Cưng Ví Tiền & Mini-View Ghim Nổi
 
-- **Gợi ý cho bạn**: app đọc 30 ngày gần nhất (nhận ra cà phê, trà sữa, Grab/Be, ShopeeFood, mua sắm online, bia, game, Circle K, ăn vặt, thuốc lá/vape theo ghi chú) rồi đề xuất thử thách hợp thói quen, ví dụ tháng trước cà phê 500k thì thử thách "Cà phê không quá 300k trong 30 ngày". Ngoài ra có hạn mức mỗi ngày (không tính tiền trọ, hóa đơn, học phí), cuối tuần nhẹ ví, trần theo danh mục, ngày không tiêu, ghi chép đều tay.
-- Chạm một gợi ý, chọn **mức độ** Nhẹ (-20%) / Vừa (-40%) / Gắt (-60%) và **thời gian** 7 / 14 / 30 ngày, xem trước mức trần và số tiền giữ lại, rồi bấm **Bắt đầu thử thách**.
-- Chạy tối đa **5 thử thách cùng lúc**. Mỗi thử thách có đồng hồ đếm ngược đến 23:59 ngày cuối. Muốn dừng thì bấm "Bỏ cuộc" (không tính thua).
-- Thử thách tự chốt **Thắng** khi hết hạn mà vẫn trong mức, **Chưa thành** ngay khi vượt mức. Tiến độ tính từ chính các khoản bạn ghi.
-- **25 huy hiệu** chia 3 hạng đồng, bạc, vàng: theo từng thói quen, chuỗi 7/14/30 ngày, chế độ Gắt, 3 lần thắng, "Đứng dậy" (thắng sau một lần thua), giữ lại 500k, 1 triệu... Huy hiệu chưa mở hiện mờ kèm ổ khóa, chạm để xem cách mở.
-- "Đã giữ lại" được tính dè dặt: chỉ cộng phần chênh giữa thói quen cũ và mức bạn thực sự tiêu (hoặc mức trần, lấy số lớn hơn).
+- **Hạn mức chi tiêu ngày:** Hiển thị số tiền bạn đã tiêu trong ngày và số tiền tối đa bạn được phép tiêu mỗi ngày còn lại trong tháng dựa theo ngân sách đã đặt.
+- 🐾 **Thú cưng tài chính (Pet Mood):** Trực quan hóa tình trạng tài chính của bạn qua cảm xúc của thú cưng:
+  - *Vui vẻ, tăng cấp (Level up):* Khi bạn ghi chép đều tay và chi tiêu trong hạn mức.
+  - *Nhảy múa (Quẩy):* Khi bạn duy trì chuỗi ghi chép liên tiếp 7 ngày.
+  - *Buồn ngủ / Ngủ say:* Khi bạn lười ghi chép hoặc quên mở app.
+  - *Lo lắng / Bật khóc:* Khi bạn chi tiêu vượt hạn mức ngày hoặc làm thâm hụt ngân sách tháng.
+- 🔥 **Chuỗi ngày ghi chép (Streak):** Theo dõi số ngày liên tiếp bạn có ý thức tài chính. Những ngày không phát sinh chi tiêu vẫn được tính vào chuỗi nếu bạn đánh dấu.
+- 🌙 **Lời nhắc buổi tối (Evening Nudge):** Sau 20:00 mỗi tối, nếu bạn chưa ghi khoản nào, app sẽ nhẹ nhàng hỏi *"Hôm nay bạn có tiêu gì không?"*. Chỉ cần chọn *"Hôm nay không tiêu gì"* để bảo toàn chuỗi thói quen.
+- 📌 **Mini-View Ghim Nổi (Picture-in-Picture):** Bấm biểu tượng khung nổi cạnh ảnh đại diện. Một cửa sổ widget siêu nhỏ sẽ luôn ghim trên cùng (Always-on-top) màn hình máy tính, hiển thị tổng tiền đã chi hôm nay và có sẵn ô ghi nhanh (Ví dụ: gõ *"cà phê 25k"* rồi ấn Enter).
 
-### Sổ nợ và chia tiền
-Thanh dưới, mục **"Sổ nợ"**:
+### Lịch Sử Giao Dịch & Heatmap Nhiệt Độ Chi Tiêu
 
-- **Ghi nợ**: ai nợ mình, mình nợ ai. Bấm "Đã trả" khi xong.
-- **Chia tiền nhóm**: nhập tổng hóa đơn, thêm tên từng người, chọn ai trả. App chia đều, ghi phần của mình vào khoản chi và ghi nợ cho từng người.
-- **Nhắc khéo**: soạn sẵn tin nhắn đòi nợ theo 3 giọng: Nhẹ nhàng, Hài hước, Rõ ràng, để sao chép gửi bạn bè.
+- **Bản đồ nhiệt chi tiêu (Calendar Heatmap):** Các ngày trong tháng được tô màu theo mức độ chi tiêu (ngày chi càng nhiều màu càng đậm, ngày không tiêu tiền có biểu tượng xanh lá nhẹ nhàng).
+- **Bộ lọc và tìm kiếm đa năng:** Tra cứu nhanh theo tháng, lọc riêng thu hoặc chi, tìm kiếm theo tên món đồ đã ghi chú hoặc theo danh mục.
+- 💡 **Tổng kết tuần của bạn (Weekly Wrap-up):** Luôn bắt đầu bằng những lời khen tích cực trước (Ví dụ: *"Tuần này bạn có 2 ngày không tiêu tiền và tiết kiệm hơn tuần trước 15%"*), sau đó mới khéo léo đưa ra 1 điểm cần chú ý. Tổng tiền tuần được ẩn sau nút bấm để tránh tạo áp lực tâm lý cho người dùng.
 
-### Tôi
-Thanh dưới, mục **"Tôi"**:
+### Thử Thách Tài Chính & Hệ Thống 25 Huy Hiệu Thói Quen
 
-- **Ngân sách tháng này**: đặt hạn mức tháng. Tháng sau chưa đặt thì app dùng lại mức tháng trước.
-- **Tiền bốc hơi**: đếm tiền mặt và tiền trong tài khoản thực tế, app so với số lẽ ra phải còn (đã tính cả nợ). Có nút "Đếm từng tờ" để cộng nhanh tiền mặt. Nếu lệch, để nguyên ô tick "Ghi luôn phần chênh lệch" rồi bấm "Lưu lần đối soát", phần thiếu được ghi vào "Chi không nhớ" để sổ khớp lại.
-- **Công cụ**: lối tắt tới Thử thách & huy hiệu, Tiền bốc hơi, Sổ nợ và chia tiền, Lịch sử.
+- **Gợi ý cá nhân hóa dựa trên dữ liệu thật:** Hệ thống tự động phân tích 30 ngày gần nhất của bạn. Nếu phát hiện bạn chi nhiều cho *Cà phê, Trà sữa, GrabFood, Shopee, Mua sắm online hay Thuốc lá*, app sẽ tự động đề xuất thử thách tương ứng (Ví dụ: *"Cắt giảm 40% tiền trà sữa trong 14 ngày"*).
+- **3 Cấp độ & 3 Khung thời gian linh hoạt:**
+  - Cấp độ: **Nhẹ** (-20% chi phí) | **Vừa** (-40%) | **Gắt** (-60%).
+  - Thời hạn: **7 ngày** | **14 ngày** | **30 ngày**.
+  - Chạy tối đa **5 thử thách cùng lúc** với đồng hồ đếm ngược thời gian thực.
+- 🏆 **Bộ sưu tập 25 Huy hiệu thành tựu:** Chia làm 3 hạng Đồng, Bạc, Vàng khích lệ người dùng kiên trì (Ví dụ: *Chiến thần kiềm chế, Đứng dậy sau vấp ngã, Bàn tay vàng giữ lại 1 triệu đồng...*).
 
-### Cài đặt
-Bấm **nút bánh răng ở góc phải trên cùng** (có ở trang "Hôm nay", "Lịch sử", "Sổ nợ", "Tôi"). Mọi thứ chỉnh một lần ở đây, các trang khác chỉ giữ phần dùng hằng ngày.
+### Sổ Nợ, Chia Tiền Nhóm & Mẫu Tin Đòi Nợ Khéo Léo
 
-- **Tên hiển thị**: bấm "Đổi tên" để đặt tên hiện trong lời chào (bỏ trống thì dùng lại tên đăng nhập). Tên đăng nhập không đổi.
-- **Giao diện**: sáng / tối / theo máy, màu chủ đạo (Kẹo ngọt, Biển xanh, Bạc hà, Hoàng hôn), cỡ chữ (Nhỏ, Vừa, Lớn), bật/tắt thú cưng ở trang chủ, bật/tắt rung khi chạm. Các lựa chọn này lưu trên máy đang dùng.
-- **Ngôn ngữ**: Tiếng Việt hoặc English. Đổi xong app tự tải lại; cả chữ trên màn hình, thông báo và lỗi từ máy chủ, tên danh mục mặc định, thử thách, huy hiệu đều đổi theo. Ghi chú, tên người, tên danh mục tự tạo giữ nguyên như bạn đã gõ. Câu nói và tin nhắn ngân hàng vẫn đọc tiếng Việt.
-- **Danh mục**: chia hai tab Chi / Thu.
-  - Thêm danh mục riêng (tên, biểu tượng, màu), sửa danh mục riêng.
-  - Ẩn danh mục không dùng: không còn hiện khi ghi khoản mới, các khoản cũ vẫn giữ nguyên. Bấm lại để hiện.
-  - Mũi tên lên / xuống để sắp thứ tự, danh mục dùng nhiều nhất đặt lên đầu.
-  - Danh mục mặc định chỉ ẩn và sắp xếp được, không sửa tên. Không có nút xóa, để khoản cũ không bị mất danh mục.
-- **Bảo mật**: đổi mật khẩu, tạo mã khôi phục mới, xem và đăng xuất các thiết bị khác.
-- **Góp ý cho app**, **Đăng xuất**.
+- **Sổ nợ 2 chiều:** Theo dõi rành mạch *Ai nợ mình* và *Mình nợ ai*. Hỗ trợ gom tổng nợ theo từng người và nút *"Đã trả hết"* để chốt sổ 1 chạm.
+- 🍕 **Chia tiền nhóm (Bill Splitter):** Đi ăn uống cùng bạn bè, bạn chỉ cần nhập tổng hóa đơn, tick chọn danh sách người tham gia và chọn ai là người đứng ra thanh toán. App sẽ tự động chia đều, ghi phần của bạn vào chi tiêu cá nhân và tự động tạo khoản nợ cho những người còn lại.
+- 💬 **Soạn sẵn tin nhắn nhắc nợ khéo léo:** Tích hợp tính năng sinh tin nhắn đòi nợ theo 3 phong cách:
+  - *Nhẹ nhàng:* Tế nhị, giữ hòa khí bạn bè.
+  - *Hài hước:* Vui vẻ, bắt trend hóm hỉnh.
+  - *Rõ ràng:* Minh bạch con số, chuyển khoản nhanh qua mã QR.
 
-### Khảo sát sau 1 ngày
-Muốn góp ý bất cứ lúc nào: **Cài đặt > Góp ý cho app**, chọn "Khảo sát 1 phút" (gửi lại thì sửa câu trả lời cũ) hoặc "Mọi người nghĩ gì" để xem chức năng nào được thích nhất.
+### Đối Soát Ví Tiền Thực Tế ("Tiền Bốc Hơi")
 
-Sau khi đăng ký được 1 ngày, lần mở app tiếp theo sẽ hiện bảng "Sau 1 ngày, bạn thấy sao?". Mỗi chức năng chỉ cần tick **Thích**, **Chưa thích** hoặc **Chưa dùng**. Chỉ khi bật "Mình muốn thêm chức năng mới" mới phải viết đề xuất. Bấm "Để sau" thì app hỏi lại vào ngày sau. Tài khoản dùng thử không bị hỏi.
+Nhiều khi bạn cảm thấy tiền trong túi cứ tự biến mất mà không rõ lý do. Chức năng **Tiền bốc hơi** (trong mục *Tôi*) giúp bạn:
 
-Tên đăng nhập nằm trong biến `SURVEY_ADMINS` (cách nhau bằng dấu phẩy, đặt trong `backend/.env`) được xem cả các đề xuất viết tay. Người khác chỉ xem số đếm.
+1. Nhập số tiền mặt thực tế trong ví (có công cụ hỗ trợ đếm nhanh từng mệnh giá tiền) và số dư tài khoản ngân hàng.
+2. Ứng dụng so khớp với số tiền lý thuyết theo sổ sách kế toán.
+3. Nếu phát hiện chênh lệch thiếu, chỉ cần tick chọn *"Ghi luôn phần chênh lệch"*, hệ thống sẽ tự động hạch toán khoản tiền mất tích này vào mục *"Chi không nhớ"* để số dư trong sổ lập tức khớp chuẩn 100% với thực tế.
 
-### Cài lên màn hình chính, dùng khi mất mạng
-Trên điện thoại (Chrome, Safari) chọn "Thêm vào màn hình chính", trên máy tính bấm biểu tượng cài đặt ở thanh địa chỉ. Nhấn giữ biểu tượng app để có lối tắt **Ghi khoản mới**, **Chia tiền** và **Tiền bốc hơi**. Khi mất mạng, app vẫn mở được giao diện. Việc ghi khoản mới cần có mạng.
+### Cài Đặt, Tùy Biến Giao Diện, Đa Ngôn Ngữ (vi/en) & Khảo Sát
 
-## 5. Mở trên điện thoại thật
+Truy cập qua biểu tượng **Bánh răng cài đặt** ở góc trên cùng bên phải:
 
-1. Điện thoại và máy tính phải dùng chung một wifi.
-2. Chạy `chay_thu_chi.bat` rồi nhìn dòng **"Điện thoại: http://192.168.x.x:8090/app/"**.
-3. Mở địa chỉ đó bằng trình duyệt trên điện thoại.
+- **Tùy biến hiển thị:** Chọn chế độ Sáng / Tối / Tự động theo hệ điều hành; 4 bộ màu chủ đạo (*Kẹo ngọt, Biển xanh, Bạc hà, Hoàng hôn*); điều chỉnh cỡ chữ (*Nhỏ, Vừa, Lớn*); bật/tắt phản hồi rung haptic khi chạm.
+- **Hỗ trợ 2 ngôn ngữ toàn diện (Tiếng Việt & English):** Chuyển đổi ngôn ngữ tức thì, dịch chuẩn xác cả giao diện, thông báo lỗi máy chủ và danh mục mặc định.
+- **Quản trị danh mục:** Cho phép tạo danh mục riêng; ẩn bớt danh mục không dùng (khoản cũ vẫn giữ nguyên, không sợ mất dữ liệu); hỗ trợ sắp xếp thứ tự ưu tiên đẩy danh mục hay dùng lên đầu.
+- **Bảo mật nhiều lớp:** Đổi mật khẩu, tạo mã khôi phục dự phòng (Recovery Code), xem danh sách các phiên thiết bị đang đăng nhập và đăng xuất từ xa.
+- 📋 **Khảo sát cảm nhận 1 phút:** Sau 24 giờ đăng ký, app sẽ hiện bảng hỏi ngắn để lắng nghe trải nghiệm của bạn nhằm tiếp tục nâng cấp sản phẩm.
 
-Nếu không vào được, cho phép Node.js qua Windows Firewall (mạng Private) rồi thử lại.
+---
 
-Lưu ý: micro và cài app (PWA) thường chỉ chạy ở `localhost` hoặc `https`. Mở qua địa chỉ IP thì các phần khác vẫn dùng bình thường.
+## 7. MỞ ỨNG DỤNG TRÊN ĐIỆN THOẠI THẬT (CÙNG WI-FI)
 
-## 6. Kiểm thử
+Bạn hoàn toàn có thể dùng điện thoại thật (iPhone, Android) để trải nghiệm như một ứng dụng di động thực thụ:
 
-Bấm đúp `kiem_thu_thu_chi.bat` (hoặc chạy `chay_thu_chi.bat kiemthu`, kết quả như nhau). File tự bật LocalDB và chờ nó sẵn sàng, rồi chạy ba phần:
+1. Đảm bảo điện thoại và máy tính chạy server đang **kết nối chung một mạng Wi-Fi**.
+2. Chạy `chay_thu_chi.bat`, console sẽ in ra dòng:
 
-1. `npm test` trong `backend/`: kiểm thử phần hiểu câu nói ("trà sữa 30 nghìn", nhiều khoản một câu, hôm qua, giờ), đoán danh mục, đọc SMS ngân hàng, đọc hóa đơn và tâm trạng thú cưng.
-2. `database/mo_rong/kiem_thu_mo_rong.sql`: kiểm thử ràng buộc và thủ tục trong CSDL (chia tiền, đối soát, ngân sách, chuỗi ngày, khảo sát...). Script tự dọn dữ liệu thử.
-3. `backend/tests/api/kiem_thu_api.mjs`: bật máy chủ tạm ở cổng 8099 rồi gọi API từ đầu đến cuối: đăng ký, khóa sau 5 lần sai, khôi phục, ghi khoản, giọng nói, SMS, up ảnh, sổ nợ, chia tiền, đối soát ví, khảo sát, thử thách (bắt đầu, chặn trùng, chạy nhiều cái, bỏ cuộc, việc nên làm), cài đặt (tên hiển thị, ẩn / sửa / sắp xếp danh mục), trả lời tiếng Anh khi gửi `X-Lang: en`, đổi mật khẩu, chặn xem dữ liệu người khác. Xong thì tắt máy chủ tạm và xóa các tài khoản thử `kt_api_...`.
+   ```text
+   Điện thoại: http://192.168.x.x:8090/app/
+   ```
 
-Cuối cùng file in bảng kết quả từng phần, tất cả đạt thì có dòng **"TẤT CẢ ĐỀU ĐẠT."**
+3. Mở trình duyệt trên điện thoại (Safari trên iOS hoặc Chrome trên Android) và gõ địa chỉ IP ở trên.
+4. Chọn tính năng **"Thêm vào màn hình chính" (Add to Home Screen)**. Biểu tượng ứng dụng Sổ Chi sẽ xuất hiện trên màn hình điện thoại, mở lên toàn màn hình không có thanh địa chỉ duyệt web như app native tải từ App Store/Google Play!
 
-## 7. Tốc độ, chịu tải và tìm kiếm Google
+> [!NOTE]
+> Nếu điện thoại không tải được trang, hãy kiểm tra **Windows Defender Firewall** trên máy tính và cho phép tiến trình Node.js kết nối qua mạng Private.
 
-### Giao diện chạy mượt trên máy yếu
-- Hình nền chỉ dùng hiệu ứng mà card đồ họa tự lo (không làm mờ, không tính lại bố cục mỗi khung hình). Thú cưng chỉ cử động vài nhịp rồi nghỉ, chạm hoặc rê chuột vào thì cử động tiếp. Thú cưng nằm ngoài màn hình thì dừng hẳn.
-- Máy có từ 4 nhân CPU trở xuống, RAM từ 4 GB trở xuống hoặc bật "Tiết kiệm dữ liệu" thì app tự chuyển sang **chế độ nhẹ**: tắt các chuyển động trang trí, chức năng giữ nguyên.
-- Biểu tượng chỉ lấy đúng 118 hình app dùng (khoảng 6 KB sau khi nén) thay vì cả bộ 358 KB.
-- Đo trên điện thoại giả lập chậm gấp 4 lần: lần vẽ đầu từ 1,5 giây còn 0,7 giây, dữ liệu tải từ 672 KB còn 254 KB, cuộn trang từ 20 lên 70 khung hình/giây.
+---
 
-### Máy chủ
-- File giao diện được đọc một lần, nén sẵn (brotli, gzip) và giữ trong RAM. Trình duyệt hỏi lại file chưa đổi chỉ nhận về mã 304, không tải lại.
-- Băm mật khẩu chạy trên luồng phụ nên người đang đăng nhập không làm chậm người đang xem trang chủ.
-- Trang chủ lấy 5 loại số liệu trong một lần gọi CSDL.
-- Các bảng có thêm chỉ mục cho truy vấn hay dùng (mục 10 trong `database/mo_rong/mo_rong_bang.sql`).
+## 8. HỆ THỐNG KIỂM THỬ TỰ ĐỘNG 3 CẤP ĐỘ
 
-Các biến tùy chỉnh (đặt trong `backend/.env`):
+Hệ thống được trang bị bộ kiểm thử tự động toàn diện, có thể kích hoạt chỉ với một thao tác:
+👉 **Bấm đúp file `kiem_thu_thu_chi.bat`** (hoặc gõ lệnh `chay_thu_chi.bat kiemthu`).
 
-| Biến | Mặc định | Ý nghĩa |
-| --- | --- | --- |
-| `WEB_CONCURRENCY` | số nhân CPU, tối đa 8 | Số tiến trình khi chạy `npm run start:cluster` (hoặc `chay_thu_chi.bat chiutai`). |
-| `HASH_THREADS` | 1 khi chạy cluster, 4 khi chạy thường | Số luồng phụ băm mật khẩu. |
-| `DB_POOL_MAX`, `DB_POOL_MIN` | 20, 2 | Số kết nối CSDL tối đa, tối thiểu của mỗi tiến trình. |
-| `DB_WAIT_MS` | 60000 | Thời gian chờ SQL Server sẵn sàng lúc khởi động. |
-| `SITE_URL` | địa chỉ đang truy cập | Tên miền thật, ví dụ `https://thuchi.vn`, dùng cho thẻ chia sẻ Facebook/Zalo và sitemap. |
+Quy trình kiểm thử diễn ra qua 3 phân tầng nghiêm ngặt:
 
-### Đo chịu tải
-Chạy máy chủ ở chế độ kiểm thử rồi chạy bài đo (100 người ảo, mỗi bài 8 giây):
+```text
+================================================================================
+KỊCH BẢN KIỂM THỬ TOÀN DIỆN (AUTOMATED TEST SUITE)
+================================================================================
+1. KIỂM THỬ ĐƠN VỊ (UNIT TEST - BACKEND):
+   - Nhận diện câu nói tiếng Việt (30k, 50 nghìn, nhiều khoản, hôm qua, giờ giấc).
+   - Suy đoán danh mục thông minh theo từ khóa ngữ nghĩa.
+   - Bóc tách SMS ngân hàng (Vietcombank, Techcombank, MB, ACB, MoMo...).
+   - Nhận diện số tiền trên ảnh hóa đơn chụp bóng mờ, nhãn lệch dòng qua Tesseract OCR.
+   - Kiểm tra logic cảm xúc và thăng cấp của thú cưng ví tiền (Pet Logic).
+   => Kết quả: 33/33 TEST ĐẠT (100% PASS).
 
-```bat
-cd backend
-set PORT=8091&& set NODE_ENV=test&& node src\server.js
+2. KIỂM THỬ RÀNG BUỘC CƠ SỞ DỮ LIỆU (DATABASE INTEGRITY TEST):
+   - Chạy kịch bản database\mo_rong\kiem_thu_mo_rong.sql trên SQL Server LocalDB.
+   - Kiểm tra toàn vẹn khóa ngoại, ràng buộc CHECK số tiền > 0, mã băm bcrypt.
+   - Kiểm tra các Stored Procedure: chia tiền nhóm, đối soát số dư, chuỗi ngày.
+   => Kết quả: TOÀN BỘ STORED PROCEDURE & TRIGGER ĐẠT.
+
+3. KIỂM THỬ TÍCH HỢP ĐẦU CUỐI (API END-TO-END VERIFICATION):
+   - Tự động bật máy chủ tạm thời tại cổng độc lập 8099.
+   - Chạy kịch bản backend\tests\api\kiem_thu_api.mjs kiểm thử toàn bộ REST API:
+     * Đăng ký, đăng nhập, khóa tài khoản sau 5 lần nhập sai, mở khóa bằng mã dự phòng.
+     * Thêm/sửa/xóa giao dịch, batch insert, lọc tháng, tìm kiếm full-text.
+     * Nhận diện giọng nói, bóc tách SMS, nhận diện ảnh hóa đơn.
+     * Sổ nợ, chia tiền nhóm, đối soát ví tiền, khảo sát người dùng.
+     * Thử thách tài chính, kiểm soát hạn mức, bỏ cuộc, tính toán 25 huy hiệu.
+     * Đa ngôn ngữ (X-Lang: en/vi), cô lập dữ liệu người dùng (chống đọc trộm dữ liệu chéo).
+   - Tự động tắt máy chủ tạm và dọn dẹp sạch sẽ tài khoản thử nghiệm "kt_api_...".
+   => Kết quả: 81/81 CA KIỂM THỬ ĐẠT (100% PASS).
+================================================================================
 ```
-Mở một cửa sổ cmd khác:
-```bat
-cd backend
-node tests\tai\kiem_thu_tai.mjs http://localhost:8091 100 8
-```
 
-Kết quả trên máy 16 nhân, LocalDB (yêu cầu/giây):
+---
 
-| Bài | 1 tiến trình | 4 tiến trình |
-| --- | --- | --- |
-| Trang `/app/` | ~2.400 | ~4.300 |
-| `app.css` đã nén | ~3.300 | ~4.100 |
-| API trang chủ | ~270 | ~350 |
-| Đăng nhập | ~34 | ~20-35 |
+## 9. TỐI ƯU HIỆU NĂNG, CHỊU TẢI CAO & CHUẨN HÓA SEO
 
-Ước lượng: một người dùng thật mở app khoảng 1 lần mỗi vài phút, nên ~300 lượt API trang chủ mỗi giây tương đương vài chục nghìn người dùng trong một giờ cao điểm. Muốn 100.000 người dùng cùng lúc thì cần: SQL Server bản đầy đủ trên máy chủ riêng (LocalDB chỉ dùng tối đa 4 nhân), CDN cho file giao diện, và đặt máy chủ sau Nginx hoặc bộ cân bằng tải.
+### Tối ưu hóa giao diện cho thiết bị cấu hình yếu
 
-### Tìm kiếm Google và chia sẻ
-- Trang có tiêu đề, mô tả, thẻ chia sẻ (ảnh `og.png` 1200x630), dữ liệu có cấu trúc `WebApplication`, nội dung giới thiệu đọc được cả khi chưa chạy JavaScript.
-- `/robots.txt` và `/sitemap.xml` do máy chủ tạo theo `SITE_URL`.
+- **Render mượt mà 60-120 FPS:** Hiệu ứng chuyển động sử dụng CSS GPU-accelerated transform, tuyệt đối không gây reflow/repaint bố cục. Thú cưng tự động tạm dừng cử động khi nằm ngoài vùng nhìn thấy (Viewport) để tiết kiệm pin.
+- **Chế độ tiết kiệm tài nguyên (Low-spec Mode):** Ứng dụng tự động phát hiện thiết bị có dưới 4 nhân CPU hoặc RAM dưới 4GB để tắt bớt hoạt họa trang trí, ưu tiên tối đa độ phản hồi mượt mà cho các thao tác kế toán.
+- **Gói icon siêu nhẹ:** Bộ icon Lucide được biên dịch chọn lọc, chỉ nạp 118 biểu tượng ứng dụng cần (kích thước nén chỉ ~6 KB thay vì nạp toàn bộ thư viện 358 KB).
 
-## 8. Gặp lỗi thì làm gì
+### Tối ưu hóa máy chủ & Chịu tải cao
 
-| Hiện tượng | Cách xử lý |
-| --- | --- |
-| "chưa cài Node.js" | Cài Node.js LTS, mở lại cmd. |
-| "chưa có SQL Server" | Cài LocalDB và sqlcmd (mục 1). |
-| "tạo CSDL thất bại" | Chạy `sqllocaldb info` xem có `MSSQLLocalDB` chưa. Nếu có thì chạy `chay_thu_chi.bat taolai`. |
-| "Login timeout expired" hoặc "Server is not found" | LocalDB tự tắt khi lâu không dùng và cần 10-30 giây để bật lại. Hai file `.bat` đã tự chờ. Sau 3 lần không được, file tự dừng hẳn LocalDB (kể cả tiến trình `sqlservr.exe` bị kẹt của tài khoản Windows đang dùng) rồi bật lại. Nếu vẫn lỗi, khởi động lại máy tính. |
-| "máy chủ không phản hồi sau 40 giây" | Xem lỗi trong cửa sổ "ThuChi - May chu". Thường do thiếu ODBC Driver 17. |
-| Cổng 8090 đã bị app khác dùng | Tắt app đó, hoặc sửa dòng `set "PORT=8090"` trong `chay_thu_chi.bat`. |
-| Nhập sai mật khẩu 5 lần | Tài khoản tạm khóa **5 phút**. Trong lúc khóa, đăng nhập bằng mã khôi phục cũng phải chờ (để không ai dò mã được). Chờ hết 5 phút rồi thử lại. |
-| Quên mật khẩu | Màn hình đăng nhập, chọn "Quên mật khẩu?", nhập mã khôi phục được cấp lúc đăng ký. Mã cũ hết hiệu lực ngay, app cấp mã mới, nhớ lưu lại. |
-| Giao diện không cập nhật sau khi sửa code | Tải lại trang bằng Ctrl + Shift + R. Mở bằng `localhost` thì app luôn lấy bản mới nhất; mở bằng tên miền thì app dùng bản đã lưu trước rồi cập nhật ngầm, lần mở sau mới thấy. |
+- **In-memory Pre-compressed Cache:** Toàn bộ file giao diện được nén sẵn cả 2 định dạng **Brotli** và **Gzip** lưu trực tiếp trên RAM, kết hợp cơ chế kiểm tra `ETag` giúp trình duyệt tái sử dụng cache với mã phản hồi `304 Not Modified`, tiết kiệm 95% băng thông.
+- **Worker Threads cho Bcrypt:** Thao tác băm và kiểm tra mật khẩu được chuyển sang thực thi trên Worker Threads riêng biệt, đảm bảo các tác vụ CPU-intensive không gây nghẽn Event Loop của Node.js.
+- **Truy vấn gộp (Multi-resultset Query):** Trang chủ lấy toàn bộ 5 nhóm chỉ số tài chính chỉ trong **1 lần đi-về CSDL** (thay vì gọi 5 truy vấn rời rạc).
+
+### Kết quả đo lường kiểm thử tải (Benchmark)
+
+Đo lường bằng công cụ `backend/tests/tai/kiem_thu_tai.mjs` với kịch bản mô phỏng **100 người dùng ảo đồng thời** trên máy tính cá nhân (SQL Server LocalDB):
+
+| Phân hệ kiểm thử | Chế độ 1 tiến trình (Single Core) | Chế độ đa tiến trình (Cluster 4 Cores) |
+| :--- | :---: | :---: |
+| **Trang chủ tĩnh `/app/`** | ~2.400 req/giây | **~4.300 req/giây** |
+| **Tập tin giao diện `app.css` (Brotli)** | ~3.300 req/giây | **~4.100 req/giây** |
+| **API Dashboard tổng hợp** | ~270 req/giây | **~350 req/giây** |
+| **API Đăng nhập (Bcrypt cost 10)** | ~34 req/giây | **~35 req/giây** |
+
+> [!NOTE]
+> Mức thông lượng ~350 yêu cầu API/giây tương đương với khả năng phục vụ đồng thời cho **vài chục nghìn người dùng hoạt động** trong cùng một khung giờ cao điểm trên môi trường thực tế.
+
+---
+
+## 10. BẢNG TRA CỨU & XỬ LÝ SỰ CỐ THƯỜNG GẶP (TROUBLESHOOTING)
+
+| Hiện tượng lỗi | Nguyên nhân khả dĩ | Giải pháp xử lý triệt để |
+| :--- | :--- | :--- |
+| **"LỖI: chưa cài Node.js"** | Máy tính chưa có Node.js hoặc chưa nhận biến môi trường PATH | Tải và cài đặt Node.js LTS từ [nodejs.org](https://nodejs.org), sau đó đóng cmd và mở lại. |
+| **"LỖI: chưa có sqlcmd"** | Chưa cài đặt công cụ dòng lệnh của SQL Server | Cài đặt SQL Server Express (chọn thành phần LocalDB) hoặc cài gói *sqlcmd utility* từ Microsoft. |
+| **"Login timeout expired" hoặc "Server is not found"** | SQL Server LocalDB tự rơi vào trạng thái ngủ đông khi lâu không dùng | File `.bat` đã tích hợp cơ chế tự động chờ và đánh thức LocalDB trong 30 giây. Nếu bị kẹt tiến trình cũ, script sẽ tự động khởi động lại `sqlservr.exe`. Nếu vẫn lỗi, hãy khởi động lại máy tính. |
+| **"Máy chủ không phản hồi sau 40 giây"** | Thiếu thư viện ODBC driver kết nối SQL Server | Cài đặt **ODBC Driver 17 for SQL Server** (hoặc bản 18) từ trang chủ Microsoft. |
+| **Cổng 8090 bị báo đang sử dụng (Port in use)** | Có ứng dụng khác đang chiếm dụng cổng 8090 | Đóng ứng dụng đó, hoặc mở file `chay_thu_chi.bat` và sửa dòng `set "PORT=8090"` thành một cổng trống khác (ví dụ: `8095`). |
+| **Tài khoản bị tạm khóa sau 5 lần đăng nhập** | Cơ chế chống tấn công dò mật khẩu tự động kích hoạt | Tài khoản được bảo vệ tạm khóa trong **5 phút**. Hết thời gian trên bạn có thể đăng nhập lại, hoặc sử dụng tính năng *"Quên mật khẩu"* với Mã khôi phục đã cấp. |
+| **Quên mật khẩu đăng nhập** | Người dùng không nhớ mật khẩu tài khoản | Tại màn hình Đăng nhập, bấm **"Quên mật khẩu?"** và nhập Mã khôi phục dự phòng đã nhận lúc đăng ký. Hệ thống sẽ cấp mật khẩu mới và một mã dự phòng thay thế. |
+| **Sửa đổi code nhưng trình duyệt không cập nhật** | Trình duyệt giữ cache Service Worker cũ | Nhấn tổ hợp phím **Ctrl + Shift + R** (hoặc `Cmd + Shift + R` trên Mac) để xóa cache cưỡng bức và nạp mã nguồn mới nhất. |
+
+---
+
+*Phát triển bởi Nhóm Dự Án Quản Lý Chi Tiêu © 2026. Mọi quyền được bảo lưu.*

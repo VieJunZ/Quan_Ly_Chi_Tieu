@@ -42,7 +42,7 @@ erDiagram
 **Quan hệ:**
 
 | Quan hệ | Kiểu | Khi xóa |
-|---|---|---|
+| --- | --- | --- |
 | `users` → `transactions` | 1 – nhiều (mỗi giao dịch thuộc đúng 1 người dùng) | Xóa người dùng → xóa luôn giao dịch của họ |
 | `users` → `categories` | 0..1 – nhiều (chỉ danh mục cá nhân có chủ) | Xóa người dùng → xóa luôn danh mục cá nhân của họ |
 | `categories` → `transactions` | 1 – nhiều (mỗi giao dịch thuộc đúng 1 danh mục) | Không cho xóa danh mục đang có giao dịch |
@@ -52,7 +52,7 @@ erDiagram
 ### 2.1. `users` – Người dùng
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `id` | INT IDENTITY | PK | |
 | `username` | NVARCHAR(30) | NOT NULL, UNIQUE, ≥ 3 ký tự | Không phân biệt hoa thường (`Tri` = `tri`) |
 | `password_hash` | VARCHAR(60) | NOT NULL, CHECK định dạng bcrypt | **Không lưu mật khẩu gốc.** Chuỗi phải dài 60 ký tự và bắt đầu bằng `$2a$`, `$2b$` hoặc `$2y$` |
@@ -61,7 +61,7 @@ erDiagram
 ### 2.2. `categories` – Danh mục thu/chi
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `id` | INT IDENTITY | PK | id 1–13 cố định cho danh mục mặc định |
 | `user_id` | INT | FK → `users.id`, NULL được | **NULL = danh mục mặc định**, có giá trị = danh mục cá nhân |
 | `name` | NVARCHAR(100) | NOT NULL, không rỗng | |
@@ -80,7 +80,7 @@ erDiagram
 Danh mục mặc định:
 
 | id | Tên | Loại | id | Tên | Loại |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | 1 | Ăn uống | expense | 8 | Y tế & Sức khỏe | expense |
 | 2 | Nhà cửa & Phòng trọ | expense | 9 | Khoản chi khác | expense |
 | 3 | Di chuyển & Xăng xe | expense | 10 | Tiền lương | income |
@@ -92,7 +92,7 @@ Danh mục mặc định:
 ### 2.3. `transactions` – Khoản thu/chi
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `id` | INT IDENTITY | PK | |
 | `user_id` | INT | NOT NULL, FK → `users.id` | Chủ sở hữu giao dịch |
 | `category_id` | INT | NOT NULL, FK → `categories.id` | |
@@ -111,7 +111,7 @@ Thư mục [`database/`](../../database):
 Chạy **đúng thứ tự từ trên xuống**, vì file sau dùng những gì file trước đã tạo:
 
 | Thứ tự | File | Nội dung |
-|---|---|---|
+| --- | --- | --- |
 | 1 | `create_database.sql` | Tạo CSDL `quan_ly_chi_tieu_db` |
 | 2 | `create_tables.sql` | Tạo 3 bảng, khóa chính, khóa ngoại, CHECK, UNIQUE, chỉ mục, trigger (cần CSDL đã có) |
 | 3 | `seed_categories.sql` | Nạp 13 danh mục mặc định (cần bảng `categories`) |
@@ -132,7 +132,7 @@ Các file chạy lại nhiều lần đều được. Bảng đã có sẽ đư�
 Xem tên máy chủ của bạn:
 
 | Bản cài | Tên máy chủ (`-S`) |
-|---|---|
+| --- | --- |
 | LocalDB | `(localdb)\MSSQLLocalDB` |
 | Express | `localhost\SQLEXPRESS` hoặc `.\SQLEXPRESS` |
 | Developer / bản mặc định | `localhost` |
@@ -251,7 +251,7 @@ SELECT TOP 1 id, username, password_hash FROM dbo.users WHERE username = @userna
 ### 5.6. Mã lỗi
 
 | Mã | Ý nghĩa | Gợi ý HTTP |
-|---|---|---|
+| --- | --- | --- |
 | 50001 | Người dùng không tồn tại | 404 |
 | 50002 | Số tiền phải lớn hơn 0 | 400 |
 | 50003 | Danh mục không tồn tại hoặc không thuộc người dùng | 404 |
@@ -269,6 +269,7 @@ SELECT TOP 1 id, username, password_hash FROM dbo.users WHERE username = @userna
 Code Backend hiện có trên nhánh `feature/backend` đang dùng **MySQL** (`mysql2`, `database/init.sql`, `docker-compose` với `mysql:8.0`). Để chuyển sang SQL Server, phía Backend cần:
 
 1. **Đổi thư viện kết nối:** thay `mysql2` bằng [`mssql`](https://www.npmjs.com/package/mssql).
+
    ```js
    const sql = require("mssql");
    const pool = await sql.connect({
@@ -284,6 +285,7 @@ Code Backend hiện có trên nhánh `feature/backend` đang dùng **MySQL** (`m
      .execute("dbo.sp_get_summary_by_user");
    const summary = result.recordset[0];
    ```
+
 2. **Đổi tên cột:** `users.password` → `users.password_hash`.
 3. **Đổi cú pháp truy vấn:** tham số `?` → `@ten`, `LIMIT n` → `TOP (n)`, `result.insertId` → `OUTPUT inserted.id`, `DATE_FORMAT` → `CONVERT(VARCHAR(10), col, 23)`. Hoặc dùng luôn các thủ tục ở mục 5, khi đó không cần tự viết lại SQL.
 4. **Lỗi giờ được trả ra thay vì lưu dữ liệu sai:** `storage.js` đang `catch` lỗi CSDL rồi chuyển sang lưu file JSON. Với các ràng buộc mới, những lỗi như số tiền ≤ 0 hay dùng danh mục của người khác cần được trả về client.
@@ -294,7 +296,7 @@ Code Backend hiện có trên nhánh `feature/backend` đang dùng **MySQL** (`m
 Đã đọc code trên nhánh `feature/backend` (`backend/src/services/storage.js`, các file `routes/*.routes.js`, `frontend/js/api.js`, `frontend/js/app.js`). Các trường Frontend cần đều có sẵn trong CSDL:
 
 | API | Frontend cần | Lấy từ CSDL |
-|---|---|---|
+| --- | --- | --- |
 | `POST /api/auth/register`, `/login` | `username` 3–30 ký tự, mật khẩu 8–128 ký tự | `users.username NVARCHAR(30)` (CHECK ≥ 3 ký tự), `users.password_hash` (bcrypt 60 ký tự) |
 | `GET /api/categories` | `id, name, type, icon, color` | `sp_get_categories_for_user` (thêm cột `is_default`) |
 | `POST /api/transactions` | gửi `amount, category_id, transaction_date, note, type` | `sp_add_transaction`. Trường `type` Frontend gửi lên **không cần lưu**, vì loại thu/chi lấy theo danh mục |
@@ -308,6 +310,7 @@ Một số điểm Backend cần lưu ý:
 - **Số tiền:** `DECIMAL(15,2)` được `mssql` trả về kiểu `number`, khớp với `Number(record.amount)` ở Frontend.
 
 > **Lưu ý về LocalDB:** thư viện `mssql` (driver `tedious`) chỉ kết nối được qua TCP, mà LocalDB **không mở cổng TCP**. Khi chạy Backend thật, cần một trong các cách sau:
+>
 > - **SQL Server Express/Developer:** bật TCP/IP cổng 1433 trong *SQL Server Configuration Manager* và bật *SQL Server and Windows Authentication mode*.
 > - **Docker:** dùng image `mcr.microsoft.com/mssql/server:2022-latest`.
 >
