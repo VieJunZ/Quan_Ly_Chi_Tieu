@@ -22,8 +22,8 @@ function rolling(key, el, to, options) {
 }
 
 function petCard(mini) {
-  const pet = mini.pet || { mood: "happy", level: 1, message: "" };
-  const holder = h("div", { class: "hero-pet", style: { margin: 0 } }, renderPet({ mood: pet.mood, level: pet.level, size: 128 }));
+  const pet = mini.pet || { mood: "happy", level: 1, message: "", coins: 100, pet_fullness: 80, equipped: {} };
+  const holder = h("div", { class: "hero-pet", style: { margin: 0 } }, renderPet({ mood: pet.mood, level: pet.level, size: 128, equipped: pet.equipped }));
   const bubble = h("div", { class: "bubble" }, pet.message || tr("Ghi một khoản để mình vui nha!"));
   holder.addEventListener("click", () => {
     const svg = holder.querySelector("svg");
@@ -46,7 +46,10 @@ function petCard(mini) {
   const streak = mini.streak || {};
   const meta = h("div", { class: "pet-meta" },
     h("span", { class: "badge" }, icon("star", 13), tr`Cấp ${pet.level || 1}`),
-    h("span", { class: `badge ${streak.current_streak ? "warn" : ""}` }, icon("flame", 13), tr`${streak.current_streak || 0} ngày liền`));
+    h("span", { class: `badge ${streak.current_streak ? "warn" : ""}` }, icon("flame", 13), tr`${streak.current_streak || 0} ngày liền`),
+    h("a", { class: "badge", href: "#/shop", style: { textDecoration: "none", color: "inherit", fontWeight: 700 } },
+      "🪙 ", tr`${pet.coins ?? 100} xu`),
+    h("span", { class: "badge", title: tr("Độ no của thú cưng") }, "🍖 ", `${pet.pet_fullness ?? 80}%`));
   if (pet.next_level_in) meta.append(h("span", { class: "badge" }, tr`còn ${pet.next_level_in} ngày lên cấp`));
 
   return h("section", { class: "card pet-card" }, holder, h("div", null, bubble, meta));
