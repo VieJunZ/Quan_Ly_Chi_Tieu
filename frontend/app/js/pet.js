@@ -279,7 +279,7 @@ export function renderPet({ mood = "happy", level = 1, size = 130, equipped = {}
       ${heldSvg}
       ${headSvg}
     </g>
-    ${EXTRAS[m] || ""}
+    ${headItem && m === "party" ? "" : (EXTRAS[m] || "")}
   </svg>`;
 
   const svg = new DOMParser().parseFromString(markup, "image/svg+xml").documentElement;

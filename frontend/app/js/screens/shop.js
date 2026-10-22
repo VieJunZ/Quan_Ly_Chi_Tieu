@@ -1,7 +1,7 @@
 /**
  * @file shop.js
  * @description Màn hình Tiệm đồ thú cưng (Pet Shop):
- * Mua phụ kiện bằng xu tích lũy, mặc/tháo phụ kiện, cho thú cưng ăn, xem lịch sử xu.
+ * Phòng thử đồ tương tác (Fitting Room), mua phụ kiện, mặc/tháo phụ kiện, cho thú cưng ăn, xem lịch sử xu.
  */
 
 import { tr } from "../i18n.js";
@@ -10,27 +10,27 @@ import { h, icon, haptic, toast, confetti, openSheet, busy } from "../ui.js";
 import { renderPet, pokeLine } from "../pet.js";
 
 const CATEGORIES = [
-  ["all", tr("Tất cả")],
-  ["head", tr("Mũ")],
-  ["face", tr("Mặt/Kính")],
-  ["emblem", tr("Trán")],
-  ["held", tr("Cầm tay")],
-  ["pedestal", tr("Bệ đứng")],
-  ["skin", tr("Skin")],
-  ["bg", tr("Nền")],
-  ["consumable", tr("Đồ ăn")],
-  ["utility", tr("Tiện ích")]
+  ["all", "✨ " + tr("Tất cả")],
+  ["head", "🎓 " + tr("Mũ")],
+  ["face", "🕶️ " + tr("Mặt/Kính")],
+  ["emblem", "🪙 " + tr("Trán")],
+  ["held", "🧋 " + tr("Cầm tay")],
+  ["pedestal", "🏆 " + tr("Bệ đứng")],
+  ["skin", "🤖 " + tr("Skin")],
+  ["bg", "🏡 " + tr("Nền")],
+  ["consumable", "🍜 " + tr("Đồ ăn")],
+  ["utility", "⚡ " + tr("Tiện ích")]
 ];
 
-const RARITY_COLORS = {
-  common: { bg: "rgba(100, 116, 139, 0.12)", color: "#64748b", label: tr("Phổ thông") },
-  rare: { bg: "rgba(59, 130, 246, 0.12)", color: "#3b82f6", label: tr("Hiếm") },
-  epic: { bg: "rgba(168, 85, 247, 0.14)", color: "#a855f7", label: tr("Sử thi") },
-  legendary: { bg: "rgba(234, 179, 8, 0.16)", color: "#ca8a04", label: tr("Huyền thoại") }
+const RARITY_INFO = {
+  common: { bg: "rgba(148, 163, 184, 0.18)", color: "var(--ink-soft)", label: tr("Phổ thông") },
+  rare: { bg: "rgba(59, 130, 246, 0.22)", color: "#3b82f6", label: tr("Hiếm") },
+  epic: { bg: "rgba(168, 85, 247, 0.24)", color: "#a855f7", label: tr("Sử thi") },
+  legendary: { bg: "rgba(245, 158, 11, 0.28)", color: "#f59e0b", label: tr("Huyền thoại") }
 };
 
 export async function shopScreen(ctx) {
-  const container = h("div", { class: "screen screen--shop stack" });
+  const container = h("div", { class: "screen screen--shop stack", style: { gap: "16px" } });
 
   let shopData = { coins: 0, pet_fullness: 80, items: [] };
   let petData = { pet: { mood: "happy", level: 1, equipped: {} } };
@@ -49,39 +49,116 @@ export async function shopScreen(ctx) {
   let coins = shopData.coins ?? 100;
   let fullness = shopData.pet_fullness ?? 80;
   let items = shopData.items || [];
-  let equipped = { ...(petData.pet?.equipped || {}) };
+  // Phụ kiện đang thực sự trang bị từ CSDL
+  let serverEquipped = { ...(petData.pet?.equipped || {}) };
+  // Phụ kiện đang hiển thị trên phòng thử đồ (có thể là đồ đang ướm thử)
+  let previewEquipped = { ...serverEquipped };
   let activeTab = "all";
+  let previewingItem = null;
 
   // Header
   const backBtn = h("button", { class: "btn-icon", type: "button", "aria-label": tr("Quay lại") }, icon("arrow-left"));
   backBtn.addEventListener("click", () => ctx.go("home"));
 
-  const coinPill = h("span", { class: "badge", style: { fontSize: "14px", fontWeight: "700", padding: "6px 12px", background: "rgba(250, 204, 21, 0.15)", color: "#b45309" } },
-    "🪙 ", `${coins} xu`);
+  const coinBadge = h("span", {
+    class: "badge",
+    style: {
+      fontSize: "14px",
+      fontWeight: "800",
+      padding: "6px 14px",
+      background: "linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(234, 179, 8, 0.1))",
+      color: "#f59e0b",
+      border: "1px solid rgba(245, 158, 11, 0.4)",
+      borderRadius: "999px",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "4px"
+    }
+  }, "🪙 ", `${coins} xu`);
 
   const historyBtn = h("button", { class: "btn small soft", type: "button" }, icon("history", 14), tr("Lịch sử"));
   historyBtn.addEventListener("click", () => openHistorySheet());
 
   const header = h("header", { class: "row between items-center" },
-    h("div", { class: "row items-center", style: { gap: "8px" } }, backBtn, h("h1", { style: { margin: 0, fontSize: "1.25rem" } }, tr("Tiệm đồ Thú cưng"))),
-    h("div", { class: "row items-center", style: { gap: "8px" } }, coinPill, historyBtn));
+    h("div", { class: "row items-center", style: { gap: "8px" } },
+      backBtn,
+      h("h1", { style: { margin: 0, fontSize: "1.3rem", fontWeight: "800" } }, tr("Tiệm đồ Thú cưng"))),
+    h("div", { class: "row items-center", style: { gap: "8px" } }, coinBadge, historyBtn));
 
-  // Live Pet Stage
-  const petStageHolder = h("div", { class: "hero-pet", style: { margin: "0 auto", cursor: "pointer" } });
-  const bubble = h("div", { class: "bubble", style: { textAlign: "center", marginBottom: "8px" } }, tr("Bạn muốn sắm gì cho mình nào?"));
-  const fullnessBarFill = h("div", { style: { height: "6px", borderRadius: "3px", background: "var(--primary, #8b5cf6)", width: `${fullness}%`, transition: "width 0.3s" } });
-  const fullnessText = h("span", { class: "faint", style: { fontSize: "12px" } }, tr`Độ no: ${fullness}/100 🍖`);
+  // Stage: Phòng thử đồ linh thú
+  const petStageHolder = h("div", {
+    class: "hero-pet",
+    style: {
+      margin: "0 auto",
+      cursor: "pointer",
+      position: "relative",
+      zIndex: 1,
+      filter: "drop-shadow(0 12px 24px rgba(139, 92, 246, 0.25))"
+    }
+  });
+
+  const speechBubble = h("div", {
+    style: {
+      position: "relative",
+      padding: "8px 16px",
+      borderRadius: "18px 18px 18px 4px",
+      background: "var(--glass-strong)",
+      border: "1px solid var(--stroke)",
+      color: "var(--ink)",
+      fontSize: "13.5px",
+      fontWeight: "700",
+      boxShadow: "var(--shadow)",
+      maxWidth: "92%",
+      margin: "0 auto 6px",
+      textAlign: "center"
+    }
+  }, tr("Bạn muốn sắm gì cho mình nào?"));
+
+  const fullnessBarFill = h("div", {
+    style: {
+      height: "8px",
+      borderRadius: "4px",
+      background: "var(--grad-main)",
+      width: `${Math.min(100, Math.max(0, fullness))}%`,
+      transition: "width 0.4s var(--spring)"
+    }
+  });
+
+  const fullnessLabel = h("span", {
+    style: { fontSize: "12px", fontWeight: "600", color: "var(--ink-soft)" }
+  }, tr`Độ no: ${fullness}/100 🍖`);
+
+  const resetPreviewBtn = h("button", {
+    class: "btn small soft",
+    type: "button",
+    style: {
+      fontSize: "11.5px",
+      padding: "2px 10px",
+      borderRadius: "999px",
+      display: "none"
+    }
+  }, "↩ " + tr("Bỏ ướm thử"));
+
+  resetPreviewBtn.addEventListener("click", () => {
+    previewEquipped = { ...serverEquipped };
+    previewingItem = null;
+    speechBubble.textContent = tr("Đã trả lại bộ trang phục đang mặc!");
+    resetPreviewBtn.style.display = "none";
+    refreshPetStage();
+    renderGrid();
+  });
 
   function refreshPetStage() {
     petStageHolder.replaceChildren(renderPet({
       mood: petData.pet?.mood || "happy",
       level: petData.pet?.level || 1,
-      size: 136,
-      equipped
+      size: 156,
+      equipped: previewEquipped
     }));
     fullnessBarFill.style.width = `${Math.min(100, Math.max(0, fullness))}%`;
-    fullnessText.textContent = tr`Độ no: ${fullness}/100 🍖`;
-    coinPill.textContent = `🪙 ${coins} xu`;
+    fullnessLabel.textContent = tr`Độ no: ${fullness}/100 🍖`;
+    coinBadge.textContent = `🪙 ${coins} xu`;
+    resetPreviewBtn.style.display = previewingItem ? "inline-flex" : "none";
   }
   refreshPetStage();
 
@@ -92,26 +169,87 @@ export async function shopScreen(ctx) {
       void svg.getBoundingClientRect();
       svg.classList.add("poked");
     }
-    bubble.textContent = pokeLine(petData.pet?.mood || "happy");
+    speechBubble.textContent = pokeLine(petData.pet?.mood || "happy");
     haptic([8, 30, 8]);
   });
 
-  const stageCard = h("section", { class: "card stack items-center", style: { background: "var(--card-bg, #fff)", border: "1px solid var(--border)", textAlign: "center" } },
-    bubble,
-    petStageHolder,
-    h("div", { style: { width: "100%", maxWidth: "200px", margin: "4px auto 0" } },
-      h("div", { style: { background: "rgba(0,0,0,0.06)", borderRadius: "3px", overflow: "hidden" } }, fullnessBarFill),
-      h("div", { style: { marginTop: "4px" } }, fullnessText)));
+  const stageCard = h("section", {
+    class: "card stack items-center",
+    style: {
+      background: "var(--grad-soft)",
+      border: "1px solid var(--stroke)",
+      borderRadius: "var(--radius)",
+      padding: "18px 16px 14px",
+      position: "relative",
+      overflow: "hidden"
+    }
+  },
+  // Vầng sáng spotlight sau lưng thú cưng
+  h("div", {
+    style: {
+      position: "absolute",
+      top: "10%",
+      left: "50%",
+      transform: "translateX(-50%)",
+      width: "200px",
+      height: "200px",
+      borderRadius: "50%",
+      background: "radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%)",
+      pointerEvents: "none"
+    }
+  }),
+  speechBubble,
+  petStageHolder,
+  h("div", {
+    class: "stack",
+    style: {
+      width: "100%",
+      maxWidth: "240px",
+      gap: "6px",
+      margin: "4px auto 0",
+      position: "relative",
+      zIndex: 1
+    }
+  },
+  h("div", { class: "row between items-center" }, fullnessLabel, resetPreviewBtn),
+  h("div", {
+    style: {
+      background: "rgba(0, 0, 0, 0.12)",
+      borderRadius: "4px",
+      overflow: "hidden",
+      padding: "1px"
+    }
+  }, fullnessBarFill)));
 
-  // Category Tabs
-  const tabsRow = h("div", { class: "row", style: { overflowX: "auto", paddingBottom: "4px", gap: "6px", scrollbarWidth: "none" } });
+  // Tabs danh mục
+  const tabsRow = h("div", {
+    class: "row",
+    style: {
+      overflowX: "auto",
+      padding: "4px 2px",
+      gap: "8px",
+      scrollbarWidth: "none"
+    }
+  });
+
   function renderTabs() {
     tabsRow.replaceChildren(...CATEGORIES.map(([key, label]) => {
       const active = activeTab === key;
       const btn = h("button", {
-        class: `btn small ${active ? "" : "soft"}`,
         type: "button",
-        style: { borderRadius: "999px", whiteSpace: "nowrap", padding: "4px 12px" }
+        style: {
+          borderRadius: "999px",
+          whiteSpace: "nowrap",
+          padding: "6px 14px",
+          fontSize: "13px",
+          fontWeight: active ? "700" : "500",
+          background: active ? "var(--grad-main)" : "var(--glass)",
+          color: active ? "#fff" : "var(--ink-soft)",
+          border: active ? "none" : "1px solid var(--stroke)",
+          boxShadow: active ? "var(--shadow-pop)" : "none",
+          cursor: "pointer",
+          transition: "all 0.2s"
+        }
       }, label);
       btn.addEventListener("click", () => {
         haptic(5);
@@ -124,83 +262,167 @@ export async function shopScreen(ctx) {
   }
   renderTabs();
 
-  // Grid
-  const grid = h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "10px" } });
+  // Grid vật phẩm
+  const grid = h("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+      gap: "12px",
+      paddingBottom: "24px"
+    }
+  });
+
+  function parseEffectIcon(effectData) {
+    if (!effectData) return "✨";
+    try {
+      const parsed = typeof effectData === "string" ? JSON.parse(effectData) : effectData;
+      return parsed.icon || (parsed.fullness ? "🍜" : "✨");
+    } catch {
+      return "✨";
+    }
+  }
 
   function renderGrid() {
     const filtered = items.filter((item) => activeTab === "all" || item.slot === activeTab);
     grid.replaceChildren(...filtered.map((item) => {
-      const rarity = RARITY_COLORS[item.rarity] || RARITY_COLORS.common;
-      const isEquipped = item.slot && equipped[item.slot]?.id === item.id;
+      const rarity = RARITY_INFO[item.rarity] || RARITY_INFO.common;
+      const isEquipped = item.slot && serverEquipped[item.slot]?.id === item.id;
+      const isPreviewing = previewEquipped[item.slot]?.id === item.id;
       const isOwned = item.owned_quantity > 0;
       const isConsumable = item.slot === "consumable" || item.slot === "utility";
+      const iconChar = parseEffectIcon(item.effect_data);
 
-      const actionBtn = h("button", { class: "btn small block", type: "button", style: { marginTop: "8px" } });
-
-      if (isConsumable) {
-        if (isOwned) {
-          actionBtn.textContent = tr`Dùng (còn x${item.owned_quantity})`;
-          actionBtn.classList.add("ok");
-          actionBtn.addEventListener("click", () => useItem(item, actionBtn));
-        } else {
-          actionBtn.textContent = tr`Mua ${item.price_coins} xu`;
-          actionBtn.addEventListener("click", () => buyItem(item, actionBtn));
-        }
-      } else {
-        if (isEquipped) {
-          actionBtn.textContent = tr("Đang mặc");
-          actionBtn.classList.add("soft");
-          actionBtn.style.color = "var(--ok, #10b981)";
-          actionBtn.addEventListener("click", () => toggleEquip(item, false, actionBtn));
-        } else if (isOwned) {
-          actionBtn.textContent = tr("Mặc đồ");
-          actionBtn.addEventListener("click", () => toggleEquip(item, true, actionBtn));
-        } else {
-          actionBtn.textContent = tr`Mua ${item.price_coins} xu`;
-          actionBtn.addEventListener("click", () => buyItem(item, actionBtn));
-        }
-      }
-
-      const itemCard = h("div", {
-        class: "card stack",
+      const actionBtn = h("button", {
+        class: "btn small block",
+        type: "button",
         style: {
-          padding: "12px",
-          background: isEquipped ? "rgba(139, 92, 246, 0.05)" : "var(--card-bg, #fff)",
-          border: isEquipped ? "1.5px solid var(--primary, #8b5cf6)" : "1px solid var(--border)",
-          borderRadius: "12px",
-          position: "relative",
-          cursor: "pointer"
-        }
-      },
-      h("div", { class: "row between items-center" },
-        h("span", { class: "badge", style: { fontSize: "11px", background: rarity.bg, color: rarity.color, fontWeight: "600" } }, rarity.label),
-        item.required_level > 1 ? h("span", { class: "faint", style: { fontSize: "11px" } }, `Lv.${item.required_level}`) : null),
-      h("div", { style: { fontWeight: "700", fontSize: "14px", marginTop: "4px" } }, item.name),
-      h("p", { class: "faint", style: { fontSize: "12px", margin: "2px 0 6px", minHeight: "32px", lineHeight: "1.3" } }, item.description),
-      h("div", { class: "row items-center", style: { fontWeight: "700", color: "#b45309", fontSize: "13px" } }, "🪙 ", `${item.price_coins} xu`),
-      actionBtn);
-
-      // Nhấp vào thẻ để ướm thử lên thú cưng ngay lập tức
-      itemCard.addEventListener("click", (e) => {
-        if (e.target.tagName === "BUTTON") return;
-        if (!isConsumable) {
-          equipped[item.slot] = { id: item.id, name: item.name };
-          refreshPetStage();
-          bubble.textContent = tr`Ướm thử: "${item.name}"!`;
-          haptic(5);
+          marginTop: "8px",
+          fontSize: "12.5px",
+          fontWeight: "700",
+          borderRadius: "12px"
         }
       });
 
-      return itemCard;
+      if (isConsumable) {
+        if (isOwned) {
+          actionBtn.textContent = tr`Dùng (x${item.owned_quantity})`;
+          actionBtn.classList.add("ok");
+          actionBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            useItem(item, actionBtn);
+          });
+        } else {
+          actionBtn.textContent = tr`Mua ${item.price_coins} xu`;
+          if (coins < item.price_coins) actionBtn.classList.add("soft");
+          actionBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            buyItem(item, actionBtn);
+          });
+        }
+      } else {
+        if (isEquipped) {
+          actionBtn.textContent = tr("✓ Đang mặc");
+          actionBtn.classList.add("soft");
+          actionBtn.style.color = "var(--ok, #10b981)";
+          actionBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleEquip(item, false, actionBtn);
+          });
+        } else if (isOwned) {
+          actionBtn.textContent = tr("Mặc đồ");
+          actionBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleEquip(item, true, actionBtn);
+          });
+        } else {
+          actionBtn.textContent = tr`Mua ${item.price_coins} xu`;
+          if (coins < item.price_coins) actionBtn.classList.add("soft");
+          actionBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            buyItem(item, actionBtn);
+          });
+        }
+      }
+
+      const card = h("div", {
+        class: "card stack",
+        style: {
+          padding: "12px",
+          borderRadius: "16px",
+          background: isPreviewing ? "var(--glass-strong)" : "var(--glass)",
+          border: isPreviewing ? "2px solid var(--violet)" : (isEquipped ? "1.5px solid var(--ok, #10b981)" : "1px solid var(--stroke)"),
+          boxShadow: isPreviewing ? "0 8px 20px -6px rgba(139, 92, 246, 0.4)" : "var(--shadow)",
+          position: "relative",
+          cursor: "pointer",
+          gap: "6px"
+        }
+      },
+      h("div", { class: "row between items-center" },
+        h("span", {
+          style: {
+            fontSize: "26px",
+            lineHeight: "1",
+            display: "inline-block"
+          }
+        }, iconChar),
+        h("span", {
+          class: "badge",
+          style: {
+            fontSize: "10.5px",
+            fontWeight: "700",
+            background: rarity.bg,
+            color: rarity.color,
+            padding: "2px 8px"
+          }
+        }, rarity.label)),
+      h("div", {
+        style: {
+          fontWeight: "700",
+          fontSize: "13.5px",
+          color: "var(--ink)",
+          lineHeight: "1.25"
+        }
+      }, item.name),
+      h("p", {
+        class: "faint",
+        style: {
+          fontSize: "11.5px",
+          lineHeight: "1.35",
+          minHeight: "32px",
+          margin: 0
+        }
+      }, item.description),
+      h("div", {
+        style: {
+          fontWeight: "800",
+          color: "#f59e0b",
+          fontSize: "13px"
+        }
+      }, item.price_coins > 0 ? `🪙 ${item.price_coins} xu` : tr("Miễn phí")),
+      actionBtn);
+
+      // Chạm thẻ để ướm thử lên sân khấu
+      card.addEventListener("click", () => {
+        if (!isConsumable) {
+          previewEquipped[item.slot] = { id: item.id, name: item.name };
+          previewingItem = item;
+          speechBubble.textContent = tr`Ướm thử: "${item.name}"! Trông hợp không bạn?`;
+          refreshPetStage();
+          renderGrid();
+          haptic(6);
+        }
+      });
+
+      return card;
     }));
   }
   renderGrid();
 
-  // Thao tác Mua
+  // Mua vật phẩm
   async function buyItem(item, btn) {
     if (coins < item.price_coins) {
-      toast(tr`Bạn còn thiếu ${item.price_coins - coins} xu. Hãy ghi chép chi tiêu để tích lũy thêm xu nhé!`, "error");
-      haptic([20, 40, 20]);
+      toast(tr`Bạn còn thiếu ${item.price_coins - coins} xu. Hãy tiếp tục ghi chép chi tiêu để nhận thêm nhé!`, "warn");
+      haptic([20, 50, 20]);
       return;
     }
     const restore = busy(btn);
@@ -209,32 +431,38 @@ export async function shopScreen(ctx) {
       coins = res.coins;
       item.owned_quantity = (item.owned_quantity || 0) + 1;
       if (item.slot !== "consumable" && item.slot !== "utility") {
-        equipped[item.slot] = { id: item.id, name: item.name };
+        serverEquipped[item.slot] = { id: item.id, name: item.name };
+        previewEquipped[item.slot] = { id: item.id, name: item.name };
+        previewingItem = null;
       }
       refreshPetStage();
       renderGrid();
       haptic([10, 30, 10]);
-      confetti({ count: 40 });
-      toast(tr`Đã mua "${item.name}" thành công!`, "ok");
-      bubble.textContent = tr`Cảm ơn bạn! Mình diện "${item.name}" trông ngầu không?`;
+      confetti({ count: 50 });
+      toast(tr`Mua thành công "${item.name}"!`, "ok");
+      speechBubble.textContent = tr`Tuyệt cú mèo! Mình sở hữu "${item.name}" rồi nè!`;
     } catch (err) {
-      toast(err.message || tr("Mua vật phẩm thất bại."), "error");
+      toast(err.message || tr("Không thể mua vật phẩm."), "error");
     } finally {
       restore();
     }
   }
 
-  // Thao tác Mặc / Tháo
+  // Mặc / Tháo
   async function toggleEquip(item, equip, btn) {
     const restore = busy(btn);
     try {
       await api("/pet-shop/equip", { method: "POST", body: { item_id: item.id, equip } });
       if (equip) {
-        equipped[item.slot] = { id: item.id, name: item.name };
-        bubble.textContent = tr`Đã diện "${item.name}" rồi nè!`;
+        serverEquipped[item.slot] = { id: item.id, name: item.name };
+        previewEquipped[item.slot] = { id: item.id, name: item.name };
+        previewingItem = null;
+        speechBubble.textContent = tr`Đã diện "${item.name}" lên người!`;
       } else {
-        delete equipped[item.slot];
-        bubble.textContent = tr`Đã tháo "${item.name}".`;
+        delete serverEquipped[item.slot];
+        delete previewEquipped[item.slot];
+        previewingItem = null;
+        speechBubble.textContent = tr`Đã tháo "${item.name}".`;
       }
       refreshPetStage();
       renderGrid();
@@ -246,7 +474,7 @@ export async function shopScreen(ctx) {
     }
   }
 
-  // Thao tác Dùng đồ ăn / Tiện ích
+  // Cho ăn / Dùng
   async function useItem(item, btn) {
     const restore = busy(btn);
     try {
@@ -257,15 +485,15 @@ export async function shopScreen(ctx) {
       renderGrid();
       haptic([15, 30, 15]);
       toast(tr`Đã dùng "${item.name}". Độ no tăng lên ${fullness}/100!`, "ok");
-      bubble.textContent = tr("Măm măm, no nê rồi! Cảm ơn bạn nhiều nha!");
+      speechBubble.textContent = tr("Măm măm ngon quá! Độ no tăng lên rồi nè!");
     } catch (err) {
-      toast(err.message || tr("Không dùng được vật phẩm."), "error");
+      toast(err.message || tr("Không thể dùng vật phẩm."), "error");
     } finally {
       restore();
     }
   }
 
-  // Bảng Lịch sử xu
+  // Lịch sử xu
   async function openHistorySheet() {
     const listEl = h("div", { class: "stack", style: { gap: "8px", maxHeight: "360px", overflowY: "auto" } },
       h("p", { class: "faint" }, tr("Đang tải lịch sử...")));
@@ -279,20 +507,28 @@ export async function shopScreen(ctx) {
       const res = await api("/pet-shop/history");
       const list = res.history || [];
       if (list.length === 0) {
-        listEl.replaceChildren(h("p", { class: "faint", style: { textAlign: "center", padding: "16px 0" } }, tr("Chưa có giao dịch xu nào.")));
+        listEl.replaceChildren(h("p", { class: "faint center", style: { padding: "16px 0" } }, tr("Chưa có biến động xu nào.")));
         return;
       }
       listEl.replaceChildren(...list.map((tx) => {
         const isPlus = tx.amount > 0;
-        return h("div", { class: "row between items-center card", style: { padding: "8px 12px", border: "1px solid var(--border)" } },
-          h("div", { class: "stack", style: { gap: "2px" } },
-            h("span", { style: { fontWeight: "600", fontSize: "14px" } }, tx.reason),
-            h("span", { class: "faint", style: { fontSize: "11px" } }, tx.created_at)),
-          h("div", { style: { fontWeight: "700", color: isPlus ? "var(--income, #10b981)" : "#ef4444" } },
-            isPlus ? `+${tx.amount}` : `${tx.amount}`, " xu"));
+        return h("div", {
+          class: "row between items-center card",
+          style: { padding: "10px 14px", border: "1px solid var(--stroke)" }
+        },
+        h("div", { class: "stack", style: { gap: "2px" } },
+          h("span", { style: { fontWeight: "700", fontSize: "14px", color: "var(--ink)" } }, tx.reason),
+          h("span", { class: "faint", style: { fontSize: "11px" } }, tx.created_at)),
+        h("div", {
+          style: {
+            fontWeight: "800",
+            fontSize: "14px",
+            color: isPlus ? "var(--income, #10b981)" : "#ef4444"
+          }
+        }, isPlus ? `+${tx.amount}` : `${tx.amount}`, " xu"));
       }));
     } catch {
-      listEl.replaceChildren(h("p", { class: "faint" }, tr("Không thể tải lịch sử xu.")));
+      listEl.replaceChildren(h("p", { class: "faint center" }, tr("Không thể tải lịch sử.")));
     }
   }
 
