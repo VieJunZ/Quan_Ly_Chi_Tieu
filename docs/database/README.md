@@ -261,6 +261,13 @@ SELECT TOP 1 id, username, password_hash FROM dbo.users WHERE username = @userna
 | 50007 | Danh mục đã tồn tại | 409 |
 | 50008 | Khoảng ngày không hợp lệ | 400 |
 | 50010 | Dùng danh mục cá nhân của người khác | 403 |
+| 50060 | Vật phẩm không tồn tại trong cửa hàng | 404 |
+| 50061 | Số xu không đủ để thực hiện | 400 |
+| 50062 | Đã sở hữu vật phẩm này rồi | 409 |
+| 50063 | Vật phẩm này không thể trang bị | 400 |
+| 50064 | Chưa sở hữu vật phẩm này | 400 |
+| 50065 | Vật phẩm không phải đồ tiêu hao | 400 |
+| 50066 | Vật phẩm không có trong túi đồ | 400 |
 | 547 | Vi phạm CHECK / khóa ngoại (lỗi hệ thống của SQL Server) | 400 |
 | 2627 | Trùng khóa UNIQUE (ví dụ trùng tên đăng nhập) | 409 |
 
@@ -302,6 +309,12 @@ Code Backend hiện có trên nhánh `feature/backend` đang dùng **MySQL** (`m
 | `POST /api/transactions` | gửi `amount, category_id, transaction_date, note, type` | `sp_add_transaction`. Trường `type` Frontend gửi lên **không cần lưu**, vì loại thu/chi lấy theo danh mục |
 | `GET /api/dashboard` | `total_income, total_expense, balance` của tháng hiện tại | `sp_get_summary_by_user` với `@from_date`/`@to_date` là đầu/cuối tháng |
 | `GET /api/dashboard` | `recent_transactions[]`: `id, category_id, type, amount, note, transaction_date, category_name, category_icon, category_color` | `sp_get_transactions_by_user @limit = 30` |
+| `GET /api/pet-shop/items` | `coins, pet_fullness, items[]` (giá, rarity, sở hữu, đang mặc) | `sp_get_pet_shop_items` |
+| `POST /api/pet-shop/buy` | gửi `{ item_id }` | `sp_buy_pet_item` (trừ xu, auto-equip) |
+| `POST /api/pet-shop/equip` | gửi `{ item_id, equip }` | `sp_equip_pet_item` (mặc/tháo đồ theo slot) |
+| `POST /api/pet-shop/use` | gửi `{ item_id }` | `sp_use_pet_consumable` (tăng độ no) |
+| `GET /api/pet-shop/pet` | `mood, level, streak, coins, pet_fullness, equipped{}` | `petMood`, `users`, `user_inventory` |
+| `GET /api/pet-shop/history` | `history[]` biến động xu | `pet_coin_history` |
 
 Một số điểm Backend cần lưu ý:
 
