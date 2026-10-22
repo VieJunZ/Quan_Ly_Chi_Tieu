@@ -5,7 +5,7 @@
    Script chạy lại nhiều lần không lỗi (kiểm tra tồn tại trước khi tạo).
    ============================================================================= */
 
-USE $(DB_NAME);
+USE so_chi_tri_db;
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

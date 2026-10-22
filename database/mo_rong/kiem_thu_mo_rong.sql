@@ -3,7 +3,7 @@
    Tự tạo dữ liệu thử và tự dọn khi xong. Có ca FAIL thì script báo lỗi.
    ============================================================================= */
 
-USE $(DB_NAME);
+USE so_chi_tri_db;
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

@@ -4,7 +4,7 @@
    khi chúng là bản nâng cấp của thủ tục gốc (thêm giờ, nguồn nhập, liên kết bill).
    ============================================================================= */
 
-USE $(DB_NAME);
+USE so_chi_tri_db;
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO

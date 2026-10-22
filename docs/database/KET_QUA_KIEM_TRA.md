@@ -18,7 +18,7 @@ Sau khi kiểm thử xong, script tự xóa cả 3 tài khoản cùng toàn bộ
 ## Dữ liệu thử
 
 | Tài khoản | Ngày | Danh mục | Loại | Số tiền |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | A | 2026-09-28 | Nhà cửa & Phòng trọ | chi | 1.200.000 |
 | A | 2026-10-01 | Tiền lương | thu | 3.000.000 |
 | A | 2026-10-05 | Ăn uống | chi | 50.000 |
@@ -30,7 +30,7 @@ Sau khi kiểm thử xong, script tự xóa cả 3 tài khoản cùng toàn bộ
 ## Bảng kết quả
 
 | STT | Ca kiểm thử | Kết quả | Kết quả thực tế |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | Có đủ 13 danh mục mặc định | PASS | 13 danh mục |
 | 2 | Danh mục mặc định có 4 mục thu, 9 mục chi | PASS | 4 thu, 9 chi |
 | 3 | Từ chối mật khẩu dạng văn bản thường | PASS | Bị chặn bởi CHECK `ck_users_password_hash` |
@@ -67,7 +67,7 @@ Sau khi kiểm thử xong, script tự xóa cả 3 tài khoản cùng toàn bộ
 ## Đối chiếu tiêu chí nghiệm thu (issue #11)
 
 | Tiêu chí | Trạng thái | Bằng chứng |
-|---|---|---|
+| --- | --- | --- |
 | Mã SQL chạy thành công trên SQL Server | Đạt | Chạy `setup_database.bat` trên CSDL mới, không lỗi |
 | Các bảng và quan hệ đúng yêu cầu | Đạt | ERD trong [README.md](README.md), ca 1–2, 13, 32 |
 | Không lưu mật khẩu dạng văn bản thông thường | Đạt | Ca 3 |
