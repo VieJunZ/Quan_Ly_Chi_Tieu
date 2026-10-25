@@ -463,6 +463,14 @@ BEGIN
 END
 GO
 
+IF COL_LENGTH('dbo.users', 'badge_points') IS NULL
+BEGIN
+    ALTER TABLE dbo.users ADD
+        badge_points INT NOT NULL CONSTRAINT df_users_badge_points DEFAULT 3;
+    PRINT N'Đã thêm cột badge_points cho users.';
+END
+GO
+
 IF OBJECT_ID(N'dbo.ck_users_coins', N'C') IS NULL
     ALTER TABLE dbo.users ADD
         CONSTRAINT ck_users_coins CHECK (coins >= 0),
@@ -476,6 +484,7 @@ BEGIN
         name           NVARCHAR(100) NOT NULL,
         slot           VARCHAR(20)   NOT NULL,
         price_coins    INT           NOT NULL CONSTRAINT df_pet_items_price DEFAULT 0,
+        price_badges   INT           NOT NULL CONSTRAINT df_pet_items_price_badges DEFAULT 0,
         rarity         VARCHAR(20)   NOT NULL CONSTRAINT df_pet_items_rarity DEFAULT 'common',
         required_level INT           NOT NULL CONSTRAINT df_pet_items_level DEFAULT 1,
         description    NVARCHAR(255) NULL,
@@ -485,7 +494,7 @@ BEGIN
 
         CONSTRAINT pk_pet_shop_items PRIMARY KEY (id),
         CONSTRAINT ck_pet_items_slot CHECK (slot IN
-            ('head', 'face', 'emblem', 'held', 'skin', 'bg', 'pedestal', 'aura', 'consumable', 'utility')),
+            ('head', 'face', 'emblem', 'held', 'skin', 'bg', 'pedestal', 'aura', 'consumable', 'utility', 'egg', 'pet')),
         CONSTRAINT ck_pet_items_price CHECK (price_coins >= 0),
         CONSTRAINT ck_pet_items_rarity CHECK (rarity IN ('common', 'rare', 'epic', 'legendary')),
         CONSTRAINT ck_pet_items_level CHECK (required_level >= 1)
@@ -577,8 +586,26 @@ BEGIN
     ('bg_cafe', N'Quán cafe học bài chill', 'bg', 80, 'rare', 2, N'Không gian cafe nhẹ nhàng ấm cúng đầy cảm hứng', N'{"icon":"☕"}'),
     ('bg_beach', N'Bãi biển nghỉ dưỡng', 'bg', 120, 'epic', 4, N'Kỳ nghỉ hè xứng đáng sau những tháng ngày tiết kiệm', N'{"icon":"🏖️"}'),
     ('bg_vault', N'Két sắt kho vàng', 'bg', 180, 'legendary', 6, N'Hầm chứa két sắt tiền vàng đầy ắp thịnh vượng', N'{"icon":"🏦"}'),
+    ('ped_cloud', N'Đám mây bồng bềnh', 'pedestal', 40, 'common', 1, N'Linh thú lướt trên đám mây trắng phao thảnh thơi nhẹ nhõm', N'{"icon":"☁️"}'),
+    ('ped_books', N'Chồng sách tri thức', 'pedestal', 50, 'common', 1, N'Bục sách giáo trình đại học nâng tầm tri thức sinh viên', N'{"icon":"📚"}'),
+    ('ped_ice', N'Tảng băng pha lê', 'pedestal', 60, 'rare', 2, N'Đóng băng các khoản chi bốc đồng để bảo toàn số dư ví', N'{"icon":"🧊"}'),
     ('ped_redcarpet', N'Thảm đỏ vinh danh', 'pedestal', 70, 'rare', 2, N'Thảm đỏ sang trọng nâng tầm vị thế linh thú', N'{"icon":"🟥"}'),
+    ('ped_lotus', N'Đài sen thanh tịnh', 'pedestal', 85, 'rare', 2, N'Tâm bất biến giữa dòng đời biến động giá cả thị trường', N'{"icon":"🪷"}'),
     ('ped_coins', N'Đống tiền vàng may mắn', 'pedestal', 90, 'epic', 3, N'Lót chân bằng đống tiền xu vàng óng ánh', N'{"icon":"💰"}'),
+    ('ped_cyber', N'Đĩa bay Cyber Neon', 'pedestal', 130, 'epic', 4, N'Đĩa năng lượng tương lai phát sáng xanh neon lơ lửng', N'{"icon":"🛸"}'),
+    ('ped_gold_throne', N'Ngai vàng đại gia', 'pedestal', 200, 'legendary', 6, N'Bệ ngai vàng rực rỡ tượng trưng đỉnh cao chiến thần tiết kiệm', N'{"icon":"👑"}'),
+    ('ped_mushroom', N'Nấm thần kỳ', 'pedestal', 55, 'common', 1, N'Cây nấm đỏ chấm trắng cổ tích nâng linh thú bay bổng trí tưởng tượng', N'{"icon":"🍄"}'),
+    ('ped_star', N'Ngôi sao vàng may mắn', 'pedestal', 75, 'rare', 2, N'Ngôi sao năm cánh vàng kim lấp lánh dành cho ngôi sao tiết kiệm', N'{"icon":"⭐"}'),
+    ('ped_donut', N'Donut phủ kem nhiều màu', 'pedestal', 65, 'rare', 2, N'Bệ donut hồng phủ kem rắc hạt sặc sỡ ngọt ngào dễ thương', N'{"icon":"🍩"}'),
+    ('ped_pizza', N'Miếng pizza phô mai', 'pedestal', 45, 'common', 1, N'Miếng pizza nóng hổi phô mai kéo sợi đứng lên là chiến đấu', N'{"icon":"🍕"}'),
+
+    -- Hào quang (Aura)
+    ('aura_sakura', N'Hào quang Anh Đào Thần Thoại', 'aura', 95, 'rare', 2, N'Vầng sáng hồng pastel dịu êm với cánh hoa anh đào bay lượn theo làn gió', N'{"icon":"🌸"}'),
+    ('aura_flame', N'Hào quang Lửa Rực Cháy', 'aura', 120, 'epic', 3, N'Ngọn lửa năng lượng vàng cam bốc lên hừng hực cùng tàn lửa bay lượn', N'{"icon":"🔥"}'),
+    ('aura_frost', N'Hào quang Cực Quang Băng Tuyết', 'aura', 135, 'epic', 4, N'Dải sáng cực quang xanh tuyết trắng lung linh với hoa tuyết xoay tròn', N'{"icon":"❄️"}'),
+    ('aura_cyber', N'Hào quang Cyber Neon', 'aura', 140, 'epic', 4, N'Vòng năng lượng phát sáng xanh Cyan & tím Magenta điện tử công nghệ cao', N'{"icon":"⚡"}'),
+    ('aura_galaxy', N'Hào quang Ngân Hà Tinh Vân', 'aura', 210, 'legendary', 6, N'Vòng xoáy vũ trụ tím khói huyền ảo với các hành tinh nhỏ xoay quanh quỹ đạo', N'{"icon":"🌌"}'),
+    ('aura_gold', N'Hào quang Kim Quang Chí Tôn', 'aura', 250, 'legendary', 7, N'Tia sáng mặt trời vàng kim thần thánh chiếu tỏa hào quang chói lọi', N'{"icon":"👑"}'),
 
     -- Màu da / Skin
     ('skin_piggy', N'Skin Heo đất vàng', 'skin', 100, 'rare', 3, N'Chuyển đổi toàn thân linh thú sang màu vàng kim heo đất', N'{"icon":"🐷"}'),

@@ -22,7 +22,7 @@ function rolling(key, el, to, options) {
 }
 
 function petCard(mini) {
-  const pet = mini.pet || { mood: "happy", level: 1, message: "", coins: 100, pet_fullness: 80, equipped: {} };
+  const pet = mini.pet || { mood: "happy", level: 1, message: "", coins: 100, pet_fullness: 80, badge_points: 3, equipped: {} };
   const bgKey = pet.equipped?.bg?.id || pet.equipped?.bg || "default";
   const theme = getStageTheme(bgKey);
 
@@ -38,7 +38,7 @@ function petCard(mini) {
       void svg.getBoundingClientRect();
       svg.classList.add("poked");
     }
-    bubble.textContent = pokeLine(pet.mood);
+    bubble.textContent = pokeLine(pet.mood, pet.equipped?.pet);
     haptic([8, 30, 8]);
   });
   holder.setAttribute("role", "button");
@@ -57,6 +57,8 @@ function petCard(mini) {
     h("span", { class: `badge ${streak.current_streak ? "warn" : ""}` }, icon("flame", 13), tr`${streak.current_streak || 0} ngày liền`),
     h("a", { class: "badge", href: "#/shop", style: { textDecoration: "none", color: "inherit", fontWeight: 700 } },
       "🪙 ", tr`${pet.coins ?? 100} xu`),
+    h("a", { class: "badge", href: "#/shop", style: { textDecoration: "none", color: "#f59e0b", fontWeight: 800, border: "1px solid rgba(245, 158, 11, 0.4)", background: "rgba(245, 158, 11, 0.15)" } },
+      "🏆 ", tr`${pet.badge_points ?? 3} huy hiệu`),
     h("span", { class: "badge", title: tr("Độ no của thú cưng") }, "🍖 ", `${pet.pet_fullness ?? 80}%`));
   if (pet.next_level_in) meta.append(h("span", { class: "badge" }, tr`còn ${pet.next_level_in} ngày lên cấp`));
 
