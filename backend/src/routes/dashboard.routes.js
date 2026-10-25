@@ -127,7 +127,7 @@ router.get("/mini", asyncRoute(async (req, res) => {
     db.execRows("dbo.sp_get_day_summary", { user_id: userId, day: today }),
     budgetStatus(userId, today),
     streak(userId, today),
-    db.query("SELECT coins, pet_fullness FROM dbo.users WHERE id = @user_id", { user_id: userId }),
+    db.query("SELECT coins, pet_fullness, ISNULL(badge_points, 3) AS badge_points FROM dbo.users WHERE id = @user_id", { user_id: userId }),
     db.query(`
       SELECT s.slot, s.id AS item_id, s.name, s.rarity
       FROM dbo.user_inventory AS i
@@ -136,7 +136,7 @@ router.get("/mini", asyncRoute(async (req, res) => {
   ]);
   const day = dayRows[0];
   const petStats = petMood({ today, now, nudgeHour: nudgeHour(), streak: streakRow, budget });
-  const user = userRows[0] || { coins: 100, pet_fullness: 80 };
+  const user = userRows[0] || { coins: 100, pet_fullness: 80, badge_points: 3 };
   const equipped = {};
   for (const item of equippedRows) {
     equipped[item.slot] = { id: item.item_id, name: item.name, rarity: item.rarity };
@@ -164,6 +164,7 @@ router.get("/mini", asyncRoute(async (req, res) => {
       ...petStats,
       coins: user.coins,
       pet_fullness: user.pet_fullness,
+      badge_points: user.badge_points ?? 3,
       equipped
     }
   });
