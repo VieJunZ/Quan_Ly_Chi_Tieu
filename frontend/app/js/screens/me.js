@@ -9,6 +9,7 @@ import { api, today } from "../api.js";
 import {
   h, icon, money, moneyShort, haptic, toast, confirmSheet, field, busy, parseMoneyInput, menuItem, settingsButton, displayName
 } from "../ui.js";
+import { notificationButton } from "../flows/notifications.js";
 
 /* ---------------------------------------------------------------------------
    Ngân sách tháng
@@ -125,9 +126,11 @@ async function budgetCard(ctx, focus) {
 export async function meScreen(ctx, params) {
   const user = ctx.user;
   const screen = h("main", { class: "screen stack" });
+  const notifBtn = notificationButton(ctx);
   screen.append(h("header", { class: "screen-head" },
     h("div", { class: "grow" }, h("h1", null, user.is_demo ? tr("Tôi") : displayName(user)), h("span", { class: "sub" }, user.is_demo ? tr("Đang dùng thử") : `@${user.username}`)),
-    settingsButton()));
+    notifBtn, settingsButton()));
+  screen.cleanup = () => notifBtn.destroy?.();
 
   if (user.is_demo) {
     const up = h("button", { class: "btn block", type: "button" }, icon("user-plus", 18), tr("Tạo tài khoản, giữ dữ liệu"));

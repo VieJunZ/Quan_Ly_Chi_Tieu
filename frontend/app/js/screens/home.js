@@ -10,6 +10,7 @@ import { h, icon, money, moneyShort, countUp, greeting, haptic, toast, txRow, ca
 import { getPref } from "../prefs.js";
 import { renderPet, pokeLine, getStageTheme, renderStageBackdrop } from "../pet.js";
 import { challengeStrip, actionsCard, celebrate, startTicker } from "../coach.js";
+import { notificationButton } from "../flows/notifications.js";
 
 // Số đã hiện lần trước: vẽ lại (do có số mới) thì số chạy tiếp từ số cũ, không chạy lại từ 0
 const shown = {};
@@ -213,6 +214,7 @@ export async function homeScreen(ctx) {
 
   const name = displayName(user);
   const showPet = getPref("pet") === "on";
+  const notifBtn = notificationButton(ctx);
   const pin = h("button", { class: "icon-btn", type: "button", "aria-label": tr("Ghim Mini-View nổi") }, icon("picture-in-picture-2"));
   pin.addEventListener("click", async () => {
     const m = await import("../flows/mini.js");
@@ -227,6 +229,7 @@ export async function homeScreen(ctx) {
         h("h1", null, name),
         // Tắt thú cưng thì chuỗi ngày ghi chép chuyển lên đây
         showPet ? null : h("span", { class: `badge ${mini.streak?.current_streak ? "warn" : ""}` }, icon("flame", 13), tr`${mini.streak?.current_streak || 0} ngày liền`)),
+      notifBtn,
       pin,
       settingsButton()),
     ...(showPet ? [petCard(mini)] : []),
@@ -242,6 +245,10 @@ export async function homeScreen(ctx) {
   if (actions) screen.append(actions);
   screen.append(recentList(ctx, dash.recent_transactions || [], t));
   celebrate(challenges);
-  screen.cleanup = startTicker(screen);
+  const stopTicker = startTicker(screen);
+  screen.cleanup = () => {
+    if (typeof notifBtn.destroy === "function") notifBtn.destroy();
+    stopTicker();
+  };
   return screen;
 }

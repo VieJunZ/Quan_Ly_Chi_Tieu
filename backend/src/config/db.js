@@ -4,7 +4,8 @@
  * Mọi truy vấn đều truyền tham số (không ghép chuỗi) để chống SQL Injection.
  */
 
-const sql = require("mssql/msnodesqlv8");
+const isWindowsLocalDb = !process.env.DB_USER && !process.env.DB_CONNECTION_STRING && process.platform === "win32";
+const sql = isWindowsLocalDb ? require("mssql/msnodesqlv8") : require("mssql");
 require("dotenv").config();
 
 const DEFAULT_SERVER = String.raw`(localdb)\MSSQLLocalDB`;
@@ -22,21 +23,44 @@ function buildConnectionString() {
   return `Driver={${driver}};Server=${server};Database=${database};${auth}TrustServerCertificate=yes;`;
 }
 
-let poolPromise = null;
-
-/** Lấy pool kết nối dùng chung (tạo ở lần gọi đầu tiên). */
-function getPool() {
-  if (!poolPromise) {
-    const pool = new sql.ConnectionPool({
+function getPoolConfig() {
+  if (isWindowsLocalDb) {
+    return {
       connectionString: buildConnectionString(),
-      // Giữ sẵn vài kết nối: không phải mở lại mỗi lần, và LocalDB không tự tắt khi vắng người
-      // (bật lại mất 10-30 giây, người dùng đầu tiên sẽ phải chờ). Máy chủ nhiều người dùng thì tăng DB_POOL_MAX.
       pool: {
         max: Number(process.env.DB_POOL_MAX) || 20,
         min: Number(process.env.DB_POOL_MIN) || 2,
         idleTimeoutMillis: 5 * 60 * 1000
       }
-    });
+    };
+  }
+  if (process.env.DB_CONNECTION_STRING) {
+    return process.env.DB_CONNECTION_STRING;
+  }
+  return {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    server: process.env.DB_SERVER,
+    database: process.env.DB_NAME || "so_chi_tri_db",
+    port: Number(process.env.DB_PORT) || 1433,
+    options: {
+      encrypt: process.env.DB_ENCRYPT === "false" ? false : true,
+      trustServerCertificate: true
+    },
+    pool: {
+      max: Number(process.env.DB_POOL_MAX) || 20,
+      min: Number(process.env.DB_POOL_MIN) || 2,
+      idleTimeoutMillis: 5 * 60 * 1000
+    }
+  };
+}
+
+let poolPromise = null;
+
+/** Lấy pool kết nối dùng chung (tạo ở lần gọi đầu tiên). */
+function getPool() {
+  if (!poolPromise) {
+    const pool = new sql.ConnectionPool(getPoolConfig());
     poolPromise = pool.connect().catch((error) => {
       poolPromise = null;
       throw error;
