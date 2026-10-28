@@ -40,6 +40,7 @@ const walletRoutes = require("./routes/wallet.routes");
 const surveyRoutes = require("./routes/survey.routes");
 const budgetRoutes = require("./routes/budget.routes");
 const challengeRoutes = require("./routes/challenge.routes");
+const petShopRoutes = require("./routes/petShop.routes");
 const ocr = require("./services/ocr.service");
 const hasher = require("./services/hash.service");
 const { errorHandler, notFoundHandler } = require("./middlewares/error.middleware");
@@ -90,6 +91,7 @@ app.use("/api/wallet", walletRoutes);
 app.use("/api/survey", surveyRoutes);
 app.use("/api/budget", budgetRoutes);
 app.use("/api/challenges", challengeRoutes);
+app.use("/api/pet-shop", petShopRoutes);
 app.use("/api", notFoundHandler);
 
 // Giao diện web

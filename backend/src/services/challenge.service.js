@@ -529,6 +529,7 @@ async function award(userId, keys, challengeId) {
       IF NOT EXISTS (SELECT 1 FROM dbo.user_badges WHERE user_id = @user_id AND badge_key = @badge_key)
       BEGIN
           INSERT INTO dbo.user_badges (user_id, badge_key, challenge_id) VALUES (@user_id, @badge_key, @challenge_id);
+          UPDATE dbo.users SET badge_points = ISNULL(badge_points, 0) + 1 WHERE id = @user_id;
           SELECT CAST(1 AS BIT) AS added;
       END
       ELSE SELECT CAST(0 AS BIT) AS added;`, { user_id: userId, badge_key: key, challenge_id: challengeId || null });

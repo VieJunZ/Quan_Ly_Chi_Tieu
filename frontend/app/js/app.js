@@ -19,6 +19,7 @@ const ROUTES = {
   wallet: { nav: "me", load: () => import("./screens/wallet.js").then((m) => m.walletScreen) },
   me: { nav: "me", load: () => import("./screens/me.js").then((m) => m.meScreen) },
   challenges: { nav: "home", load: () => import("./screens/challenges.js").then((m) => m.challengesScreen) },
+  shop: { nav: "home", load: () => import("./screens/shop.js").then((m) => m.shopScreen) },
   settings: { nav: "me", load: () => import("./screens/settings.js").then((m) => m.settingsScreen) },
   categories: { nav: "me", load: () => import("./screens/categories.js").then((m) => m.categoriesScreen) }
 };

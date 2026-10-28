@@ -1678,6 +1678,152 @@ body:has(.sheet) .blob {
   100% { transform: scale(1, 1); }
 }
 
+/* ---------------------------------------------------------------------------
+   Hào quang linh thú (Pet Auras) - Hiệu ứng chuyển động đa tầng siêu mượt
+   ------------------------------------------------------------------------ */
+.pet .pet-aura {
+  pointer-events: none;
+}
+
+/* 1. Flame Aura */
+@keyframes aura-flame-pulse {
+  0%, 100% { transform: scale(1) translateY(0); opacity: 0.85; }
+  50% { transform: scale(1.05, 1.08) translateY(-4px); opacity: 1; }
+}
+@keyframes aura-ember-1 {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  20% { opacity: 0.9; }
+  80% { opacity: 0.8; }
+  100% { transform: translate(-8px, -45px) scale(0.3); opacity: 0; }
+}
+@keyframes aura-ember-2 {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  25% { opacity: 1; }
+  75% { opacity: 0.7; }
+  100% { transform: translate(10px, -50px) scale(0.2); opacity: 0; }
+}
+.aura-flame-glow {
+  transform-origin: 100px 122px;
+  animation: aura-flame-pulse 1.8s ease-in-out infinite;
+}
+.aura-ember-a { animation: aura-ember-1 2.2s ease-out infinite; }
+.aura-ember-b { animation: aura-ember-2 2.6s ease-out infinite 0.7s; }
+.aura-ember-c { animation: aura-ember-1 2.4s ease-out infinite 1.3s; }
+
+/* 2. Cyber Aura */
+@keyframes cyber-ring-spin-cw {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes cyber-ring-spin-ccw {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+@keyframes cyber-glitch-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  48% { transform: scale(1.03); opacity: 0.95; }
+  52% { transform: scale(0.98); opacity: 0.7; }
+}
+.cyber-ring-cw {
+  transform-origin: 100px 122px;
+  animation: cyber-ring-spin-cw 12s linear infinite;
+}
+.cyber-ring-ccw {
+  transform-origin: 100px 122px;
+  animation: cyber-ring-spin-ccw 9s linear infinite;
+}
+.cyber-bracket-pulse {
+  transform-origin: 100px 122px;
+  animation: cyber-glitch-pulse 2s ease-in-out infinite;
+}
+
+/* 3. Galaxy Aura */
+@keyframes galaxy-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes star-twinkle {
+  0%, 100% { transform: scale(0.6); opacity: 0.3; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+.galaxy-orbit {
+  transform-origin: 100px 122px;
+  animation: galaxy-spin 16s linear infinite;
+}
+.galaxy-orbit-reverse {
+  transform-origin: 100px 122px;
+  animation: galaxy-spin 22s linear infinite reverse;
+}
+.star-blink-1 { transform-origin: 45px 80px; animation: star-twinkle 1.8s ease-in-out infinite; }
+.star-blink-2 { transform-origin: 155px 75px; animation: star-twinkle 2.2s ease-in-out infinite 0.6s; }
+.star-blink-3 { transform-origin: 160px 145px; animation: star-twinkle 1.6s ease-in-out infinite 1.1s; }
+
+/* 4. Gold Aura */
+@keyframes gold-halo-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes gold-ray-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.75; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+.gold-rays-spin {
+  transform-origin: 100px 120px;
+  animation: gold-halo-rotate 24s linear infinite;
+}
+.gold-halo-pulse {
+  transform-origin: 100px 120px;
+  animation: gold-ray-breathe 2.4s ease-in-out infinite;
+}
+
+/* 5. Sakura Aura */
+@keyframes sakura-swirl {
+  0%, 100% { transform: scale(1) rotate(-2deg); opacity: 0.8; }
+  50% { transform: scale(1.04) rotate(2deg); opacity: 1; }
+}
+@keyframes petal-drift-1 {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  20% { opacity: 0.9; }
+  80% { opacity: 0.8; }
+  100% { transform: translate(25px, -38px) rotate(180deg); opacity: 0; }
+}
+@keyframes petal-drift-2 {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  25% { opacity: 0.9; }
+  75% { opacity: 0.8; }
+  100% { transform: translate(-22px, -42px) rotate(-160deg); opacity: 0; }
+}
+.sakura-swirl-glow {
+  transform-origin: 100px 122px;
+  animation: sakura-swirl 3.2s ease-in-out infinite;
+}
+.sakura-petal-1 { animation: petal-drift-1 3.4s ease-in-out infinite; }
+.sakura-petal-2 { animation: petal-drift-2 3.8s ease-in-out infinite 1.2s; }
+.sakura-petal-3 { animation: petal-drift-1 4.1s ease-in-out infinite 2s; }
+
+/* 6. Frost Aura */
+@keyframes aurora-wave {
+  0%, 100% { transform: scale(1, 1) skewX(0deg); opacity: 0.7; }
+  33% { transform: scale(1.04, 1.06) skewX(2deg); opacity: 0.95; }
+  66% { transform: scale(0.98, 1.03) skewX(-2deg); opacity: 0.8; }
+}
+@keyframes snowflake-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.frost-aurora-curtain {
+  transform-origin: 100px 122px;
+  animation: aurora-wave 3.6s ease-in-out infinite;
+}
+.snowflake-spin-slow {
+  transform-origin: 40px 90px;
+  animation: snowflake-spin 14s linear infinite;
+}
+.snowflake-spin-fast {
+  transform-origin: 160px 85px;
+  animation: snowflake-spin 10s linear infinite reverse;
+}
+
 @keyframes zzz {
   0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
   30% { opacity: 1; }
@@ -3409,4 +3555,916 @@ button.cat-main:active {
 
 .color-pick button[aria-checked="true"] {
   border-color: var(--ink-faint);
+}
+
+/* ==========================================================================
+   Vườn Trứng Linh Thú & Gacha Hatching Animation
+   ========================================================================== */
+.pet-linhthu-wrap {
+  animation: linhthu-breathe 3.5s ease-in-out infinite;
+  transform-origin: 100px 145px;
+}
+
+.pet--linhthu:hover .pet-linhthu-wrap,
+.pet--linhthu.poked .pet-linhthu-wrap {
+  animation: linhthu-jump 0.65s var(--spring);
+}
+
+@keyframes linhthu-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.02, 0.98); }
+}
+
+@keyframes linhthu-jump {
+  0% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-16px) scale(0.95, 1.05); }
+  65% { transform: translateY(2px) scale(1.04, 0.96); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* Banner Trứng Gacha trong Shop */
+.gacha-banner {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.22) 0%, rgba(245, 158, 11, 0.18) 50%, rgba(236, 72, 153, 0.2) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 20px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 28px -10px rgba(139, 92, 246, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.25s var(--spring), box-shadow 0.25s ease;
+}
+
+.gacha-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px -8px rgba(245, 158, 11, 0.45);
+}
+
+.gacha-banner::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+  pointer-events: none;
+  animation: rotate-slow 20s linear infinite;
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Trứng Gacha trong Modal */
+.gacha-egg-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 230px;
+  margin: 12px 0 18px;
+}
+
+.gacha-egg-img {
+  width: 175px;
+  height: 175px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 28px rgba(245, 158, 11, 0.5));
+  transition: transform 0.3s ease, filter 0.3s ease;
+  animation: egg-float 3s ease-in-out infinite;
+}
+
+@keyframes egg-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1.5deg); }
+}
+
+.gacha-egg-img.shaking {
+  animation: egg-crack-wobble 0.12s ease-in-out infinite !important;
+  filter: drop-shadow(0 0 35px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 60px rgba(168, 85, 247, 0.7));
+}
+
+@keyframes egg-crack-wobble {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1.02); }
+  25% { transform: translate(-4px, -3px) rotate(-4deg) scale(1.05); }
+  50% { transform: translate(4px, 3px) rotate(4deg) scale(1.08); }
+  75% { transform: translate(-3px, 4px) rotate(-3deg) scale(1.05); }
+  100% { transform: translate(3px, -4px) rotate(3deg) scale(1.02); }
+}
+
+.gacha-pet-emerge {
+  animation: pet-burst-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes pet-burst-in {
+  0% { transform: scale(0.2) translateY(50px) rotate(-15deg); opacity: 0; filter: brightness(2.5); }
+  60% { transform: scale(1.15) translateY(-10px) rotate(4deg); opacity: 1; filter: brightness(1.2); }
+  100% { transform: scale(1) translateY(0) rotate(0); filter: brightness(1); }
+}
+
+.egg-glow-ring {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(139, 92, 246, 0.2) 50%, transparent 72%);
+  pointer-events: none;
+  animation: pulse-ring 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.linhthu-pool-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.linhthu-pool-item {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--glass);
+  border: 1px solid var(--stroke);
+  display: grid;
+  place-items: center;
+  position: relative;
+  padding: 4px;
+  transition: transform 0.2s;
+}
+
+.linhthu-pool-item:hover {
+  transform: translateY(-2px) scale(1.08);
+  border-color: var(--violet);
+}
+
+.linhthu-pool-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Hoạt ảnh vector sống động cho 10 Linh Thú & Phụ kiện đồng bộ */
+.linhthu-model,
+.linhthu-accessories {
+  transform-origin: 100px 145px;
+  animation: linhthu-breathe 3.6s ease-in-out infinite;
+  transition: transform 0.25s var(--spring);
+}
+
+@keyframes linhthu-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.015, 0.985); }
+}
+
+.pet.poked .linhthu-model,
+.pet.poked .linhthu-accessories {
+  animation: linhthu-poke 0.55s var(--spring) both !important;
+}
+
+@keyframes linhthu-poke {
+  0% { transform: scale(1); }
+  25% { transform: scale(0.92, 1.1) translateY(-14px); }
+  50% { transform: scale(1.08, 0.92) translateY(4px); }
+  75% { transform: scale(0.98, 1.02) translateY(-3px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* Biểu cảm ngủ khò */
+.pet--sleeping .linhthu-model,
+.pet--sleeping .linhthu-accessories {
+  animation: linhthu-sleep 4.5s ease-in-out infinite !important;
+}
+
+@keyframes linhthu-sleep {
+  0%, 100% { transform: translateY(2px) rotate(0deg); }
+  50% { transform: translateY(5px) rotate(1.5deg); }
+}
+
+/* Biểu cảm quẩy ăn mừng */
+.pet--party .linhthu-model,
+.pet--party .linhthu-accessories {
+  animation: linhthu-party 0.8s ease-in-out infinite alternate !important;
+}
+
+@keyframes linhthu-party {
+  0% { transform: translateY(0) rotate(-2deg); }
+  100% { transform: translateY(-12px) rotate(2deg); }
+}
+
+/* Hiệu ứng Hào quang & Bệ đứng */
+.pet-aura {
+  transform-origin: 100px 110px;
+  animation: aura-glow 3.5s ease-in-out infinite;
+}
+
+@keyframes aura-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.88;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+.aura-spin {
+  transform-origin: 100px 100px;
+  animation: aura-spin-kf 20s linear infinite;
+}
+
+@keyframes aura-spin-kf {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.pet-pedestal {
+  transform-origin: 100px 188px;
+}
+
+/* =============================================================================
+   Tiệm Linh Thú (Pet Shop) - Phong cách Hiện đại & Dễ thương (Kawaii Candy)
+   ========================================================================== */
+
+.screen--shop {
+  padding-bottom: 125px !important; /* Tránh thanh dock menu che nút & thẻ cuối */
+}
+
+/* Header & Stat Capsules */
+.shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.shop-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.shop-back-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: 1.5px solid var(--stroke);
+  background: var(--glass-strong);
+  color: var(--ink);
+  box-shadow: 0 4px 14px -3px rgba(122, 72, 180, 0.18);
+  transition: transform 0.25s var(--spring), background 0.2s, box-shadow 0.2s, border-color 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+  outline: none;
+  padding: 0;
+}
+
+.shop-back-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: #ffffff;
+  border-color: var(--violet);
+  box-shadow: 0 8px 18px -4px rgba(139, 92, 246, 0.28);
+}
+
+.shop-back-btn:active {
+  transform: scale(0.92);
+}
+
+.shop-header-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.shop-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.shop-counter-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 0.2s var(--spring), box-shadow 0.2s ease;
+  user-select: none;
+}
+
+.shop-counter-capsule:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.shop-counter-capsule.coins {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(234, 179, 8, 0.12));
+  color: #f59e0b;
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  box-shadow: 0 4px 14px -3px rgba(245, 158, 11, 0.35);
+}
+
+.shop-counter-capsule.badges {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(236, 72, 153, 0.16));
+  color: #c084fc;
+  border: 1.5px solid rgba(192, 132, 252, 0.45);
+  box-shadow: 0 4px 14px -3px rgba(168, 85, 247, 0.3);
+}
+
+.shop-history-btn {
+  border-radius: 999px !important;
+  padding: 6px 12px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  background: var(--glass) !important;
+  border: 1.5px solid var(--stroke) !important;
+  color: var(--ink-soft) !important;
+  transition: all 0.2s var(--spring) !important;
+}
+
+.shop-history-btn:hover {
+  transform: translateY(-2px);
+  color: var(--ink) !important;
+  border-color: var(--violet) !important;
+}
+
+/* Sân khấu thử đồ (Stage Card) */
+.shop-stage-card {
+  border-radius: 28px !important;
+  padding: 18px 16px 16px !important;
+  position: relative;
+  overflow: hidden;
+  border: 1.5px solid var(--stroke) !important;
+  box-shadow: 0 16px 36px -12px rgba(139, 92, 246, 0.25);
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+/* Bong bóng thoại dễ thương kiểu truyện tranh (Kawaii Speech Bubble) */
+.shop-speech-bubble {
+  position: relative;
+  padding: 9px 18px;
+  border-radius: 22px;
+  background: var(--glass-strong);
+  border: 1.5px solid var(--stroke);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px -6px rgba(122, 72, 180, 0.2);
+  max-width: 90%;
+  margin: 0 auto 10px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: shop-bubble-float 3.2s ease-in-out infinite;
+  z-index: 2;
+}
+
+/* Đuôi nhọn của bóng thoại hướng xuống thú cưng */
+.shop-speech-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 9px solid var(--glass-strong);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.06));
+}
+
+@keyframes shop-bubble-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Thanh độ no bụng & Cho ăn nhanh */
+.shop-fullness-wrapper {
+  width: 100%;
+  max-width: 260px;
+  margin: 6px auto 0;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shop-fullness-track {
+  height: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 999px;
+  overflow: hidden;
+  padding: 1.5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.shop-fullness-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff7eb9 0%, #f59e0b 55%, #10b981 100%);
+  box-shadow: 0 0 10px rgba(255, 126, 185, 0.5);
+  transition: width 0.4s var(--spring);
+}
+
+.shop-quick-feed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.1)) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  cursor: pointer;
+  transition: all 0.2s var(--spring) !important;
+}
+
+.shop-quick-feed-btn:hover {
+  transform: translateY(-1px) scale(1.05);
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #fff !important;
+}
+
+/* Thanh danh mục Tabs kiểu viên kẹo trượt */
+.shop-cat-tabs {
+  display: flex;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  gap: 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shop-cat-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.shop-cat-pill {
+  border-radius: 999px;
+  white-space: nowrap;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1.5px solid var(--stroke);
+  background: var(--glass);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.25s var(--spring);
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.shop-cat-pill:hover {
+  transform: translateY(-2px);
+  color: var(--ink);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.shop-cat-pill.active {
+  background: var(--grad-main) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 20px -4px rgba(255, 95, 168, 0.5) !important;
+  transform: translateY(-2px) scale(1.03);
+}
+
+/* Thanh chip lọc phụ Skin cho từng Linh Thú */
+.shop-subfilter-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shop-subfilter-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.shop-subfilter-chip {
+  white-space: nowrap;
+  padding: 5px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s var(--spring);
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink-soft);
+}
+
+.shop-subfilter-chip:hover {
+  transform: translateY(-1px);
+  color: var(--ink);
+}
+
+.shop-subfilter-chip.active {
+  background: var(--violet, #9333ea) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 14px -2px rgba(147, 51, 234, 0.45) !important;
+}
+
+/* Thẻ vật phẩm phong cách Hộp sưu tầm tượng mô hình (Collectible Box) */
+.shop-item-card {
+  border-radius: 22px !important;
+  padding: 13px !important;
+  background: var(--glass) !important;
+  border: 1.5px solid var(--stroke) !important;
+  box-shadow: var(--shadow) !important;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.25s var(--spring), box-shadow 0.25s ease, border-color 0.25s ease !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.shop-item-card:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 14px 30px -8px rgba(139, 92, 246, 0.35) !important;
+  border-color: rgba(168, 85, 247, 0.5) !important;
+}
+
+.shop-item-card.is-equipped {
+  border: 2px solid var(--ok, #10b981) !important;
+  box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.35) !important;
+}
+
+.shop-item-card.is-previewing {
+  background: var(--glass-strong) !important;
+  border: 2.5px solid var(--violet, #9333ea) !important;
+  box-shadow: 0 10px 28px -6px rgba(139, 92, 246, 0.5) !important;
+  animation: preview-pulse 2.2s infinite ease-in-out;
+}
+
+@keyframes preview-pulse {
+  0%, 100% { border-color: var(--violet, #9333ea); }
+  50% { border-color: #ec4899; }
+}
+
+/* Thẻ tag lơ lửng "Đang thử" */
+.shop-preview-tag {
+  position: absolute;
+  top: -8px;
+  right: 12px;
+  background: var(--grad-main);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 9px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(255, 95, 168, 0.55);
+  animation: tag-bounce 1.6s ease-in-out infinite;
+  z-index: 3;
+}
+
+@keyframes tag-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Khung bệ tròn trưng bày vật phẩm (Thumb Pedestal Frame) */
+.shop-item-thumb-frame {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(243, 232, 255, 0.6) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px -3px rgba(139, 92, 246, 0.18);
+  transition: transform 0.2s var(--spring);
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .shop-item-thumb-frame {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(30, 20, 50, 0.6) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shop-item-thumb-frame {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(30, 20, 50, 0.6) 100%);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.shop-item-card:hover .shop-item-thumb-frame {
+  transform: scale(1.08) rotate(-2deg);
+}
+
+/* Huy hiệu độ hiếm lấp lánh (Rarity Pill) */
+.shop-rarity-pill {
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  letter-spacing: -0.2px;
+}
+
+/* Nút bấm kẹo ngọt tương tác (Candy Action Button) */
+.shop-candy-btn {
+  margin-top: 8px;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  border-radius: 14px !important;
+  padding: 9px 12px !important;
+  border: none !important;
+  cursor: pointer;
+  transition: all 0.2s var(--spring) !important;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.shop-candy-btn:active {
+  transform: scale(0.96) !important;
+}
+
+.shop-candy-btn.primary {
+  background: var(--grad-main) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 18px -4px rgba(255, 95, 168, 0.45) !important;
+}
+
+.shop-candy-btn.primary:hover {
+  box-shadow: 0 8px 22px -3px rgba(255, 95, 168, 0.6) !important;
+}
+
+.shop-candy-btn.ok-btn {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px -4px rgba(16, 185, 129, 0.45) !important;
+}
+
+.shop-candy-btn.equipped-btn {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #10b981 !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+.shop-candy-btn.equipped-btn:hover {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+.shop-candy-btn.buy-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px -4px rgba(245, 158, 11, 0.45) !important;
+}
+
+.shop-candy-btn.buy-badge-btn {
+  background: linear-gradient(135deg, #9333ea, #db2777) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px -4px rgba(147, 51, 234, 0.45) !important;
+}
+
+.shop-candy-btn.soft-btn {
+  background: var(--glass) !important;
+  color: var(--ink-soft) !important;
+  border: 1px solid var(--stroke) !important;
+}
+
+.shop-candy-btn.soft-btn:hover {
+  color: var(--ink) !important;
+  border-color: var(--violet) !important;
+}
+
+/* =============================================================================
+   Widget Chuông Thông Báo & Bảng Cảnh Báo (Notification Center)
+   ========================================================================== */
+
+.notif-btn {
+  position: relative;
+  transition: transform 0.2s var(--spring);
+}
+
+.notif-btn:hover {
+  transform: scale(1.08);
+}
+
+.notif-btn.has-unread svg {
+  animation: notifRing 4s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+@keyframes notifRing {
+  0%, 80%, 100% { transform: rotate(0); }
+  85% { transform: rotate(14deg); }
+  90% { transform: rotate(-14deg); }
+  95% { transform: rotate(8deg); }
+}
+
+.notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(135deg, #ff4d6d, #f43f74);
+  border-radius: 99px;
+  border: 2px solid var(--bg);
+  box-shadow: 0 2px 8px rgba(244, 63, 116, 0.5);
+  animation: notifPulse 2.4s infinite;
+  pointer-events: none;
+}
+
+@keyframes notifPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); box-shadow: 0 4px 12px rgba(244, 63, 116, 0.7); }
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 20px;
+}
+
+.notif-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.notif-card {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--glass-strong);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.2s var(--spring), box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.notif-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -10px rgba(122, 72, 180, 0.25);
+}
+
+.notif-card.is-read {
+  opacity: 0.82;
+}
+
+.notif-card.notif-danger {
+  border-left: 4px solid var(--danger);
+  background: linear-gradient(135deg, rgba(244, 63, 116, 0.12), var(--glass-strong));
+}
+
+.notif-card.notif-warn {
+  border-left: 4px solid var(--warn);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), var(--glass-strong));
+}
+
+.notif-card.notif-info {
+  border-left: 4px solid var(--violet);
+  background: linear-gradient(135deg, rgba(139, 108, 255, 0.12), var(--glass-strong));
+}
+
+.notif-card.notif-ok {
+  border-left: 4px solid var(--ok);
+  background: linear-gradient(135deg, rgba(31, 185, 133, 0.12), var(--glass-strong));
+}
+
+.notif-icon-box {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.notif-danger .notif-icon-box {
+  background: rgba(244, 63, 116, 0.18);
+  color: var(--danger);
+}
+
+.notif-warn .notif-icon-box {
+  background: rgba(245, 158, 11, 0.18);
+  color: var(--warn);
+}
+
+.notif-info .notif-icon-box {
+  background: rgba(139, 108, 255, 0.18);
+  color: var(--violet);
+}
+
+.notif-ok .notif-icon-box {
+  background: rgba(31, 185, 133, 0.18);
+  color: var(--ok);
+}
+
+.notif-body {
+  min-width: 0;
+}
+
+.notif-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.notif-desc {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.notif-dismiss {
+  opacity: 0.55;
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  margin: -4px -4px 0 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.notif-dismiss:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.notif-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.notif-empty {
+  text-align: center;
+  padding: 36px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.notif-empty svg {
+  color: var(--violet);
+  opacity: 0.8;
 }

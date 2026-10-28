@@ -8,8 +8,9 @@ import { tr } from "../i18n.js";
 import { api, session, today, nowTime } from "../api.js";
 import { h, icon, money, moneyShort, countUp, greeting, haptic, toast, txRow, categoryBadge, settingsButton, displayName } from "../ui.js";
 import { getPref } from "../prefs.js";
-import { renderPet, pokeLine } from "../pet.js";
+import { renderPet, pokeLine, getStageTheme, renderStageBackdrop } from "../pet.js";
 import { challengeStrip, actionsCard, celebrate, startTicker } from "../coach.js";
+import { notificationButton } from "../flows/notifications.js";
 
 // Số đã hiện lần trước: vẽ lại (do có số mới) thì số chạy tiếp từ số cũ, không chạy lại từ 0
 const shown = {};
@@ -22,15 +23,23 @@ function rolling(key, el, to, options) {
 }
 
 function petCard(mini) {
-  const pet = mini.pet || { mood: "happy", level: 1, message: "" };
-  const holder = h("div", { class: "hero-pet", style: { margin: 0 } }, renderPet({ mood: pet.mood, level: pet.level, size: 128 }));
-  const bubble = h("div", { class: "bubble" }, pet.message || tr("Ghi một khoản để mình vui nha!"));
+  const pet = mini.pet || { mood: "happy", level: 1, message: "", coins: 100, pet_fullness: 80, badge_points: 3, equipped: {} };
+  const bgKey = pet.equipped?.bg?.id || pet.equipped?.bg || "default";
+  const theme = getStageTheme(bgKey);
+
+  const holder = h("div", { class: "hero-pet", style: { margin: 0, position: "relative", zIndex: 1 } },
+    renderPet({ mood: pet.mood, level: pet.level, size: 128, equipped: pet.equipped }));
+  const bubble = h("div", { class: "bubble", style: { position: "relative", zIndex: 1 } },
+    pet.message || tr("Ghi một khoản để mình vui nha!"));
+
   holder.addEventListener("click", () => {
     const svg = holder.querySelector("svg");
-    svg.classList.remove("poked");
-    void svg.getBoundingClientRect();
-    svg.classList.add("poked");
-    bubble.textContent = pokeLine(pet.mood);
+    if (svg) {
+      svg.classList.remove("poked");
+      void svg.getBoundingClientRect();
+      svg.classList.add("poked");
+    }
+    bubble.textContent = pokeLine(pet.mood, pet.equipped?.pet);
     haptic([8, 30, 8]);
   });
   holder.setAttribute("role", "button");
@@ -44,12 +53,31 @@ function petCard(mini) {
   });
 
   const streak = mini.streak || {};
-  const meta = h("div", { class: "pet-meta" },
+  const meta = h("div", { class: "pet-meta", style: { position: "relative", zIndex: 1 } },
     h("span", { class: "badge" }, icon("star", 13), tr`Cấp ${pet.level || 1}`),
-    h("span", { class: `badge ${streak.current_streak ? "warn" : ""}` }, icon("flame", 13), tr`${streak.current_streak || 0} ngày liền`));
+    h("span", { class: `badge ${streak.current_streak ? "warn" : ""}` }, icon("flame", 13), tr`${streak.current_streak || 0} ngày liền`),
+    h("a", { class: "badge", href: "#/shop", style: { textDecoration: "none", color: "inherit", fontWeight: 700 } },
+      "🪙 ", tr`${pet.coins ?? 100} xu`),
+    h("a", { class: "badge", href: "#/shop", style: { textDecoration: "none", color: "#f59e0b", fontWeight: 800, border: "1px solid rgba(245, 158, 11, 0.4)", background: "rgba(245, 158, 11, 0.15)" } },
+      "🏆 ", tr`${pet.badge_points ?? 3} huy hiệu`),
+    h("span", { class: "badge", title: tr("Độ no của thú cưng") }, "🍖 ", `${pet.pet_fullness ?? 80}%`));
   if (pet.next_level_in) meta.append(h("span", { class: "badge" }, tr`còn ${pet.next_level_in} ngày lên cấp`));
 
-  return h("section", { class: "card pet-card" }, holder, h("div", null, bubble, meta));
+  const card = h("section", {
+    class: "card pet-card",
+    style: {
+      background: theme.cardBg,
+      border: theme.cardBorder,
+      boxShadow: `0 14px 34px -10px ${theme.glowColor}`,
+      position: "relative",
+      overflow: "hidden",
+      transition: "background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease"
+    }
+  });
+  const backdropNode = renderStageBackdrop(bgKey);
+  if (backdropNode) card.append(backdropNode);
+  card.append(holder, h("div", { style: { position: "relative", zIndex: 1 } }, bubble, meta));
+  return card;
 }
 
 function moneyCard(ctx, mini) {
@@ -186,6 +214,7 @@ export async function homeScreen(ctx) {
 
   const name = displayName(user);
   const showPet = getPref("pet") === "on";
+  const notifBtn = notificationButton(ctx);
   const pin = h("button", { class: "icon-btn", type: "button", "aria-label": tr("Ghim Mini-View nổi") }, icon("picture-in-picture-2"));
   pin.addEventListener("click", async () => {
     const m = await import("../flows/mini.js");
@@ -200,6 +229,7 @@ export async function homeScreen(ctx) {
         h("h1", null, name),
         // Tắt thú cưng thì chuỗi ngày ghi chép chuyển lên đây
         showPet ? null : h("span", { class: `badge ${mini.streak?.current_streak ? "warn" : ""}` }, icon("flame", 13), tr`${mini.streak?.current_streak || 0} ngày liền`)),
+      notifBtn,
       pin,
       settingsButton()),
     ...(showPet ? [petCard(mini)] : []),
@@ -215,6 +245,10 @@ export async function homeScreen(ctx) {
   if (actions) screen.append(actions);
   screen.append(recentList(ctx, dash.recent_transactions || [], t));
   celebrate(challenges);
-  screen.cleanup = startTicker(screen);
+  const stopTicker = startTicker(screen);
+  screen.cleanup = () => {
+    if (typeof notifBtn.destroy === "function") notifBtn.destroy();
+    stopTicker();
+  };
   return screen;
 }

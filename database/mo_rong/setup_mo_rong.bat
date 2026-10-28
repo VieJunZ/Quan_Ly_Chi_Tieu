@@ -39,6 +39,12 @@ for %%f in (create_database.sql create_tables.sql seed_categories.sql procedures
     if errorlevel 1 goto :error
 )
 
+REM Chép script mở rộng sang thư mục tạm, đổi tên CSDL, giữ nguyên mã UTF-8
+for %%f in (mo_rong_bang.sql mo_rong_thu_tuc.sql kiem_thu_mo_rong.sql) do (
+    powershell -NoProfile -Command "$t = [IO.File]::ReadAllText('%MO_RONG%%%f', [Text.Encoding]::UTF8); [IO.File]::WriteAllText('%TAM%\%%f', $t.Replace('so_chi_tri_db', '%DB_NAME%'), (New-Object Text.UTF8Encoding $false))"
+    if errorlevel 1 goto :error
+)
+
 for %%f in (create_database.sql create_tables.sql seed_categories.sql procedures.sql test_database.sql) do (
     echo.
     echo ===== [gốc] %%f
@@ -49,7 +55,7 @@ for %%f in (create_database.sql create_tables.sql seed_categories.sql procedures
 for %%f in (mo_rong_bang.sql mo_rong_thu_tuc.sql kiem_thu_mo_rong.sql) do (
     echo.
     echo ===== [mở rộng] %%f
-    sqlcmd -S "%SERVER%" -E -b -I -f 65001 -W -v DB_NAME=%DB_NAME% -i "%MO_RONG%%%f"
+    sqlcmd -S "%SERVER%" -E -b -I -f 65001 -W -i "%TAM%\%%f"
     if errorlevel 1 goto :error
 )
 

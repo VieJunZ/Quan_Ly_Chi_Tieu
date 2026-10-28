@@ -3,7 +3,7 @@
    Tự tạo dữ liệu thử và tự dọn khi xong. Có ca FAIL thì script báo lỗi.
    ============================================================================= */
 
-USE $(DB_NAME);
+USE so_chi_tri_db;
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
@@ -550,6 +550,76 @@ BEGIN CATCH
     INSERT @results VALUES (N'Dọn tài khoản dùng thử hết hạn, giữ tài khoản còn hạn', 'FAIL', ERROR_MESSAGE());
 END CATCH
 
+/* ===========================================================================
+   NHÓM 15: Pet Shop, Tủ đồ linh thú & Biến động xu
+   =========================================================================== */
+-- 58. Người dùng mới có sẵn 100 xu và độ no 80
+INSERT @results VALUES (N'Người dùng mới có sẵn 100 xu và độ no 80',
+    IIF((SELECT coins FROM dbo.users WHERE id = @u) = 100 AND (SELECT pet_fullness FROM dbo.users WHERE id = @u) = 80, 'PASS', 'FAIL'), NULL);
+
+-- 59. Mua vật phẩm thời trang thành công (Mũ cử nhân 50 xu -> còn 50 xu, tự động mặc)
+BEGIN TRY
+    EXEC dbo.sp_buy_pet_item @user_id = @u, @item_id = 'hat_grad';
+    INSERT @results VALUES (N'Mua vật phẩm trừ đúng xu và tự động trang bị',
+        IIF((SELECT coins FROM dbo.users WHERE id = @u) = 50
+            AND EXISTS (SELECT 1 FROM dbo.user_inventory WHERE user_id = @u AND item_id = 'hat_grad' AND is_equipped = 1)
+            AND EXISTS (SELECT 1 FROM dbo.pet_coin_history WHERE user_id = @u AND amount = -50), 'PASS', 'FAIL'), NULL);
+END TRY
+BEGIN CATCH
+    INSERT @results VALUES (N'Mua vật phẩm trừ đúng xu và tự động trang bị', 'FAIL', ERROR_MESSAGE());
+END CATCH
+
+-- 60. Chặn mua trùng vật phẩm thời trang đã sở hữu
+BEGIN TRY
+    EXEC dbo.sp_buy_pet_item @user_id = @u, @item_id = 'hat_grad';
+    INSERT @results VALUES (N'Chặn mua trùng vật phẩm thời trang đã sở hữu', 'FAIL', N'CSDL vẫn cho mua trùng');
+END TRY
+BEGIN CATCH
+    INSERT @results VALUES (N'Chặn mua trùng vật phẩm thời trang đã sở hữu', IIF(ERROR_NUMBER() = 50062, 'PASS', 'FAIL'), ERROR_MESSAGE());
+END CATCH
+
+-- 61. Chặn mua khi không đủ xu (mua vương miện 150 xu trong khi chỉ còn 50 xu)
+BEGIN TRY
+    EXEC dbo.sp_buy_pet_item @user_id = @u, @item_id = 'hat_crown';
+    INSERT @results VALUES (N'Chặn mua khi không đủ xu', 'FAIL', N'CSDL vẫn cho mua');
+END TRY
+BEGIN CATCH
+    INSERT @results VALUES (N'Chặn mua khi không đủ xu', IIF(ERROR_NUMBER() = 50061, 'PASS', 'FAIL'), ERROR_MESSAGE());
+END CATCH
+
+-- 62. Mua mũ khác (Mầm cây 30 xu) -> tự động tháo Mũ cử nhân
+BEGIN TRY
+    EXEC dbo.sp_buy_pet_item @user_id = @u, @item_id = 'hat_sprout';
+    INSERT @results VALUES (N'Mặc phụ kiện mới tự động tháo phụ kiện cũ cùng slot',
+        IIF((SELECT is_equipped FROM dbo.user_inventory WHERE user_id = @u AND item_id = 'hat_sprout') = 1
+            AND (SELECT is_equipped FROM dbo.user_inventory WHERE user_id = @u AND item_id = 'hat_grad') = 0, 'PASS', 'FAIL'), NULL);
+END TRY
+BEGIN CATCH
+    INSERT @results VALUES (N'Mặc phụ kiện mới tự động tháo phụ kiện cũ cùng slot', 'FAIL', ERROR_MESSAGE());
+END CATCH
+
+-- 63. Mua và tiêu thụ thức ăn (Mì tôm thanh long 15 xu) -> tăng độ no
+BEGIN TRY
+    EXEC dbo.sp_buy_pet_item @user_id = @u, @item_id = 'food_noddles_dragon';
+    EXEC dbo.sp_use_pet_consumable @user_id = @u, @item_id = 'food_noddles_dragon';
+    INSERT @results VALUES (N'Tiêu thụ thức ăn tăng độ no của thú cưng',
+        IIF((SELECT pet_fullness FROM dbo.users WHERE id = @u) = 100
+            AND (SELECT quantity FROM dbo.user_inventory WHERE user_id = @u AND item_id = 'food_noddles_dragon') = 0, 'PASS', 'FAIL'), NULL);
+END TRY
+BEGIN CATCH
+    INSERT @results VALUES (N'Tiêu thụ thức ăn tăng độ no của thú cưng', 'FAIL', ERROR_MESSAGE());
+END CATCH
+
+-- 64. Cộng xu thưởng khi hoàn thành nhiệm vụ (+50 xu)
+BEGIN TRY
+    EXEC dbo.sp_add_pet_coins @user_id = @u, @amount = 50, @reason = N'Thưởng chuỗi 7 ngày';
+    INSERT @results VALUES (N'Cộng xu thưởng ghi nhận vào lịch sử biến động',
+        IIF(EXISTS (SELECT 1 FROM dbo.pet_coin_history WHERE user_id = @u AND amount = 50 AND reason = N'Thưởng chuỗi 7 ngày'), 'PASS', 'FAIL'), NULL);
+END TRY
+BEGIN CATCH
+    INSERT @results VALUES (N'Cộng xu thưởng ghi nhận vào lịch sử biến động', 'FAIL', ERROR_MESSAGE());
+END CATCH
+
 /* ---------------------------------------------------------------------------
    Dọn dữ liệu thử (cũng là ca kiểm tra xóa dây chuyền với người dùng thường)
    --------------------------------------------------------------------------- */
@@ -558,7 +628,9 @@ BEGIN TRY
     INSERT @results VALUES (N'Xóa người dùng xóa kèm mọi dữ liệu mở rộng',
         IIF(NOT EXISTS (SELECT 1 FROM dbo.debts WHERE user_id = @u)
             AND NOT EXISTS (SELECT 1 FROM dbo.split_bills WHERE user_id = @u)
-            AND NOT EXISTS (SELECT 1 FROM dbo.wallet_checks WHERE user_id = @u), 'PASS', 'FAIL'), NULL);
+            AND NOT EXISTS (SELECT 1 FROM dbo.wallet_checks WHERE user_id = @u)
+            AND NOT EXISTS (SELECT 1 FROM dbo.user_inventory WHERE user_id = @u)
+            AND NOT EXISTS (SELECT 1 FROM dbo.pet_coin_history WHERE user_id = @u), 'PASS', 'FAIL'), NULL);
 END TRY
 BEGIN CATCH
     IF XACT_STATE() <> 0 ROLLBACK;

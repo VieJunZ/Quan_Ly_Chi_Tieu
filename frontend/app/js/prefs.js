@@ -11,7 +11,11 @@ const KEYS = {
   font: "sochi.font",
   pet: "sochi.pet",
   haptics: "sochi.haptics",
-  lang: "sochi.lang"
+  lang: "sochi.lang",
+  notif_budget: "sochi.notif.budget",
+  notif_pet: "sochi.notif.pet",
+  notif_debts: "sochi.notif.debts",
+  notif_streak: "sochi.notif.streak"
 };
 
 const CHOICES = {
@@ -20,11 +24,18 @@ const CHOICES = {
   font: ["sm", "md", "lg"],
   pet: ["on", "off"],
   haptics: ["on", "off"],
-  lang: ["vi", "en"]
+  lang: ["vi", "en"],
+  notif_budget: ["on", "off"],
+  notif_pet: ["on", "off"],
+  notif_debts: ["on", "off"],
+  notif_streak: ["on", "off"]
 };
 
 /** Giá trị mặc định: không lưu gì vào máy khi người dùng chọn đúng mặc định. */
-const DEFAULTS = { theme: "system", accent: "candy", font: "md", pet: "on", haptics: "on", lang: "vi" };
+const DEFAULTS = {
+  theme: "system", accent: "candy", font: "md", pet: "on", haptics: "on", lang: "vi",
+  notif_budget: "on", notif_pet: "on", notif_debts: "on", notif_streak: "on"
+};
 
 export function getPref(name) {
   try {

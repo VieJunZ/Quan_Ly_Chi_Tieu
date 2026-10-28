@@ -10,6 +10,7 @@ import {
   h, icon, money, moneyShort, dateLabel, haptic, toast, confetti, openSheet, confirmSheet,
   field, busy, parseMoneyInput, settingsButton
 } from "../ui.js";
+import { notificationButton } from "../flows/notifications.js";
 
 /** Tên -> màu avatar cố định để dễ nhận ra từng người. */
 function avatar(name, size = 42) {
@@ -405,9 +406,11 @@ async function openSplit(ctx, known) {
 export async function debtsScreen(ctx, params) {
   const showHistory = params.get("history") === "1";
   const screen = h("main", { class: "screen stack" });
+  const notifBtn = notificationButton(ctx);
   screen.append(h("header", { class: "screen-head" },
     h("div", { class: "grow" }, h("h1", null, tr("Sổ nợ")), h("span", { class: "sub" }, tr("Bạn bè chỉ cần tên, không cần tài khoản"))),
-    settingsButton()));
+    notifBtn, settingsButton()));
+  screen.cleanup = () => notifBtn.destroy?.();
 
   let data;
   let splits;

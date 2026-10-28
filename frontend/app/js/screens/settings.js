@@ -125,6 +125,19 @@ function appearanceCard() {
 }
 
 /* ---------------------------------------------------------------------------
+   Thông báo & Cảnh báo
+   ------------------------------------------------------------------------ */
+function notificationsCard() {
+  const trigger = () => window.dispatchEvent(new Event("sochi:data"));
+  return h("section", { class: "card stack" },
+    h("div", { class: "card-title", style: { marginBottom: 0 } }, icon("bell", 20), tr("Thông báo & Cảnh báo")),
+    toggleRow("notif_budget", tr("Cảnh báo vượt ngân sách"), tr("Báo khi tiêu lố hạn mức hôm nay hoặc sắp chạm trần tháng"), trigger),
+    toggleRow("notif_pet", tr("Nhắc nhở thú cưng"), tr("Báo khi thú cưng bị đói hoặc sắp sửa lên cấp"), trigger),
+    toggleRow("notif_debts", tr("Nhắc sổ nợ & chia tiền"), tr("Báo khi có người nợ tiền hoặc bạn có khoản cần trả"), trigger),
+    toggleRow("notif_streak", tr("Động viên chuỗi ngày"), tr("Báo cột mốc chuỗi ngày ghi chép liên tiếp"), trigger));
+}
+
+/* ---------------------------------------------------------------------------
    Ngôn ngữ
    ------------------------------------------------------------------------ */
 function languageCard() {
@@ -317,7 +330,7 @@ export async function settingsScreen(ctx) {
     api("/auth/sessions").catch(() => null)
   ]);
 
-  screen.append(profileCard(ctx), appearanceCard(), languageCard(), categoriesCard(cats));
+  screen.append(profileCard(ctx), appearanceCard(), notificationsCard(), languageCard(), categoriesCard(cats));
   if (!user.is_demo) screen.append(securityCard(ctx));
   if (sessions) screen.append(sessionsCard(ctx, sessions));
 
