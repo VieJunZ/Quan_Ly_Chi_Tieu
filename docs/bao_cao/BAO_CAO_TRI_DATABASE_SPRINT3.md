@@ -21,7 +21,7 @@
 | Issue | Nhiệm vụ | Trạng thái GitHub ngày 29/10 | Minh chứng |
 | --- | --- | --- | --- |
 | [#71](https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/issues/71) – S3-03 | Thiết kế dữ liệu vật phẩm, xu và kho đồ người dùng | **Closed** | Các bảng và ràng buộc trong script SQL mở rộng |
-| [#76](https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/issues/76) – S3-08 | Đồng bộ dữ liệu giao dịch giữa Widget và tài khoản | **Closed** | API Dashboard sử dụng dữ liệu có `user_id`; query tổng hợp từng ngày |
+| [#76](https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/issues/76) – S3-08 | Đồng bộ dữ liệu giao dịch giữa Widget và tài khoản | **Đang mở** (PO đã đóng rồi mở lại, chờ nghiệm thu) | API Dashboard sử dụng dữ liệu có `user_id`; query tổng hợp từng ngày |
 
 **Ghi chú:** Issue #76 đóng không có nghĩa đã có **Widget native trên màn hình chính Android**. [Issue #75](https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/issues/75) về Widget Android vẫn đang mở tại thời điểm tổng hợp.
 
@@ -96,10 +96,10 @@ Các tệp thay đổi liên quan:
 
 ## 7. Tự đánh giá và xác nhận cá nhân
 
-- **Phần việc cá nhân Trí trực tiếp thực hiện:** _[Trí điền ngắn gọn và nêu tệp/commit/PR tương ứng]_  
-- **Lệnh và môi trường kiểm thử đã chạy:** _[Trí điền]_  
-- **Số ca PASS/FAIL của Sprint 3:** _[Trí điền theo log thực tế]_  
-- **Ảnh/log minh chứng:** _[Dán link ảnh, log hoặc PR]_  
-- **Vấn đề còn tồn đọng:** _[Trí điền hoặc ghi “Không” nếu đã xác minh]_  
+- **Phần việc cá nhân Trí trực tiếp thực hiện:** thiết kế và viết CSDL SQL Server của nhóm (commit `6bdabd1`, PR #18, Sprint 1); phần CSDL mở rộng, backend, frontend và tài liệu của tuần 2 (4 commit `552b77d`, `5e6e14b`, `96055bf`, `19f1f89` trên nhánh `feature/tong-hop-tuan-2`, đã có trên `main`), trong đó có API `GET /api/transactions/months` và bộ chọn tháng ở màn Lịch sử. Sprint 3: rà soát, đối chiếu và nghiệm thu dữ liệu Tiệm Pet và dữ liệu Widget/Mini-View theo issue #71 và #76. Mã nguồn Tiệm Pet (4 commit `bc960d6`, `d77b0e2`, `5fa323a`, `7a01f52`) do Việt (VieTruong-2007) viết.  
+- **Lệnh và môi trường kiểm thử đã chạy:** SQL Server 2025 Express LocalDB `(localdb)MSSQLLocalDB`; `database/mo_rong/setup_mo_rong.bat` (tạo CSDL và chạy `kiem_thu_mo_rong.sql`); `npm test` trong thư mục `backend`.  
+- **Số ca PASS/FAIL của Sprint 3:** `npm test` (backend): 33/33 PASS, chạy ngày 21/10/2026 trên nhánh tuần 2. Kết quả `kiem_thu_mo_rong.sql` cho Tiệm Pet: _[Trí điền số ca PASS/FAIL từ màn hình chạy thật]_  
+- **Ảnh/log minh chứng:** PR #79 và các commit nêu trên; ảnh chụp kết quả chạy: _[Trí dán link]_  
+- **Vấn đề còn tồn đọng:** issue #76 đang mở chờ PO nghiệm thu; chưa có Widget Android native (issue #75).
 
-**Kết luận:** Hai Issue Database được giao cho Trí trong Sprint 3 hiện đều đã đóng trên GitHub. Nhánh `main` có các thành phần SQL Server phục vụ Tiệm Pet và dữ liệu tổng quan cho Widget/Mini-View. Kết quả kiểm thử runtime chuyên biệt cho Sprint 3 và phạm vi đóng góp cá nhân cần được Trí kiểm tra, bổ sung trước khi xác nhận báo cáo chính thức.
+**Kết luận:** Hai Issue Database được giao cho Trí trong Sprint 3 là #71 (đã đóng) và #76 (đang mở chờ nghiệm thu). Nhánh `main` có các thành phần SQL Server phục vụ Tiệm Pet và dữ liệu tổng quan cho Widget/Mini-View. Kết quả kiểm thử runtime chuyên biệt cho Sprint 3 và phạm vi đóng góp cá nhân cần được Trí kiểm tra, bổ sung trước khi xác nhận báo cáo chính thức.
