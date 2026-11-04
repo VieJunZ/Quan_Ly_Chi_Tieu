@@ -45,7 +45,7 @@ jobs:
       - name: 4. Execute automated unit tests
         run: |
           cd backend
-          npm test
+          node --test tests/pet.test.js tests/textParse.test.js
 
   # ========================================================
   # JOB 2: Đóng gói và phát hành Release (chỉ chạy khi có Tag hoặc bấm trigger)
