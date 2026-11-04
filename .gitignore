@@ -16,3 +16,6 @@ backend/data/
 
 # Dữ liệu OCR tải về khi chạy
 backend/.cache/
+
+# Release bundles
+*.zip
