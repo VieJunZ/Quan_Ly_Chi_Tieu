@@ -104,3 +104,4 @@ jobs:
             1. Tải file `thuchi-${{ steps.vars.outputs.tag_name }}-bundle.zip` bên dưới và giải nén.
             2. Mở thư mục vừa giải nén, nhấp đúp chạy **`chay_thu_chi.bat`**.
             3. Trình duyệt sẽ tự động mở tại `http://localhost:8090/app/`.
+

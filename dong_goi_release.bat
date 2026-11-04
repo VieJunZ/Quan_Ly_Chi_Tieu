@@ -24,3 +24,4 @@ echo [THÀNH CÔNG] Đã tạo file: %OUTPUT_ZIP%
 echo Bạn có thể tải file này lên mục Releases trên GitHub:
 echo https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/releases/new?tag=%TAG%
 echo ========================================================
+
