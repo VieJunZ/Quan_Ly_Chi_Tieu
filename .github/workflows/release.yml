@@ -1,0 +1,106 @@
+name: Build & Publish App Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag phiên bản cần phát hành (ví dụ: v1.0.0-sprint3)'
+        required: true
+        default: 'v1.0.0-sprint3'
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-release:
+    name: Test, Package & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 2. Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 3. Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 4. Execute automated unit tests
+        run: |
+          cd backend
+          npm test
+
+      - name: 5. Determine Release Version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG_NAME="${{ github.event.inputs.release_tag }}"
+          else
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "Phát hành phiên bản: ${TAG_NAME}"
+
+      - name: 6. Package Portable Release Bundle
+        run: |
+          VERSION="${{ steps.vars.outputs.tag_name }}"
+          DIST_DIR="thuchi-release-${VERSION}"
+          mkdir -p "${DIST_DIR}"
+
+          # Sao chép các thành phần mã nguồn sạch
+          cp -r backend "${DIST_DIR}/"
+          cp -r frontend "${DIST_DIR}/"
+          cp -r database "${DIST_DIR}/"
+          cp -r docs "${DIST_DIR}/" 2>/dev/null || true
+          cp chay_thu_chi.bat "${DIST_DIR}/" 2>/dev/null || true
+          cp kiem_thu_thu_chi.bat "${DIST_DIR}/" 2>/dev/null || true
+          cp README.md "${DIST_DIR}/"
+          cp HUONG_DAN_THU_CHI.md "${DIST_DIR}/"
+
+          # Dọn dẹp các thư mục rác / cache / node_modules trước khi nén
+          rm -rf "${DIST_DIR}/backend/node_modules"
+          rm -rf "${DIST_DIR}/backend/.cache"
+          rm -rf "${DIST_DIR}/backend/.env"
+
+          # Đóng gói zip
+          zip -r "thuchi-${VERSION}-bundle.zip" "${DIST_DIR}"
+          echo "Đã đóng gói thuchi-${VERSION}-bundle.zip thành công."
+
+      - name: 7. Generate Release Notes & Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag_name }}
+          name: "Sổ Chi Tiêu (Thu Chi) - Release ${{ steps.vars.outputs.tag_name }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            thuchi-*-bundle.zip
+          body: |
+            ## 🚀 Bản phát hành chính thức - ${{ steps.vars.outputs.tag_name }}
+            
+            Ứng dụng **Sổ Chi Tiêu (Thu Chi)** - Hệ thống quản lý tài chính cá nhân Mobile-First cho sinh viên.
+            
+            ### 🌟 Điểm nổi bật phiên bản (Sprint 3 hoàn tất):
+            - 🐾 **Tiệm Thú Cưng (Pet Shop)**: Tích lũy xu từ chuỗi ngày ghi chép, đổi vật phẩm trang bị cho Pet.
+            - 🔔 **Trung tâm thông báo & Widget tiện ích**: Nhắc nhở ngân sách thông minh buổi tối, cảnh báo bội chi.
+            - 🎙️ **Ghi chép đa phương thức**: Nhận diện giọng nói tiếng Việt NLP, quét ảnh hóa đơn/chuyển khoản OCR ngoại tuyến, bóc tách tin nhắn ngân hàng SMS.
+            - 👥 **Sổ nợ & Chia tiền nhóm**: Tự động tính toán chia đều, xuất mẫu tin nhắn đòi nợ khéo léo.
+            - 📊 **Heatmap nhiệt độ chi tiêu**: Trực quan hóa mức chi tiêu từng ngày trong tháng.
+            
+            ### 📦 Hướng dẫn cài đặt & khởi chạy từ file Bundle ZIP:
+            1. Tải file `thuchi-${{ steps.vars.outputs.tag_name }}-bundle.zip` bên dưới và giải nén.
+            2. Mở thư mục vừa giải nén, nhấp đúp chạy **`chay_thu_chi.bat`**.
+            3. Trình duyệt sẽ tự động mở tại `http://localhost:8090/app/`.
