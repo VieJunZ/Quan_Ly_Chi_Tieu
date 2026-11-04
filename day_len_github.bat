@@ -3,7 +3,7 @@ setlocal
 chcp 65001 >nul
 
 echo ========================================================
-echo  Day commit va Release Tag len GitHub
+echo  Day nhanh feature/release-sprint3 len GitHub (Tao PR)
 echo ========================================================
 echo.
 
@@ -22,21 +22,21 @@ if errorlevel 1 (
 )
 
 echo Su dung: "%GIT_EXE%"
-echo Dang day code va tag len GitHub...
+echo Dang day nhanh feature/release-sprint3 len GitHub...
 echo.
 
-"%GIT_EXE%" push origin main --tags
+"%GIT_EXE%" push -u origin feature/release-sprint3
 
 if errorlevel 1 (
     echo.
-    echo [LOI] Push khong thanh cong. Vui long kiem tra ket noi mang hoac xac thuc GitHub.
+    echo [LOI] Push khong thanh cong. Vui long kiem tra ket noi hoac xac thuc GitHub.
 ) else (
     echo.
     echo ========================================================
-    echo [THANH CONG] Da day code va tag v1.0.0-sprint3 len GitHub!
-    echo Theo doi tien trinh Build va Release tai:
-    echo   https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/actions
-    echo   https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/releases
+    echo [THANH CONG] Da day nhanh feature/release-sprint3 len GitHub!
+    echo.
+    echo Buoc tiep theo: Mo link sau de tao Pull Request vao nhanh main:
+    echo   https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/compare/main...feature/release-sprint3?expand=1
     echo ========================================================
 )
 

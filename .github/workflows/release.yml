@@ -1,6 +1,10 @@
-name: Build & Publish App Release
+name: CI Quality Gate & Release Pipeline
 
 on:
+  pull_request:
+    branches:
+      - main
+      - develop
   push:
     tags:
       - 'v*'
@@ -15,8 +19,41 @@ permissions:
   contents: write
 
 jobs:
-  test-and-release:
-    name: Test, Package & Publish Release
+  # ========================================================
+  # JOB 1: Kiểm thử tự động trên Pull Request & Commits
+  # ========================================================
+  test:
+    name: Automated Unit Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 3. Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 4. Execute automated unit tests
+        run: |
+          cd backend
+          npm test
+
+  # ========================================================
+  # JOB 2: Đóng gói và phát hành Release (chỉ chạy khi có Tag hoặc bấm trigger)
+  # ========================================================
+  release:
+    name: Package & Publish GitHub Release
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -37,12 +74,7 @@ jobs:
           cd backend
           npm ci
 
-      - name: 4. Execute automated unit tests
-        run: |
-          cd backend
-          npm test
-
-      - name: 5. Determine Release Version
+      - name: 4. Determine Release Version
         id: vars
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -53,32 +85,35 @@ jobs:
           echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
           echo "Phát hành phiên bản: ${TAG_NAME}"
 
-      - name: 6. Package Portable Release Bundle
+      - name: 5. Package Portable Release Bundle
         run: |
           VERSION="${{ steps.vars.outputs.tag_name }}"
           DIST_DIR="thuchi-release-${VERSION}"
           mkdir -p "${DIST_DIR}"
 
-          # Sao chép các thành phần mã nguồn sạch
+          # Sao chép các thành phần mã nguồn chính thức
           cp -r backend "${DIST_DIR}/"
           cp -r frontend "${DIST_DIR}/"
           cp -r database "${DIST_DIR}/"
           cp -r docs "${DIST_DIR}/" 2>/dev/null || true
           cp chay_thu_chi.bat "${DIST_DIR}/" 2>/dev/null || true
           cp kiem_thu_thu_chi.bat "${DIST_DIR}/" 2>/dev/null || true
+          cp dong_goi_release.bat "${DIST_DIR}/" 2>/dev/null || true
+          cp day_len_github.bat "${DIST_DIR}/" 2>/dev/null || true
+          cp preview_server.js "${DIST_DIR}/" 2>/dev/null || true
           cp README.md "${DIST_DIR}/"
           cp HUONG_DAN_THU_CHI.md "${DIST_DIR}/"
 
-          # Dọn dẹp các thư mục rác / cache / node_modules trước khi nén
+          # Dọn dẹp cache / dev dependencies trước khi nén
           rm -rf "${DIST_DIR}/backend/node_modules"
           rm -rf "${DIST_DIR}/backend/.cache"
           rm -rf "${DIST_DIR}/backend/.env"
 
-          # Đóng gói zip
+          # Nén file bundle
           zip -r "thuchi-${VERSION}-bundle.zip" "${DIST_DIR}"
-          echo "Đã đóng gói thuchi-${VERSION}-bundle.zip thành công."
+          echo "Đã đóng gói file thuchi-${VERSION}-bundle.zip thành công."
 
-      - name: 7. Generate Release Notes & Publish GitHub Release
+      - name: 6. Generate Release Notes & Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.vars.outputs.tag_name }}
@@ -91,9 +126,9 @@ jobs:
           body: |
             ## 🚀 Bản phát hành chính thức - ${{ steps.vars.outputs.tag_name }}
             
-            Ứng dụng **Sổ Chi Tiêu (Thu Chi)** - Hệ thống quản lý tài chính cá nhân Mobile-First cho sinh viên.
+            Hệ thống quản lý tài chính cá nhân **Sổ Chi Tiêu (Thu Chi)** định hướng Mobile-First.
             
-            ### 🌟 Điểm nổi bật phiên bản (Sprint 3 hoàn tất):
+            ### 🌟 Tính năng hoàn tất Sprint 3:
             - 🐾 **Tiệm Thú Cưng (Pet Shop)**: Tích lũy xu từ chuỗi ngày ghi chép, đổi vật phẩm trang bị cho Pet.
             - 🔔 **Trung tâm thông báo & Widget tiện ích**: Nhắc nhở ngân sách thông minh buổi tối, cảnh báo bội chi.
             - 🎙️ **Ghi chép đa phương thức**: Nhận diện giọng nói tiếng Việt NLP, quét ảnh hóa đơn/chuyển khoản OCR ngoại tuyến, bóc tách tin nhắn ngân hàng SMS.
@@ -104,4 +139,3 @@ jobs:
             1. Tải file `thuchi-${{ steps.vars.outputs.tag_name }}-bundle.zip` bên dưới và giải nén.
             2. Mở thư mục vừa giải nén, nhấp đúp chạy **`chay_thu_chi.bat`**.
             3. Trình duyệt sẽ tự động mở tại `http://localhost:8090/app/`.
-
