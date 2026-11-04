@@ -40,7 +40,7 @@ jobs:
       - name: 3. Install backend dependencies
         run: |
           cd backend
-          npm ci
+          npm ci --ignore-scripts
 
       - name: 4. Execute automated unit tests
         run: |
@@ -72,7 +72,7 @@ jobs:
       - name: 3. Install backend dependencies
         run: |
           cd backend
-          npm ci
+          npm ci --ignore-scripts
 
       - name: 4. Determine Release Version
         id: vars
