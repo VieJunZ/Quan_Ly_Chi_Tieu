@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Thu Chi</string>
+    <string name="widget_small_desc">Xem nhanh hạn mức chi tiêu hôm nay và thú cưng Mochi</string>
+    <string name="widget_medium_desc">Ngân sách chi tiêu, chuỗi ngày Streak và phím tắt ghi nhanh</string>
+</resources>
