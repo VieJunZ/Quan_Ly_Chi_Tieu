@@ -278,15 +278,101 @@ export function handleMockRequest(url, method, body) {
 
   // 8. PET SHOP
   if (path === "/pet-shop/items") {
-    return [
-      { id: 1, name: "Mũ phù thủy", price: 50, icon: "sparkles", owned: true, equipped: true },
-      { id: 2, name: "Kính râm ngầu", price: 80, icon: "sun", owned: false, equipped: false },
-      { id: 3, name: "Bóng đồ chơi", price: 30, icon: "circle-dot", owned: true, equipped: false }
+    const storeStats = getStore("pet_stats", { coins: 150, pet_fullness: 80, badge_points: 3 });
+    const defaultItems = [
+      { id: "egg_elemental", name: "Trứng Linh Thú Ngũ Hành", slot: "egg", price_coins: 80, price_badges: 1, rarity: "rare", description: "Mở ngẫu nhiên 1 trong 5 Linh Thú Ngũ Hành hoặc 20% Thần Thú", owned_quantity: 0, is_equipped: false },
+      { id: "egg_divine", name: "Trứng Thần Thú Thượng Cổ", slot: "egg", price_coins: 160, price_badges: 2, rarity: "legendary", description: "Mở ngẫu nhiên 1 trong 5 Thần Thú Thượng Cổ cực hiếm", owned_quantity: 0, is_equipped: false },
+      { id: "pet_moc", name: "Linh Thú Mộc (Mộc Linh Nhi)", slot: "pet", price_coins: 0, price_badges: 1, rarity: "rare", description: "Gieo mầm tiết kiệm, gặt hái tương lai xanh tươi!", owned_quantity: 0, is_equipped: false },
+      { id: "pet_hoa", name: "Linh Thú Hỏa (Xích Viêm Linh)", slot: "pet", price_coins: 0, price_badges: 1, rarity: "rare", description: "Ngọn lửa kỷ luật tài chính bừng cháy trong từng khoản chi!", owned_quantity: 0, is_equipped: false },
+      { id: "food_noddles_dragon", name: "Mì tôm thanh long", slot: "consumable", price_coins: 15, price_badges: 0, rarity: "common", description: "Đặc sản cứu đói tăng 30 điểm no bụng", owned_quantity: 2, is_equipped: false }
     ];
+    return {
+      success: true,
+      coins: storeStats.coins,
+      pet_fullness: storeStats.pet_fullness,
+      badge_points: storeStats.badge_points,
+      items: getStore("pet_items", defaultItems)
+    };
   }
 
   if (path === "/pet-shop/pet") {
-    return getStore("pet", { mood: "party", level: 3, exp: 140, next_level_exp: 200, name: "Mochi" });
+    return {
+      success: true,
+      pet: getStore("pet", { mood: "happy", level: 3, exp: 140, next_level_exp: 200, name: "Mochi", badge_points: 3, equipped: {} })
+    };
+  }
+
+  if (path === "/pet-shop/hatch-egg" && method === "POST") {
+    const eggId = (body && body.egg_id) || "egg_elemental";
+    const payWith = (body && body.pay_with) || "badges";
+    const storeStats = getStore("pet_stats", { coins: 150, pet_fullness: 80, badge_points: 3 });
+
+    const pool = eggId === "egg_divine"
+      ? [
+          { id: "pet_thanhlong", name: "Thần Thú Thanh Long (Tử Long Dạ Châu)", rarity: "legendary" },
+          { id: "pet_bachho", name: "Thần Thú Bạch Hổ (Chiêu Tài Bạch Hổ)", rarity: "legendary" },
+          { id: "pet_chutuoc", name: "Thần Thú Chu Tước (Hỏa Diễm Phượng Hoàng)", rarity: "legendary" },
+          { id: "pet_huyenvu", name: "Thần Thú Huyền Vũ (Huyền Vũ Trấn Khố)", rarity: "legendary" },
+          { id: "pet_kylan", name: "Thần Thú Kỳ Lân (Cát Tường Kỳ Lân)", rarity: "legendary" }
+        ]
+      : [
+          { id: "pet_moc", name: "Linh Thú Mộc (Mộc Linh Nhi)", rarity: "rare" },
+          { id: "pet_hoa", name: "Linh Thú Hỏa (Xích Viêm Linh)", rarity: "rare" },
+          { id: "pet_tho", name: "Linh Thú Thổ (Thạch Thổ Linh)", rarity: "rare" },
+          { id: "pet_kim", name: "Linh Thú Kim (Hoàng Kim Linh)", rarity: "rare" },
+          { id: "pet_thuy", name: "Linh Thú Thủy (Lam Thủy Linh)", rarity: "rare" },
+          { id: "pet_thanhlong", name: "Thần Thú Thanh Long (Tử Long Dạ Châu)", rarity: "legendary" }
+        ];
+
+    const hatched = pool[Math.floor(Math.random() * pool.length)];
+
+    if (payWith === "coins") {
+      storeStats.coins = Math.max(0, storeStats.coins - (eggId === "egg_divine" ? 160 : 80));
+    } else {
+      storeStats.badge_points = Math.max(0, storeStats.badge_points - (eggId === "egg_divine" ? 2 : 1));
+    }
+    setStore("pet_stats", storeStats);
+
+    return {
+      success: true,
+      message: `Chúc mừng bạn! Quả trứng đã nở ra: ${hatched.name}!`,
+      is_new: true,
+      egg: { id: eggId, name: eggId === "egg_divine" ? "Trứng Thần Thú Thượng Cổ" : "Trứng Linh Thú Ngũ Hành" },
+      pet: {
+        id: hatched.id,
+        name: hatched.name,
+        slot: "pet",
+        rarity: hatched.rarity,
+        description: "Linh thú đồng hành đắc lực của bạn",
+        effect_data: "{}",
+        is_new: true,
+        is_equipped: true
+      },
+      duplicate_reward: null,
+      coins: storeStats.coins,
+      badge_points: storeStats.badge_points,
+      pet_fullness: storeStats.pet_fullness
+    };
+  }
+
+  if (path === "/pet-shop/buy" && method === "POST") {
+    const storeStats = getStore("pet_stats", { coins: 150, pet_fullness: 80, badge_points: 3 });
+    return {
+      success: true,
+      coins: storeStats.coins,
+      badge_points: storeStats.badge_points
+    };
+  }
+
+  if (path === "/pet-shop/equip" && method === "POST") {
+    return { success: true };
+  }
+
+  if (path === "/pet-shop/use" && method === "POST") {
+    const storeStats = getStore("pet_stats", { coins: 150, pet_fullness: 80, badge_points: 3 });
+    storeStats.pet_fullness = Math.min(100, storeStats.pet_fullness + 30);
+    setStore("pet_stats", storeStats);
+    return { success: true, pet_fullness: storeStats.pet_fullness };
   }
 
   // 9. SCAN VOICE / TEXT

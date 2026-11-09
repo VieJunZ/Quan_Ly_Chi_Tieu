@@ -2,13 +2,38 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.onrender.quan_ly_chi_tieu_k5kn.twa">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Translucent.NoTitleBar">
+        android:theme="@android:style/Theme.NoTitleBar">
+
+        <!-- Màn hình chính chạy App (Launcher Activity) -->
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Xử lý mở link từ Widget hoặc trình duyệt -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="quan-ly-chi-tieu-k5kn.onrender.com"
+                    android:scheme="https" />
+            </intent-filter>
+        </activity>
 
         <!-- 1. Widget 2x2 Nhỏ: Thú cưng Mochi + Số dư hôm nay + Nút (+) -->
         <receiver
@@ -39,4 +64,3 @@
     </application>
 
 </manifest>
-

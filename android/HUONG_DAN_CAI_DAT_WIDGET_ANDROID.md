@@ -1,62 +1,65 @@
 # 📱 HƯỚNG DẪN CÀI ĐẶT & KÉO WIDGET RA MÀN HÌNH CHÍNH ANDROID
 
-Module Widget Android của ứng dụng **Quản Lý Thu Chi** được xây dựng theo chuẩn **Android AppWidget**, hỗ trợ kéo thả trực tiếp lên màn hình chính (Home Launcher) của các dòng điện thoại: Samsung, Xiaomi, Oppo, Vivo, Realme, Google Pixel,...
+> **⚠️ LÝ DO VÌ SAO TRƯỚC ĐÓ CHƯA KÉO ĐƯỢC WIDGET:**
+> * Nếu bạn dùng app bằng nút **"Thêm vào Màn hình chính" từ Google Chrome (PWA)**: Trình duyệt web **không thể** can thiệp vào hệ điều hành Android để tạo Widget launcher.
+> * Widget màn hình chính (AppWidget) là tính năng **Native độc quyền của Android**. Bạn **bắt buộc phải cài đặt file APK** (bản đã tích hợp Widget) lên điện thoại thì hệ điều hành Android mới nhận diện và hiển thị Widget trong menu Tiện ích.
+> * Việc chỉ có mã nguồn `.java` và `.xml` trên máy tính chưa thể tác động tới điện thoại của bạn — Bạn cần tải file APK mới nhất được build tự động về máy để cài đặt.
 
 ---
 
-## 🎨 2 LOẠI WIDGET CÓ SẴN:
+## 🚀 BƯỚC 1: TẢI FILE APK ĐÃ TÍCH HỢP WIDGET (MIỄN PHÍ 0Đ)
 
-### 1. Widget Nhỏ (Kích thước 2x2 - Ô vuông)
-* **Hiển thị**: 
-  * Icon Thú cưng Mochi biểu cảm theo mức chi tiêu.
-  * Số tiền **Còn được tiêu hôm nay** (Ví dụ: `150.000 đ` màu xanh lá).
-  * Nút tròn **(+) Ghi nhanh**: Chạm vào là mở ngay hộp thoại nhập tiền mà không cần tìm app.
+Hệ thống đã được thiết lập **GitHub Actions CI/CD** tự động biên dịch APK trên máy chủ đám mây của GitHub (hoàn toàn miễn phí, không tốn 1 xu):
 
-### 2. Widget Vừa (Kích thước 4x2 - Chữ nhật ngang)
-* **Hiển thị**:
-  * Bên trái: Thú cưng Mochi to rõ + Huy hiệu chuỗi ngày Streak (`🔥 5 ngày`).
-  * Bên phải: Số dư ngân sách ngày hôm nay.
-  * **3 Phím tắt 1 chạm**:
-    * 🎙️ **Nói**: Bấm vào là bật micro nhận diện giọng nói tiếng Việt ngay.
-    * 📸 **Bill**: Bấm vào là bật camera/chọn ảnh chụp hóa đơn để quét OCR.
-    * ✍️ **Ghi**: Mở form ghi chép nhanh.
-
----
-
-## 👆 CÁCH KÉO WIDGET RA MÀN HÌNH CHÍNH ĐIỆN THOẠI:
-
-1. **Ra màn hình chính** của điện thoại Android.
-2. Dùng ngón tay **chạm và giữ (ấn đè) vào khoảng trống bất kỳ** trên màn hình khoảng 2 giây.
-3. Ở menu dưới cùng hiện lên, bấm vào biểu tượng **Tiện ích (Widgets)**.
-4. Cuộn xuống danh sách hoặc gõ tìm kiếm: **"Thu Chi"**.
-5. Bạn sẽ thấy 2 kích thước:
-   * **Thu Chi (Nhỏ 2x2)**
-   * **Thu Chi (Vừa 4x2)**
-6. Chạm và giữ vào widget bạn thích, rồi kéo thả vào vị trí mong muốn trên màn hình chính!
-7. **Xong!** Bạn có thể chạm vào để ghi tiền bất cứ lúc nào ngay từ màn hình chính.
+1. Mở trình duyệt trên máy tính hoặc điện thoại, truy cập vào GitHub của dự án:
+   ```text
+   https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/actions
+   ```
+2. Bấm vào lượt chạy mới nhất có tên **"Build Android APK with Native Widgets"** (hoặc commit mới nhất).
+3. Cuộn xuống phần **Artifacts** ở dưới cùng:
+4. Bấm tải về file:
+   ```text
+   thuchii.zip
+   ```
+5. Giải nén bạn sẽ được file cài đặt: **`thuchii.apk`** (nếu tải về máy tính thì gửi qua Zalo/Drive vào điện thoại).
 
 ---
 
-## 🛠️ CẤU TRÚC MÃ NGUỒN WIDGET ĐÃ TÍCH HỢP TRONG DỰ ÁN:
+## 📲 BƯỚC 2: CÀI ĐẶT FILE THUCHII.APK LÊN ĐIỆN THOẠI ANDROID
 
-```text
-android/
-└── app/
-    └── src/
-        └── main/
-            ├── AndroidManifest.xml                  (Đăng ký 2 bộ phát Widget)
-            ├── java/com/onrender/quan_ly_chi_tieu_k5kn/twa/
-            │   ├── ThuChiWidgetSmallProvider.java   (Xử lý logic Widget 2x2)
-            │   └── ThuChiWidgetMediumProvider.java  (Xử lý logic Widget 4x2)
-            └── res/
-                ├── drawable/
-                │   ├── widget_background.xml        (Nền bo góc 22dp gradient mờ)
-                │   └── widget_button_bg.xml         (Nền nút tròn hồng cam)
-                ├── layout/
-                │   ├── widget_thu_chi_small.xml     (Giao diện XML widget 2x2)
-                │   └── widget_thu_chi_medium.xml    (Giao diện XML widget 4x2)
-                └── xml/
-                    ├── widget_info_small.xml        (Cấu hình kích thước 2x2)
-                    └── widget_info_medium.xml       (Cấu hình kích thước 4x2)
-```
+1. Mở file **`thuchii.apk`** trên điện thoại Android của bạn.
+2. Nếu máy hiện thông báo *"Cài đặt ứng dụng từ nguồn không xác định"*, bấm **Cài đặt** (hoặc **Vẫn cài đặt / Install anyway**).
+3. Đợi khoảng 5 giây để cài đặt hoàn tất.
+4. Mở app lần đầu để hệ thống đồng bộ dữ liệu với máy chủ Render Cloud.
 
+---
+
+## 🎨 BƯỚC 3: KÉO WIDGET RA MÀN HÌNH CHÍNH (HOME LAUNCHER)
+
+Áp dụng cho mọi dòng máy Android (Samsung, Xiaomi, Oppo, Vivo, Realme, Google Pixel...):
+
+1. **Ra màn hình chính** của điện thoại.
+2. Dùng ngón tay **ấn giữ (chạm đè) vào khoảng trống bất kỳ** trên màn hình khoảng 2 giây.
+3. Menu phía dưới hiện lên, chọn mục **Tiện ích** (hoặc **Widgets**).
+4. Tìm kiếm từ khóa: **"Thu Chi"**.
+5. Bạn sẽ thấy ngay **2 loại Widget**:
+   * **Thu Chi (Nhỏ 2x2)**: Hiển thị Thú cưng Mochi + Số tiền còn được tiêu hôm nay + Nút (+) Ghi nhanh 1 chạm.
+   * **Thu Chi (Vừa 4x2)**: Hiển thị Mochi + Chuỗi ngày Streak (`🔥 5 ngày`) + Số dư + 3 nút thao tác (🎙️ Nói, 📸 Quét Bill, ✍️ Ghi chép).
+6. **Chạm và giữ vào Widget** bạn muốn dùng, rồi kéo thả vào vị trí yêu thích trên màn hình chính!
+7. **Xong!** Bây giờ mỗi khi cần ghi chép hay kiểm tra số tiền hôm nay, bạn chỉ cần nhìn ngay trên màn hình chính mà không cần mở app.
+
+---
+
+## 🛠️ VỀ LỖI GẠCH ĐỎ CỦA CÁC FILE `.java` TRONG VS CODE:
+
+### Nguyên nhân:
+VS Code trên máy tính của bạn dùng tiện ích mở rộng Java tiêu chuẩn (Eclipse JDT Language Server), nhưng máy bạn **chưa cài bộ Android SDK** (nặng 15GB). Do đó VS Code không tìm thấy các gói `android.app.*`, `android.widget.*` nên báo gạch đỏ.
+
+### Đã được xử lý triệt để như sau:
+1. **Tạo bộ Stub thư viện Android (`android/stubs`)**: Định nghĩa đầy đủ các lớp chuẩn (`Context`, `Activity`, `PendingIntent`, `RemoteViews`, `AppWidgetProvider`...) giúp VS Code nhận diện 100% cú pháp, không còn thiếu import.
+2. **Cập nhật cấu hình `.vscode/settings.json`**:
+   - `"java.project.sourcePaths"` trỏ đến cả `src/main/java` và `stubs`.
+   - `"java.errors.incompleteClasspath.severity": "ignore"` triệt tiêu toàn bộ cảnh báo thiếu Classpath.
+3. **Cấu hình `android/app/build.gradle`**:
+   - Tự động loại trừ file `R.java` giả lập khi build thật để tránh lỗi trùng lặp `duplicate class`.
+   - Biên dịch mượt mà trên GitHub Actions tạo ra file APK chuẩn cho điện thoại.
