@@ -95,13 +95,18 @@ app.use("/api/pet-shop", petShopRoutes);
 app.use("/api", notFoundHandler);
 
 // Xác thực Digital Asset Links cho Android TWA APK (loại bỏ hoàn toàn thanh địa chỉ web)
-app.get("/.well-known/assetlinks.json", (req, res) => {
-  const assetlinksPath = path.join(FRONTEND_DIR, ".well-known", "assetlinks.json");
-  if (fs.existsSync(assetlinksPath)) {
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    return res.sendFile(assetlinksPath);
+const ANDROID_ASSET_LINKS = [{
+  relation: ["delegate_permission/common.handle_all_urls"],
+  target: {
+    namespace: "android_app",
+    package_name: "com.onrender.quan_ly_chi_tieu_k5kn.twa",
+    sha256_cert_fingerprints: ["24:3D:61:58:16:4A:FA:DB:60:39:AF:B5:04:3E:5D:41:A8:F9:97:21:57:ED:08:C6:C5:C6:82:48:C6:2D:4A:5B"]
   }
-  res.status(404).json({ error: "assetlinks not found" });
+}];
+
+app.get("/.well-known/assetlinks.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.json(ANDROID_ASSET_LINKS);
 });
 
 // Giao diện web & mobile app
