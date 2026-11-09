@@ -176,7 +176,9 @@ export async function meScreen(ctx, params) {
       menuItem("sparkles", tr("Tiệm đồ thú cưng"), tr("Mua phụ kiện, đổi skin, cho thú cưng ăn"), null, { href: "#/shop" }),
       menuItem("trophy", tr("Thử thách & huy hiệu"), tr("Cắt thói quen tốn tiền, nhận huy hiệu"), null, { href: "#/challenges" }),
       menuItem("ghost", tr("Tiền bốc hơi"), tr("Đếm tiền thật, xem sổ có khớp không"), null, { href: "#/wallet" }),
-      menuItem("hand-coins", tr("Sổ nợ và chia tiền"), tr("Ai nợ mình, mình nợ ai"), null, { href: "#/debts" }),
+      menuItem("hand-coins", tr("Sổ nợ cá nhân"), tr("Ai nợ mình, mình nợ ai"), null, { href: "#/debts" }),
+      menuItem("user-plus", tr("Bạn bè & Kết bạn"), tr("Kết bạn bằng ID / Tên, gợi ý trả nợ 1 chạm"), null, { href: "#/friends" }),
+      menuItem("users", tr("Quỹ nhóm & Chia tiền"), tr("Chia tiền phòng trọ, ăn uống nhóm"), null, { href: "#/groups" }),
       menuItem("calendar-days", tr("Lịch sử chi tiêu"), tr("Lịch nhiệt, tìm kiếm, soi tháng"), null, { href: "#/history" }))));
 
   screen.append(h("section", {
