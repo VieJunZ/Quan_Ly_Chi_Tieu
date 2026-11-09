@@ -14,19 +14,20 @@
 
 ---
 
-## 🤖 CÁCH 1: CÀI ĐẶT FILE APK TRÊN ĐIỆN THOẠI ANDROID (KHUYÊN DÙNG)
+## 🤖 CÁCH 1: CÀI ĐẶT FILE APK TRÊN ĐIỆN THOẠI ANDROID (ĐẦY ĐỦ TÍNH NĂNG & WIDGET)
 
-Ứng dụng Android được đóng gói chuẩn **TWA (Trusted Web Activity)**, mang lại trải nghiệm toàn màn hình như ứng dụng gốc tải từ Google Play Store (ẩn hoàn toàn thanh địa chỉ trình duyệt).
+Ứng dụng Android được đóng gói chuẩn **Native Android Wrapper & TWA**, mang lại trải nghiệm toàn màn hình và hỗ trợ **2 Widget kéo thả trực tiếp lên màn hình chính (2x2 và 4x2)**.
 
 ### Các bước cài đặt:
-1. **Tải file APK về điện thoại**:
-   * Tải file cài đặt APK được đóng gói từ dự án về điện thoại của bạn.
-2. **Cho phép cài đặt từ nguồn này**:
-   * Khi mở file APK, nếu điện thoại xuất hiện cảnh báo *"Ứng dụng từ nguồn không xác định"* hoặc *"Tệp có thể gây hại"*, bạn chọn **Cài đặt bằng mọi giá (Install anyway)** hoặc **Vẫn tải xuống**.
-   *(Đây là cảnh báo mặc định của Android khi cài file APK ngoài kho ứng dụng Google Play).*
-3. **Mở ứng dụng**:
-   * Sau khi cài đặt hoàn tất, biểu tượng **Ví tiền (Thu Chi)** sẽ xuất hiện trên màn hình chính của điện thoại.
-   * Chạm vào biểu tượng để mở app: Ứng dụng sẽ hiển thị toàn màn hình, không có bất kỳ thanh địa chỉ web nào!
+1. **Tải file APK về điện thoại (Miễn phí qua GitHub Actions)**:
+   * Truy cập GitHub dự án: `https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/actions`
+   * Bấm vào build mới nhất -> Tải file `ThuChi-Mochi-Android-Widget-v2.0.0.zip` và giải nén lấy file `app-debug.apk` vào điện thoại.
+2. **Cài đặt file APK**:
+   * Mở file `app-debug.apk` trên điện thoại.
+   * Nếu có cảnh báo *"Ứng dụng ngoài Google Play"* hoặc *"Tệp có thể gây hại"*, chọn **Vẫn cài đặt (Install anyway)**.
+3. **Mở ứng dụng & Kéo Widget ra màn hình**:
+   * Biểu tượng **Thu Chi** sẽ xuất hiện trên màn hình và danh sách ứng dụng.
+   * Để đưa Widget ra màn hình chính: **Ấn giữ khoảng trống màn hình điện thoại 2 giây** -> Chọn **Tiện ích (Widgets)** -> Tìm **Thu Chi** -> Kéo Widget 2x2 hoặc 4x2 ra vị trí bạn thích!
 
 ---
 
