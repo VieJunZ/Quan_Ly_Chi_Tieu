@@ -189,18 +189,18 @@ router.get("/:id", asyncRoute(async (req, res) => {
     ),
     db.query(
       `SELECT gm.user_id, gm.role,
-              u.username, ISNULL(u.full_name, u.username) AS full_name,
+              u.username, ISNULL(u.display_name, u.username) AS full_name,
               ISNULL(SUM(ge.amount), 0) AS paid
        FROM dbo.group_members AS gm
        INNER JOIN dbo.users AS u ON gm.user_id = u.id
        LEFT JOIN dbo.group_expenses AS ge ON ge.group_id = gm.group_id AND ge.payer_id = gm.user_id
        WHERE gm.group_id = @group_id
-       GROUP BY gm.user_id, gm.role, u.username, u.full_name`,
+       GROUP BY gm.user_id, gm.role, u.username, u.display_name`,
       { group_id: groupId }
     ),
     db.query(
       `SELECT ge.id, ge.amount, ge.category_name, ge.note, ge.payer_id,
-              ISNULL(u.full_name, u.username) AS payer_name,
+              ISNULL(u.display_name, u.username) AS payer_name,
               CONVERT(VARCHAR(19), ge.created_at, 126) AS created_at
        FROM dbo.group_expenses AS ge
        INNER JOIN dbo.users AS u ON ge.payer_id = u.id
@@ -293,3 +293,4 @@ router.post("/:id/leave", asyncRoute(async (req, res) => {
 }));
 
 module.exports = router;
+

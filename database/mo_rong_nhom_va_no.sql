@@ -72,3 +72,4 @@ BEGIN
     PRINT N'Đã tạo bảng group_expenses.';
 END
 GO
+

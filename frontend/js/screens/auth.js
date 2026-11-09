@@ -190,9 +190,12 @@ export function welcomeScreen(ctx) {
 export async function startDemo(ctx, button) {
   const restore = button ? busy(button) : () => {};
   try {
+    try {
+      localStorage.removeItem("thuchi.mock.initialized");
+    } catch {}
     const data = await api("/auth/demo", { method: "POST", body: { today: today(), now: nowTime() } });
     session.save(data);
-    toast(tr("Đã tạo tài khoản dùng thử 24 giờ kèm dữ liệu mẫu"), "ok");
+    toast(tr("Đã kích hoạt chế độ dùng thử với dữ liệu mẫu (Không có ID)"), "ok");
     ctx.go("home");
   } catch (error) {
     toast(error.message, "error");
@@ -460,13 +463,12 @@ export function openUpgradeSheet(ctx) {
     if (!pwBlock.validate()) return;
     const restore = busy(submit);
     try {
-      const data = await api("/auth/upgrade-demo", {
+      const data = await api("/auth/register", {
         method: "POST",
         body: {
           username: username.input.value.trim(),
           password: pwBlock.pw.input.value,
-          confirm_password: pwBlock.confirm.input.value,
-          keep_sample: keep.checked
+          confirm_password: pwBlock.confirm.input.value
         }
       });
       session.save(data);
