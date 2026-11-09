@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.onrender.quan_ly_chi_tieu_k5kn.twa">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar">
+
+        <!-- 1. Widget 2x2 Nhỏ: Thú cưng Mochi + Số dư hôm nay + Nút (+) -->
+        <receiver
+            android:name=".ThuChiWidgetSmallProvider"
+            android:exported="true"
+            android:label="Thu Chi (Nhỏ 2x2)">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_small" />
+        </receiver>
+
+        <!-- 2. Widget 4x2 Vừa: Mochi + Streak + Ngân sách + 3 Nút thao tác -->
+        <receiver
+            android:name=".ThuChiWidgetMediumProvider"
+            android:exported="true"
+            android:label="Thu Chi (Vừa 4x2)">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_medium" />
+        </receiver>
+
+    </application>
+
+</manifest>
+

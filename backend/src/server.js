@@ -54,6 +54,7 @@ const budgetRoutes = require("./routes/budget.routes");
 const challengeRoutes = require("./routes/challenge.routes");
 const petShopRoutes = require("./routes/petShop.routes");
 const groupRoutes = require("./routes/group.routes");
+const friendRoutes = require("./routes/friend.routes");
 const ocr = require("./services/ocr.service");
 const hasher = require("./services/hash.service");
 const { errorHandler, notFoundHandler } = require("./middlewares/error.middleware");
@@ -106,6 +107,7 @@ app.use("/api/budget", budgetRoutes);
 app.use("/api/challenges", challengeRoutes);
 app.use("/api/pet-shop", petShopRoutes);
 app.use("/api/groups", groupRoutes);
+app.use("/api/friends", friendRoutes);
 app.use("/api", notFoundHandler);
 
 // Xác thực Digital Asset Links cho Android TWA APK (loại bỏ hoàn toàn thanh địa chỉ web)

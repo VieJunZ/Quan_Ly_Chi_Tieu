@@ -189,9 +189,16 @@ function nameSuggestions(known, onPick, exclude = () => false) {
 /* ---------------------------------------------------------------------------
    Ghi nợ tay
    ------------------------------------------------------------------------ */
-function openNewDebt(ctx, known) {
+async function openNewDebt(ctx, known, preselectedFriend = null) {
   let direction = "owed_to_me";
-  let selectedLinkedUserId = null;
+  let hasAppAccount = Boolean(preselectedFriend);
+  let selectedLinkedUserId = preselectedFriend ? preselectedFriend.id : null;
+  let friendsList = [];
+
+  try {
+    const fRes = await api("/friends");
+    friendsList = fRes.friends || [];
+  } catch {}
 
   const seg = h("div", { class: "segmented" });
   const paintSeg = () => seg.replaceChildren(
@@ -205,17 +212,92 @@ function openNewDebt(ctx, known) {
     }));
   paintSeg();
 
+  // Chuyển đổi giữa [Ghi tự do (không dùng app)] và [Có tài khoản Thu Chi]
+  const modeSeg = h("div", { class: "segmented small", style: { margin: "4px 0 10px 0" } });
   const name = field({
-    label: tr("Tên người, ID (#2) hoặc @username"),
+    label: hasAppAccount ? tr("Tên đăng nhập (@username) hoặc User ID (#2)") : tr("Tên người nợ / cho nợ"),
     name: "person_name",
     maxlength: 50,
     autocomplete: "off",
-    placeholder: tr("Ví dụ: 2, #2, @VieJunZ hoặc An")
+    value: preselectedFriend ? (preselectedFriend.name || preselectedFriend.username) : "",
+    placeholder: hasAppAccount ? tr("Ví dụ: 2, #2 hoặc @VieJunZ") : tr("Ví dụ: Bác tổ trưởng, Cô bán nước, Nam..."),
+    hint: hasAppAccount ? tr("Khoản nợ sẽ tự động đồng bộ sang tài khoản người này") : tr("Chỉ ghi vào sổ cá nhân của bạn, không liên kết tài khoản")
   });
+
+  const friendChipsBox = h("div", { class: "chips", style: { marginBottom: "6px" } });
   const userResults = h("div", { class: "chips", style: { marginTop: "4px" } });
   let searchTimer = null;
 
+  const renderFriendChips = () => {
+    if (!hasAppAccount || friendsList.length === 0) {
+      friendChipsBox.replaceChildren();
+      return;
+    }
+    friendChipsBox.replaceChildren(
+      h("small", { class: "faint full", style: { width: "100%", fontSize: "11px" } }, tr("Chọn nhanh bạn bè đã kết bạn:")),
+      ...friendsList.map((f) => {
+        const isSel = selectedLinkedUserId === f.id;
+        const chip = h("button", {
+          class: "chip",
+          type: "button",
+          "aria-pressed": String(isSel),
+          style: isSel ? { background: "var(--grad-main)", color: "#fff", fontWeight: 700 } : {}
+        }, icon("user-check", 13), `[ID: #${f.id}] @${f.username}`);
+        chip.addEventListener("click", () => {
+          name.input.value = f.name || f.username;
+          selectedLinkedUserId = f.id;
+          renderFriendChips();
+          userResults.replaceChildren(
+            h("span", { class: "badge ok", style: { margin: "4px 0" } }, icon("check", 12), tr`Đã liên kết bạn bè: [ID: #${f.id}] @${f.username}`)
+          );
+          amount.input.focus();
+        });
+        return chip;
+      })
+    );
+  };
+
+  const setAccountMode = (isAccount) => {
+    hasAppAccount = isAccount;
+    paintModeSeg();
+    name.label.textContent = hasAppAccount ? tr("Tên đăng nhập (@username) hoặc User ID (#2)") : tr("Tên người nợ / cho nợ");
+    name.input.placeholder = hasAppAccount ? tr("Ví dụ: 2, #2 hoặc @VieJunZ") : tr("Ví dụ: Bác tổ trưởng, Cô bán nước, Nam...");
+    name.setHint(hasAppAccount ? tr("Khoản nợ sẽ tự động đồng bộ sang tài khoản người này") : tr("Chỉ ghi vào sổ cá nhân của bạn, không liên kết tài khoản"));
+    if (!hasAppAccount) {
+      selectedLinkedUserId = null;
+      userResults.replaceChildren();
+      suggest.el.hidden = false;
+    } else {
+      suggest.el.hidden = true;
+    }
+    renderFriendChips();
+  };
+
+  const paintModeSeg = () => {
+    modeSeg.replaceChildren(
+      h("button", {
+        type: "button",
+        "aria-pressed": String(!hasAppAccount),
+        onclick: () => setAccountMode(false)
+      }, icon("user", 14), tr("Không dùng app (ghi tự do)")),
+      h("button", {
+        type: "button",
+        "aria-pressed": String(hasAppAccount),
+        onclick: () => setAccountMode(true)
+      }, icon("user-check", 14), tr("Có tài khoản Thu Chi"))
+    );
+  };
+  paintModeSeg();
+  renderFriendChips();
+
+  if (preselectedFriend) {
+    userResults.replaceChildren(
+      h("span", { class: "badge ok", style: { margin: "4px 0" } }, icon("check", 12), tr`Đã liên kết bạn bè: [ID: #${preselectedFriend.id}] @${preselectedFriend.username}`)
+    );
+  }
+
   name.input.addEventListener("input", () => {
+    if (!hasAppAccount) return;
     selectedLinkedUserId = null;
     clearTimeout(searchTimer);
     const query = name.input.value.trim().replace(/^[@#]/, "");
@@ -228,18 +310,45 @@ function openNewDebt(ctx, known) {
         const res = await api("/debts/search-user", { query: { q: query } });
         if (res.users && res.users.length) {
           userResults.replaceChildren(
-            h("small", { class: "faint full", style: { width: "100%", fontSize: "11px" } }, tr("Tài khoản hệ thống (tự động đồng bộ 2 chiều):")),
+            h("small", { class: "faint full", style: { width: "100%", fontSize: "11px" } }, tr("Kết quả tìm kiếm tài khoản hệ thống:")),
             ...res.users.map((u) => {
+              const isFriend = friendsList.some((f) => f.id === u.id);
               const chip = h("button", {
                 class: "chip",
                 type: "button",
                 style: { background: "var(--grad-main)", color: "#fff", fontWeight: 700 }
               }, icon("user-check", 14), `[ID: #${u.id}] @${u.username}${u.full_name && u.full_name !== u.username ? ` (${u.full_name})` : ""}`);
+
               chip.addEventListener("click", () => {
                 name.input.value = u.full_name || u.username;
                 selectedLinkedUserId = u.id;
+                renderFriendChips();
+
+                // Nếu chưa là bạn bè, gợi ý nút kết bạn ngay bên cạnh badge
+                const friendAction = !isFriend ? h("button", {
+                  class: "btn small soft",
+                  type: "button",
+                  style: { marginLeft: "8px", padding: "2px 8px", fontSize: "11px" },
+                  onclick: async (ev) => {
+                    ev.stopPropagation();
+                    try {
+                      await api("/friends", { method: "POST", body: { friend_id: u.id } });
+                      friendsList.push({ id: u.id, username: u.username, name: u.full_name || u.username });
+                      toast(tr`Đã kết bạn với @${u.username}!`, "ok");
+                      friendAction.remove();
+                      renderFriendChips();
+                    } catch (e) {
+                      toast(e.message, "error");
+                    }
+                  }
+                }, icon("user-plus", 12), tr("Kết bạn")) : null;
+
                 userResults.replaceChildren(
-                  h("span", { class: "badge ok", style: { margin: "4px 0" } }, icon("check", 12), tr`Đã liên kết với [ID: #${u.id}] @${u.username}`)
+                  h("span", { class: "badge ok", style: { margin: "4px 0", display: "inline-flex", alignItems: "center" } },
+                    icon("check", 12),
+                    tr`Đã liên kết với [ID: #${u.id}] @${u.username}`,
+                    friendAction
+                  )
                 );
                 amount.input.focus();
               });
@@ -262,12 +371,14 @@ function openNewDebt(ctx, known) {
     selectedLinkedUserId = null;
     amount.input.focus();
   });
+  if (hasAppAccount) suggest.el.hidden = true;
+
   amount.input.addEventListener("input", () => {
     const v = parseMoneyInput(amount.input.value);
     amount.setHint(amount.input.value ? (v ? `= ${money(v)}` : tr("Số tiền chưa đúng")) : tr("Gõ 50k, 1tr2... đều được"), amount.input.value && !v ? "error" : "");
   });
   const save = h("button", { class: "btn block", type: "submit" }, icon("check", 18), tr("Ghi vào sổ"));
-  const form = h("form", { class: "stack", novalidate: true }, seg, name.el, userResults, suggest, amount.el, note.el, save);
+  const form = h("form", { class: "stack", novalidate: true }, seg, modeSeg, name.el, friendChipsBox, userResults, suggest.el, amount.el, note.el, save);
   const sheet = openSheet({ title: tr("Ghi nợ"), content: form });
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -322,12 +433,19 @@ async function openSplit(ctx, known) {
   let iPaid = true;
   let payer = "";
 
+  let friendsList = [];
+  try {
+    const fRes = await api("/friends");
+    friendsList = fRes.friends || [];
+  } catch {}
+
   const title = field({ label: tr("Đi gì thế? (lẩu, trà sữa...)"), name: "title", maxlength: 200 });
   const amount = field({ label: tr("Tổng hóa đơn"), name: "amount", inputmode: "decimal", autocomplete: "off" });
   const nameInput = h("input", { class: "mini-input", placeholder: tr("Gõ tên rồi Enter"), maxlength: 50, "aria-label": tr("Thêm người cùng chia") });
   const addBtn = h("button", { class: "btn small soft", type: "button" }, icon("user-plus", 16), tr("Thêm"));
   const peopleChips = h("div", { class: "chips" });
   const suggest = nameSuggestions(known, (n) => addPerson(n), (n) => people.includes(n));
+  const friendSuggest = h("div", { class: "chips", style: { margin: "4px 0" } });
   const payerBox = h("div", { class: "stack", style: { gap: "8px" } });
   const preview = h("div", { class: "card tight center", style: { background: "var(--glass-strong)" } });
   const category = h("select", { class: "mini-input", "aria-label": tr("Danh mục") },
@@ -379,6 +497,22 @@ async function openSplit(ctx, known) {
         });
         return chip;
       }));
+    if (friendsList.length > 0) {
+      friendSuggest.replaceChildren(
+        h("small", { class: "faint full", style: { width: "100%", fontSize: "11px" } }, tr("Chọn nhanh từ bạn bè:")),
+        ...friendsList.map((f) => {
+          const isAdded = people.includes(f.name || f.username);
+          const chip = h("button", {
+            class: "chip",
+            type: "button",
+            "aria-pressed": String(isAdded),
+            style: isAdded ? { opacity: 0.5 } : {},
+            onclick: () => addPerson(f.name || f.username)
+          }, icon(isAdded ? "check" : "user-plus", 12), f.name || `@${f.username}`);
+          return chip;
+        })
+      );
+    }
     suggest.paint();
 
     payerBox.replaceChildren(
@@ -418,7 +552,7 @@ async function openSplit(ctx, known) {
     title.el, amount.el,
     h("p", { class: "faint mt-0" }, tr("Ai đi cùng?")),
     h("div", { class: "row" }, h("div", { class: "grow" }, nameInput), addBtn),
-    peopleChips, suggest, payerBox, preview,
+    peopleChips, friendSuggest, suggest, payerBox, preview,
     category, h("div", { class: "two-col" }, date.el, time.el),
     save);
   const sheet = openSheet({ title: tr("Chia tiền nhóm"), content: form });
@@ -465,6 +599,104 @@ async function openSplit(ctx, known) {
 }
 
 /* ---------------------------------------------------------------------------
+   Quản lý bạn bè
+   ------------------------------------------------------------------------ */
+function renderFriendsSection(ctx, friends) {
+  const container = h("div", { class: "stack", style: { gap: "16px" } });
+
+  // 1. Thẻ Kết bạn mới
+  const targetInput = field({
+    label: tr("Tên đăng nhập (@username) hoặc User ID (#2)"),
+    name: "target_user",
+    autocomplete: "off",
+    placeholder: tr("Ví dụ: 2, #2 hoặc @rong.thanh.hoa"),
+    hint: tr("Nhập ID hoặc tên đăng nhập của người bạn muốn kết bạn")
+  });
+  const addBtn = h("button", { class: "btn block", type: "button" }, icon("user-plus", 18), tr("Kết bạn ngay"));
+
+  addBtn.addEventListener("click", async () => {
+    const val = targetInput.input.value.trim();
+    if (!val) {
+      targetInput.setHint(tr("Vui lòng nhập ID hoặc @username"), "error");
+      targetInput.input.focus();
+      return;
+    }
+    const restore = busy(addBtn);
+    try {
+      const res = await api("/friends", { method: "POST", body: { target: val } });
+      haptic(15);
+      confetti({ count: 60 });
+      toast(res.message, "ok");
+      targetInput.input.value = "";
+      ctx.refresh();
+    } catch (err) {
+      targetInput.setHint(err.message, "error");
+    } finally {
+      restore();
+    }
+  });
+
+  const addCard = h("section", { class: "card stack", style: { gap: "10px" } },
+    h("div", { class: "card-title", style: { marginBottom: 0 } }, icon("user-plus", 18), tr("Kết bạn mới")),
+    targetInput.el,
+    addBtn
+  );
+  container.append(addCard);
+
+  // 2. Danh sách Bạn bè
+  const friendList = h("div", { class: "tx-list" });
+  if (!friends || friends.length === 0) {
+    friendList.append(h("div", { class: "card empty" },
+      icon("users", 32),
+      h("strong", null, tr("Chưa có bạn bè nào")),
+      h("p", { class: "faint mt-0", style: { fontSize: "13px" } }, tr("Kết bạn bằng ID hoặc @username để ghi nợ 2 chiều và chia tiền nhóm 1 chạm siêu nhanh!"))
+    ));
+  } else {
+    for (const f of friends) {
+      const debtBtn = h("button", { class: "btn small soft", type: "button", title: tr("Ghi nợ với người này") }, icon("hand-coins", 14), tr("Ghi nợ"));
+      debtBtn.addEventListener("click", () => {
+        openNewDebt(ctx, [], f);
+      });
+
+      const removeBtn = h("button", { class: "icon-btn", type: "button", title: tr("Hủy kết bạn") }, icon("trash-2", 16));
+      removeBtn.addEventListener("click", async () => {
+        const ok = await confirmSheet({
+          title: tr`Hủy kết bạn với @${f.username}?`,
+          message: tr("Người này sẽ bị xóa khỏi danh sách bạn bè gợi ý nhanh."),
+          okText: tr("Hủy kết bạn"),
+          danger: true
+        });
+        if (!ok) return;
+        try {
+          await api(`/friends/${f.id}`, { method: "DELETE" });
+          toast(tr`Đã hủy kết bạn với @${f.username}.`, "ok");
+          ctx.refresh();
+        } catch (err) {
+          toast(err.message, "error");
+        }
+      });
+
+      friendList.append(h("div", { class: "tx", style: { padding: "10px 0" } },
+        avatar(f.name, 40),
+        h("div", { class: "tx-main" },
+          h("strong", null, f.name),
+          h("small", { class: "faint" }, `@${f.username} · ID: #${f.id}`)
+        ),
+        h("div", { class: "row", style: { gap: "6px" } }, debtBtn, removeBtn)
+      ));
+    }
+  }
+
+  const listCard = h("section", { class: "card" },
+    h("div", { class: "card-title" }, icon("users", 18), tr`Bạn bè của tôi (${friends.length})`),
+    friendList
+  );
+  container.append(listCard);
+
+  return container;
+}
+
+/* ---------------------------------------------------------------------------
    Màn hình
    ------------------------------------------------------------------------ */
 export async function debtsScreen(ctx, params) {
@@ -475,26 +707,42 @@ export async function debtsScreen(ctx, params) {
 
   screen.append(h("header", { class: "screen-head" },
     h("div", { class: "grow" },
-      h("h1", null, currentTab === "groups" ? tr("Quỹ Nhóm") : tr("Sổ Nợ")),
-      h("span", { class: "sub" }, currentTab === "groups" ? tr("Chia tiền phòng trọ, du lịch, nhóm bạn") : tr("Đồng bộ tài khoản hoặc ghi nợ tự do"))
+      h("h1", null, currentTab === "groups" ? tr("Quỹ Nhóm") : currentTab === "friends" ? tr("Bạn Bè") : tr("Sổ Nợ")),
+      h("span", { class: "sub" }, currentTab === "groups" ? tr("Chia tiền phòng trọ, du lịch, nhóm bạn") : currentTab === "friends" ? tr("Kết bạn để ghi nợ và chia tiền 1 chạm") : tr("Đồng bộ tài khoản hoặc ghi nợ tự do"))
     ),
     notifBtn, settingsButton()));
   screen.cleanup = () => notifBtn.destroy?.();
 
-  // Tab chuyển đổi: [Sổ nợ cá nhân] [Quỹ nhóm phòng trọ]
+  // Tab chuyển đổi: [Sổ nợ cá nhân] [Quỹ nhóm] [Bạn bè]
   const subNav = h("div", { class: "segmented", style: { marginBottom: "6px" } },
     h("button", {
       type: "button",
       "aria-pressed": String(currentTab === "personal"),
       onclick: () => ctx.go("debts", { tab: "personal" })
-    }, icon("user", 16), tr("Sổ nợ cá nhân")),
+    }, icon("user", 16), tr("Sổ nợ")),
     h("button", {
       type: "button",
       "aria-pressed": String(currentTab === "groups"),
       onclick: () => ctx.go("debts", { tab: "groups" })
-    }, icon("users", 16), tr("Quỹ nhóm phòng trọ"))
+    }, icon("users", 16), tr("Quỹ nhóm")),
+    h("button", {
+      type: "button",
+      "aria-pressed": String(currentTab === "friends"),
+      onclick: () => ctx.go("debts", { tab: "friends" })
+    }, icon("user-plus", 16), tr("Bạn bè"))
   );
   screen.append(subNav);
+
+  if (currentTab === "friends") {
+    try {
+      const res = await api("/friends");
+      screen.append(renderFriendsSection(ctx, res.friends || []));
+    } catch (err) {
+      screen.append(h("div", { class: "card empty" }, icon("wifi-off"), err.message,
+        h("button", { class: "btn small", type: "button", onclick: () => ctx.refresh() }, tr("Thử lại"))));
+    }
+    return screen;
+  }
 
   if (currentTab === "groups") {
     try {
