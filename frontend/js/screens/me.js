@@ -127,8 +127,31 @@ export async function meScreen(ctx, params) {
   const user = ctx.user;
   const screen = h("main", { class: "screen stack" });
   const notifBtn = notificationButton(ctx);
+
+  const idBadge = user.is_demo
+    ? h("span", { class: "badge", style: { background: "var(--surface-sunken)", color: "var(--text-muted)", marginLeft: "6px" } }, tr("Không có ID"))
+    : h("button", {
+        class: "badge primary",
+        type: "button",
+        style: { cursor: "pointer", marginLeft: "6px", display: "inline-flex", alignItems: "center", gap: "3px" },
+        title: tr("Chạm để sao chép ID"),
+        onclick: () => {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(String(user.id));
+            toast(tr`Đã chép ID #${user.id}!`, "ok");
+            haptic(10);
+          }
+        }
+      }, icon("copy", 11), `ID: #${user.id}`);
+
   screen.append(h("header", { class: "screen-head" },
-    h("div", { class: "grow" }, h("h1", null, user.is_demo ? tr("Tôi") : displayName(user)), h("span", { class: "sub" }, user.is_demo ? tr("Đang dùng thử") : `@${user.username}`)),
+    h("div", { class: "grow" },
+      h("h1", null, user.is_demo ? tr("Tôi") : displayName(user)),
+      h("span", { class: "sub", style: { display: "inline-flex", alignItems: "center" } },
+        user.is_demo ? tr("Dùng thử") : `@${user.username}`,
+        idBadge
+      )
+    ),
     notifBtn, settingsButton()));
   screen.cleanup = () => notifBtn.destroy?.();
 

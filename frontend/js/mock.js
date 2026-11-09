@@ -76,22 +76,30 @@ export function handleMockRequest(url, method, body) {
   // 1. AUTH
   if (path === "/auth/demo" && method === "POST") {
     const user = {
-      id: 1,
-      username: "sinhvien_demo",
+      id: null,
+      username: "KhachTraiNghiem",
+      display_name: "Khách trải nghiệm",
       is_demo: true,
-      demo_expires_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString()
+      demo_expires_at: null
     };
     return { token: "demo-jwt-token-local", user };
   }
 
   if ((path === "/auth/login" || path === "/auth/register") && method === "POST") {
     const uname = (body && body.username) ? body.username.trim() : "sinhvien";
-    const user = { id: 1, username: uname, is_demo: false };
+    const user = { id: 2, username: uname, display_name: uname, is_demo: false };
     return { token: "jwt-token-" + Date.now(), user };
   }
 
   if (path === "/auth/me") {
-    return { user: { id: 1, username: "sinhvien_demo", is_demo: true } };
+    return {
+      user: {
+        id: null,
+        username: "KhachTraiNghiem",
+        display_name: "Khách trải nghiệm",
+        is_demo: true
+      }
+    };
   }
 
   if (path === "/auth/logout") {
@@ -332,13 +340,18 @@ export function handleMockRequest(url, method, body) {
 
   // 11. GROUPS & LINKED DEBTS MOCK
   if (path === "/debts/search-user") {
-    return {
-      users: [
-        { id: 2, username: "viet2026", full_name: "Trương Việt" },
-        { id: 3, username: "anh_po", full_name: "Nguyễn Ngọc Ánh" },
-        { id: 4, username: "tri_db", full_name: "Vũ Minh Trí" }
-      ]
-    };
+    const rawQ = (params.get("q") || "").replace(/^[#@]/, "").trim().toLowerCase();
+    const mockUsers = [
+      { id: 2, username: "VieJunZ", full_name: "VieJunZ" },
+      { id: 3, username: "rong.thanh.hoa", full_name: "Rồng Thanh Hóa" }
+    ];
+    if (!rawQ) return { users: [] };
+    const filtered = mockUsers.filter((u) =>
+      String(u.id) === rawQ ||
+      u.username.toLowerCase().includes(rawQ) ||
+      u.full_name.toLowerCase().includes(rawQ)
+    );
+    return { users: filtered };
   }
 
   if (path === "/groups" && method === "GET") {

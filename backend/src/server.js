@@ -4,6 +4,18 @@
  * nên điện thoại trong cùng mạng Wi-Fi mở http://<ip-máy-tính>:8080 là dùng được.
  */
 
+// Polyfill Promise.withResolvers cho Node.js v20 trở xuống
+if (!Promise.withResolvers) {
+  Promise.withResolvers = function () {
+    let resolve, reject;
+    const promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
+
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");

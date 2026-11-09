@@ -55,11 +55,31 @@ function profileCard(ctx) {
   const shown = displayName(user);
   const edit = h("button", { class: "btn small soft", type: "button" }, icon("pencil", 16), tr("Đổi tên"));
   edit.addEventListener("click", () => (user.is_demo ? ctx.openUpgrade() : openRename(ctx)));
+
+  const idBadge = user.is_demo
+    ? h("span", { class: "badge", style: { fontSize: "11px", marginLeft: "6px" } }, tr("Không có ID"))
+    : h("button", {
+        class: "badge primary",
+        type: "button",
+        style: { cursor: "pointer", fontSize: "11px", marginLeft: "6px", display: "inline-flex", alignItems: "center", gap: "2px" },
+        title: tr("Chạm để sao chép ID"),
+        onclick: () => {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(String(user.id));
+            toast(tr`Đã chép ID #${user.id}!`, "ok");
+            haptic(10);
+          }
+        }
+      }, icon("copy", 10), `ID: #${user.id}`);
+
   return h("section", { class: "card profile-card" },
     h("span", { class: "avatar big", "aria-hidden": "true" }, user.is_demo ? icon("sparkles", 26) : (shown[0] || "?").toUpperCase()),
     h("div", { class: "grow" },
       h("strong", null, user.is_demo ? tr("Bạn đang dùng thử") : shown),
-      h("small", null, user.is_demo ? tr("Tạo tài khoản để đặt tên riêng") : `@${user.username}`)),
+      h("small", { style: { display: "inline-flex", alignItems: "center", marginTop: "2px" } },
+        user.is_demo ? tr("Chế độ dùng thử") : `@${user.username}`,
+        idBadge
+      )),
     edit);
 }
 

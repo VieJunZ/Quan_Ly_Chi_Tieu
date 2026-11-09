@@ -77,7 +77,7 @@ const inflight = new Map();
 let cacheOwner = null;
 
 function ownerKey() {
-  return memoryUser && memoryUser.id ? String(memoryUser.id) : null;
+  return memoryUser && memoryUser.id ? String(memoryUser.id) : (memoryUser && memoryUser.is_demo ? "demo" : null);
 }
 
 function loadCache() {
@@ -169,6 +169,11 @@ export async function api(path, { method = "GET", body, form, query, fresh = fal
     }
     const qs = params.toString();
     if (qs) url += `?${qs}`;
+  }
+
+  // Chế độ dùng thử hoặc endpoint demo: Xử lý 100% bằng Mock cục bộ trên máy, KHÔNG lưu hay gửi lên Cloud Database
+  if (path === "/auth/demo" || (memoryUser && memoryUser.is_demo && path !== "/auth/register" && path !== "/auth/login")) {
+    return handleMockRequest(url, method, body);
   }
 
   if (method !== "GET") {

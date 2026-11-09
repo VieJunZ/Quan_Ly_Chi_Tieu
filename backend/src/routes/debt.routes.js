@@ -40,14 +40,29 @@ const DEBT_COLUMNS = `
   CONVERT(VARCHAR(19), d.settled_at, 126) AS settled_at`;
 
 router.get("/search-user", asyncRoute(async (req, res) => {
-  const q = (req.query.q || "").trim();
-  if (q.length < 2) return res.json({ users: [] });
-  const users = await db.query(
-    `SELECT TOP (10) id, username, ISNULL(full_name, username) AS full_name
-     FROM dbo.users
-     WHERE (username LIKE @q OR full_name LIKE @q) AND id <> @user_id`,
-    { q: `%${q}%`, user_id: req.user.id }
-  );
+  const rawQ = (req.query.q || "").trim();
+  const q = rawQ.replace(/^[#@]/, "").trim();
+  if (!q) return res.json({ users: [] });
+
+  let users = [];
+  if (/^\d+$/.test(q)) {
+    // Tìm chính xác theo ID người dùng (ví dụ: 2, 3 hoặc #2)
+    const targetId = parseInt(q, 10);
+    users = await db.query(
+      `SELECT TOP (5) id, username, ISNULL(display_name, username) AS full_name
+       FROM dbo.users
+       WHERE id = @targetId AND id <> @user_id AND (is_demo IS NULL OR is_demo = 0)`,
+      { targetId, user_id: req.user.id }
+    );
+  } else if (q.length >= 2) {
+    // Tìm theo tên đăng nhập hoặc tên hiển thị
+    users = await db.query(
+      `SELECT TOP (10) id, username, ISNULL(display_name, username) AS full_name
+       FROM dbo.users
+       WHERE (username LIKE @q OR display_name LIKE @q) AND id <> @user_id AND (is_demo IS NULL OR is_demo = 0)`,
+      { q: `%${q}%`, user_id: req.user.id }
+    );
+  }
   res.json({ users });
 }));
 
@@ -65,7 +80,7 @@ router.get("/", asyncRoute(async (req, res) => {
       WHERE d.user_id = @user_id AND d.settled_at IS NULL
       UNION ALL
       SELECT d.id,
-             ISNULL(u.full_name, u.username) AS person_name,
+             ISNULL(u.display_name, u.username) AS person_name,
              CASE WHEN d.direction = 'owed_to_me' THEN 'i_owe' ELSE 'owed_to_me' END AS direction,
              d.amount, d.note, d.split_id, d.user_id AS linked_user_id,
              CONVERT(VARCHAR(19), d.created_at, 126) AS created_at,
@@ -144,7 +159,7 @@ router.post("/settle-person", asyncRoute(async (req, res) => {
   const rows = await db.query(`
     UPDATE dbo.debts SET settled_at = SYSDATETIME()
     WHERE ((user_id = @user_id AND person_name = @person_name)
-       OR (linked_user_id = @user_id AND user_id IN (SELECT id FROM dbo.users WHERE full_name = @person_name OR username = @person_name)))
+       OR (linked_user_id = @user_id AND user_id IN (SELECT id FROM dbo.users WHERE display_name = @person_name OR username = @person_name)))
       AND settled_at IS NULL;
     SELECT @@ROWCOUNT AS settled;`, { user_id: req.user.id, person_name: pName });
   if (!rows[0].settled) throw new HttpError(404, "DEBT_NOT_FOUND", "Người này không còn khoản nợ nào.");

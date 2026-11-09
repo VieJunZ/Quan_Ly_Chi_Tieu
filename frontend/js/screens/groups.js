@@ -222,7 +222,7 @@ export async function openGroupDetails(ctx, groupId) {
       avatar(m.full_name, 36),
       h("div", { class: "tx-main" },
         h("strong", null, m.full_name),
-        h("small", { class: "faint" }, m.role === "owner" ? tr("Trưởng nhóm") : tr("Thành viên"))
+        h("small", { class: "faint" }, `@${m.username} · ID: #${m.user_id}${m.role === "owner" ? ` · ${tr("Trưởng nhóm")}` : ""}`)
       ),
       h("div", { style: { textAlign: "right" } },
         h("div", { style: { fontWeight: 700 } }, money(m.paid)),
@@ -321,3 +321,4 @@ export function renderGroupsSection(ctx, groups) {
   container.append(listCard);
   return container;
 }
+

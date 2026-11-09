@@ -205,15 +205,21 @@ function openNewDebt(ctx, known) {
     }));
   paintSeg();
 
-  const name = field({ label: tr("Tên người hoặc @username"), name: "person_name", maxlength: 50, autocomplete: "off", placeholder: "Ví dụ: An hoặc @viet2026" });
+  const name = field({
+    label: tr("Tên người, ID (#2) hoặc @username"),
+    name: "person_name",
+    maxlength: 50,
+    autocomplete: "off",
+    placeholder: tr("Ví dụ: 2, #2, @VieJunZ hoặc An")
+  });
   const userResults = h("div", { class: "chips", style: { marginTop: "4px" } });
   let searchTimer = null;
 
   name.input.addEventListener("input", () => {
     selectedLinkedUserId = null;
     clearTimeout(searchTimer);
-    const query = name.input.value.trim().replace(/^@/, "");
-    if (query.length < 2) {
+    const query = name.input.value.trim().replace(/^[@#]/, "");
+    if (query.length < 1) {
       userResults.replaceChildren();
       return;
     }
@@ -228,12 +234,12 @@ function openNewDebt(ctx, known) {
                 class: "chip",
                 type: "button",
                 style: { background: "var(--grad-main)", color: "#fff", fontWeight: 700 }
-              }, icon("user-check", 14), `@${u.username} (${u.full_name})`);
+              }, icon("user-check", 14), `[ID: #${u.id}] @${u.username}${u.full_name && u.full_name !== u.username ? ` (${u.full_name})` : ""}`);
               chip.addEventListener("click", () => {
-                name.input.value = u.full_name;
+                name.input.value = u.full_name || u.username;
                 selectedLinkedUserId = u.id;
                 userResults.replaceChildren(
-                  h("span", { class: "badge ok", style: { margin: "4px 0" } }, icon("check", 12), tr`Đã liên kết với @${u.username}`)
+                  h("span", { class: "badge ok", style: { margin: "4px 0" } }, icon("check", 12), tr`Đã liên kết với [ID: #${u.id}] @${u.username}`)
                 );
                 amount.input.focus();
               });
@@ -246,7 +252,7 @@ function openNewDebt(ctx, known) {
       } catch {
         userResults.replaceChildren();
       }
-    }, 300);
+    }, 250);
   });
 
   const amount = field({ label: tr("Số tiền"), name: "amount", inputmode: "decimal", autocomplete: "off", hint: tr("Gõ 50k, 1tr2... đều được") });
