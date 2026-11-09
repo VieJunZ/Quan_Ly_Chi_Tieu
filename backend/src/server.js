@@ -94,6 +94,16 @@ app.use("/api/challenges", challengeRoutes);
 app.use("/api/pet-shop", petShopRoutes);
 app.use("/api", notFoundHandler);
 
+// Xác thực Digital Asset Links cho Android TWA APK (loại bỏ hoàn toàn thanh địa chỉ web)
+app.get("/.well-known/assetlinks.json", (req, res) => {
+  const assetlinksPath = path.join(FRONTEND_DIR, ".well-known", "assetlinks.json");
+  if (fs.existsSync(assetlinksPath)) {
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    return res.sendFile(assetlinksPath);
+  }
+  res.status(404).json({ error: "assetlinks not found" });
+});
+
 // Giao diện web & mobile app
 if (fs.existsSync(FRONTEND_DIR)) {
   seoRoutes(app);
