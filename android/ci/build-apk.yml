@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Code
@@ -21,18 +21,22 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.2"
+
+      - name: Accept Android Licenses
+        run: |
+          yes | sdkmanager --licenses || true
 
       - name: Build APK with Widgets
         run: |
           cd android
           gradle assembleDebug --stacktrace
           mkdir -p ../output
-          find app/build/outputs/apk -name "*.apk" -exec cp {} ../output/thuchii.apk \;
+          find . -name "*.apk" -exec cp {} ../output/thuchii.apk \;
+          ls -la ../output
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

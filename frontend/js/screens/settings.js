@@ -354,6 +354,26 @@ export async function settingsScreen(ctx) {
   if (!user.is_demo) screen.append(securityCard(ctx));
   if (sessions) screen.append(sessionsCard(ctx, sessions));
 
+  screen.append(h("section", {
+    class: "card",
+    style: {
+      background: "linear-gradient(135deg, rgba(147, 51, 234, 0.14), rgba(219, 39, 119, 0.14))",
+      border: "1px solid rgba(168, 85, 247, 0.35)"
+    }
+  },
+  h("div", { class: "row between items-center" },
+    h("div", { class: "stack", style: { gap: "4px" } },
+      h("div", { class: "row items-center", style: { gap: "8px" } },
+        icon("download", 18),
+        h("strong", null, tr("Cài đặt App Android (thuchii.apk)"))),
+      h("span", { class: "faint", style: { fontSize: "12.5px" } }, tr("Bản APK chính thức kèm 2 Widget màn hình chính"))),
+    h("a", {
+      class: "btn primary small pill",
+      href: "/download/thuchii.apk",
+      download: "thuchii.apk",
+      style: { textDecoration: "none", padding: "8px 16px", fontWeight: "800", whiteSpace: "nowrap" }
+    }, "📥 " + tr("Tải file .APK")))));
+
   // Góp ý: không phải chờ 1 ngày mới được hỏi, muốn nói lúc nào cũng được
   screen.append(h("section", { class: "card" },
     h("div", { class: "card-title" }, icon("message-circle-heart", 20), tr("Góp ý cho app")),

@@ -125,6 +125,18 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
   res.json(ANDROID_ASSET_LINKS);
 });
 
+// Tải file cài đặt APK Android trực tiếp từ máy chủ web
+app.get(["/download/thuchii.apk", "/thuchii.apk", "/download/app", "/download"], (req, res) => {
+  const apkPath = path.join(FRONTEND_DIR, "thuchii.apk");
+  if (fs.existsSync(apkPath)) {
+    res.setHeader("Content-Type", "application/vnd.android.package-archive");
+    res.setHeader("Content-Disposition", 'attachment; filename="thuchii.apk"');
+    res.sendFile(apkPath);
+  } else {
+    res.status(404).send("File APK đang được cập nhật, vui lòng thử lại sau.");
+  }
+});
+
 // Giao diện web & mobile app
 if (fs.existsSync(FRONTEND_DIR)) {
   seoRoutes(app);

@@ -179,6 +179,27 @@ export async function meScreen(ctx, params) {
       menuItem("hand-coins", tr("Sổ nợ và chia tiền"), tr("Ai nợ mình, mình nợ ai"), null, { href: "#/debts" }),
       menuItem("calendar-days", tr("Lịch sử chi tiêu"), tr("Lịch nhiệt, tìm kiếm, soi tháng"), null, { href: "#/history" }))));
 
+  screen.append(h("section", {
+    class: "card",
+    style: {
+      background: "linear-gradient(135deg, rgba(147, 51, 234, 0.14), rgba(219, 39, 119, 0.14))",
+      border: "1px solid rgba(168, 85, 247, 0.35)",
+      padding: "16px"
+    }
+  },
+  h("div", { class: "row between items-center" },
+    h("div", { class: "stack", style: { gap: "4px" } },
+      h("div", { class: "row items-center", style: { gap: "8px" } },
+        icon("download", 18),
+        h("strong", null, tr("Tải App Android (thuchii.apk)"))),
+      h("span", { class: "faint", style: { fontSize: "12px" } }, tr("Bản mới nhất có 2 Widget kéo ra màn hình chính"))),
+    h("a", {
+      class: "btn primary small pill",
+      href: "/download/thuchii.apk",
+      download: "thuchii.apk",
+      style: { textDecoration: "none", padding: "8px 14px", fontWeight: "800", whiteSpace: "nowrap" }
+    }, "📥 " + tr("Tải APK")))));
+
   screen.append(h("section", { class: "card" },
     h("div", { class: "menu" },
       menuItem("settings", tr("Cài đặt"), tr("Giao diện, ngôn ngữ, danh mục, mật khẩu, đăng xuất"), null, { href: "#/settings" }))));
