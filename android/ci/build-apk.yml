@@ -32,7 +32,8 @@ jobs:
           cd android
           gradle assembleDebug --stacktrace
           mkdir -p ../output
-          find app/build/outputs/apk -name "*.apk" -exec cp {} ../output/thuchii.apk \;
+          find . -name "*.apk" -exec cp {} ../output/thuchii.apk \;
+          ls -la ../output
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
