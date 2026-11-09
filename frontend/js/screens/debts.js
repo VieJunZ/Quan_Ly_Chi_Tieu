@@ -11,6 +11,7 @@ import {
   field, busy, parseMoneyInput, settingsButton
 } from "../ui.js";
 import { notificationButton } from "../flows/notifications.js";
+import { renderGroupsSection } from "./groups.js";
 
 /** Tên -> màu avatar cố định để dễ nhận ra từng người. */
 function avatar(name, size = 42) {
@@ -190,6 +191,8 @@ function nameSuggestions(known, onPick, exclude = () => false) {
    ------------------------------------------------------------------------ */
 function openNewDebt(ctx, known) {
   let direction = "owed_to_me";
+  let selectedLinkedUserId = null;
+
   const seg = h("div", { class: "segmented" });
   const paintSeg = () => seg.replaceChildren(
     ...[["owed_to_me", tr("Mình cho mượn"), "income"], ["i_owe", tr("Mình đi mượn"), "expense"]].map(([value, label, cls]) => {
@@ -202,11 +205,55 @@ function openNewDebt(ctx, known) {
     }));
   paintSeg();
 
-  const name = field({ label: tr("Tên người"), name: "person_name", maxlength: 50, autocomplete: "off" });
+  const name = field({ label: tr("Tên người hoặc @username"), name: "person_name", maxlength: 50, autocomplete: "off", placeholder: "Ví dụ: An hoặc @viet2026" });
+  const userResults = h("div", { class: "chips", style: { marginTop: "4px" } });
+  let searchTimer = null;
+
+  name.input.addEventListener("input", () => {
+    selectedLinkedUserId = null;
+    clearTimeout(searchTimer);
+    const query = name.input.value.trim().replace(/^@/, "");
+    if (query.length < 2) {
+      userResults.replaceChildren();
+      return;
+    }
+    searchTimer = setTimeout(async () => {
+      try {
+        const res = await api("/debts/search-user", { query: { q: query } });
+        if (res.users && res.users.length) {
+          userResults.replaceChildren(
+            h("small", { class: "faint full", style: { width: "100%", fontSize: "11px" } }, tr("Tài khoản hệ thống (tự động đồng bộ 2 chiều):")),
+            ...res.users.map((u) => {
+              const chip = h("button", {
+                class: "chip",
+                type: "button",
+                style: { background: "var(--grad-main)", color: "#fff", fontWeight: 700 }
+              }, icon("user-check", 14), `@${u.username} (${u.full_name})`);
+              chip.addEventListener("click", () => {
+                name.input.value = u.full_name;
+                selectedLinkedUserId = u.id;
+                userResults.replaceChildren(
+                  h("span", { class: "badge ok", style: { margin: "4px 0" } }, icon("check", 12), tr`Đã liên kết với @${u.username}`)
+                );
+                amount.input.focus();
+              });
+              return chip;
+            })
+          );
+        } else {
+          userResults.replaceChildren();
+        }
+      } catch {
+        userResults.replaceChildren();
+      }
+    }, 300);
+  });
+
   const amount = field({ label: tr("Số tiền"), name: "amount", inputmode: "decimal", autocomplete: "off", hint: tr("Gõ 50k, 1tr2... đều được") });
   const note = field({ label: tr("Lý do (không bắt buộc)"), name: "note", maxlength: 200 });
   const suggest = nameSuggestions(known, (n) => {
     name.input.value = n;
+    selectedLinkedUserId = null;
     amount.input.focus();
   });
   amount.input.addEventListener("input", () => {
@@ -214,7 +261,7 @@ function openNewDebt(ctx, known) {
     amount.setHint(amount.input.value ? (v ? `= ${money(v)}` : tr("Số tiền chưa đúng")) : tr("Gõ 50k, 1tr2... đều được"), amount.input.value && !v ? "error" : "");
   });
   const save = h("button", { class: "btn block", type: "submit" }, icon("check", 18), tr("Ghi vào sổ"));
-  const form = h("form", { class: "stack", novalidate: true }, seg, name.el, suggest, amount.el, note.el, save);
+  const form = h("form", { class: "stack", novalidate: true }, seg, name.el, userResults, suggest, amount.el, note.el, save);
   const sheet = openSheet({ title: tr("Ghi nợ"), content: form });
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -231,9 +278,20 @@ function openNewDebt(ctx, known) {
     }
     const restore = busy(save);
     try {
-      await api("/debts", { method: "POST", body: { person_name: name.input.value, direction, amount: value, note: note.input.value } });
+      await api("/debts", {
+        method: "POST",
+        body: {
+          person_name: name.input.value,
+          direction,
+          amount: value,
+          note: note.input.value,
+          linked_user_id: selectedLinkedUserId
+        }
+      });
       haptic(15);
-      toast(direction === "owed_to_me" ? tr`Đã ghi: ${name.input.value.trim()} nợ bạn ${money(value)}.` : tr`Đã ghi: bạn nợ ${name.input.value.trim()} ${money(value)}.`, "ok");
+      toast(direction === "owed_to_me"
+        ? tr`Đã ghi: ${name.input.value.trim()} nợ bạn ${money(value)}.`
+        : tr`Đã ghi: bạn nợ ${name.input.value.trim()} ${money(value)}.`, "ok");
       sheet.close("saved");
       ctx.refresh();
     } catch (error) {
@@ -405,12 +463,43 @@ async function openSplit(ctx, known) {
    ------------------------------------------------------------------------ */
 export async function debtsScreen(ctx, params) {
   const showHistory = params.get("history") === "1";
+  const currentTab = params.get("tab") || "personal";
   const screen = h("main", { class: "screen stack" });
   const notifBtn = notificationButton(ctx);
+
   screen.append(h("header", { class: "screen-head" },
-    h("div", { class: "grow" }, h("h1", null, tr("Sổ nợ")), h("span", { class: "sub" }, tr("Bạn bè chỉ cần tên, không cần tài khoản"))),
+    h("div", { class: "grow" },
+      h("h1", null, currentTab === "groups" ? tr("Quỹ Nhóm") : tr("Sổ Nợ")),
+      h("span", { class: "sub" }, currentTab === "groups" ? tr("Chia tiền phòng trọ, du lịch, nhóm bạn") : tr("Đồng bộ tài khoản hoặc ghi nợ tự do"))
+    ),
     notifBtn, settingsButton()));
   screen.cleanup = () => notifBtn.destroy?.();
+
+  // Tab chuyển đổi: [Sổ nợ cá nhân] [Quỹ nhóm phòng trọ]
+  const subNav = h("div", { class: "segmented", style: { marginBottom: "6px" } },
+    h("button", {
+      type: "button",
+      "aria-pressed": String(currentTab === "personal"),
+      onclick: () => ctx.go("debts", { tab: "personal" })
+    }, icon("user", 16), tr("Sổ nợ cá nhân")),
+    h("button", {
+      type: "button",
+      "aria-pressed": String(currentTab === "groups"),
+      onclick: () => ctx.go("debts", { tab: "groups" })
+    }, icon("users", 16), tr("Quỹ nhóm phòng trọ"))
+  );
+  screen.append(subNav);
+
+  if (currentTab === "groups") {
+    try {
+      const res = await api("/groups");
+      screen.append(renderGroupsSection(ctx, res.groups));
+    } catch (err) {
+      screen.append(h("div", { class: "card empty" }, icon("wifi-off"), err.message,
+        h("button", { class: "btn small", type: "button", onclick: () => ctx.refresh() }, tr("Thử lại"))));
+    }
+    return screen;
+  }
 
   let data;
   let splits;

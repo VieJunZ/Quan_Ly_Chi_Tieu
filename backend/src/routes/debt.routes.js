@@ -35,25 +35,67 @@ function requireName(value) {
 }
 
 const DEBT_COLUMNS = `
-  d.id, d.person_name, d.direction, d.amount, d.note, d.split_id,
+  d.id, d.person_name, d.direction, d.amount, d.note, d.split_id, d.linked_user_id,
   CONVERT(VARCHAR(19), d.created_at, 126) AS created_at,
   CONVERT(VARCHAR(19), d.settled_at, 126) AS settled_at`;
+
+router.get("/search-user", asyncRoute(async (req, res) => {
+  const q = (req.query.q || "").trim();
+  if (q.length < 2) return res.json({ users: [] });
+  const users = await db.query(
+    `SELECT TOP (10) id, username, ISNULL(full_name, username) AS full_name
+     FROM dbo.users
+     WHERE (username LIKE @q OR full_name LIKE @q) AND id <> @user_id`,
+    { q: `%${q}%`, user_id: req.user.id }
+  );
+  res.json({ users });
+}));
 
 router.get("/", asyncRoute(async (req, res) => {
   const userId = req.user.id;
   const withHistory = req.query.history === "1";
 
-  const [people, open, history] = await Promise.all([
-    db.execRows("dbo.sp_get_debt_summary", { user_id: userId }),
-    db.query(`SELECT ${DEBT_COLUMNS} FROM dbo.debts AS d
-              WHERE d.user_id = @user_id AND d.settled_at IS NULL
-              ORDER BY d.created_at DESC, d.id DESC`, { user_id: userId }),
+  const [open, history] = await Promise.all([
+    db.query(`
+      SELECT d.id, d.person_name, d.direction, d.amount, d.note, d.split_id, d.linked_user_id,
+             CONVERT(VARCHAR(19), d.created_at, 126) AS created_at,
+             CONVERT(VARCHAR(19), d.settled_at, 126) AS settled_at,
+             CAST(0 AS BIT) AS is_linked_incoming
+      FROM dbo.debts AS d
+      WHERE d.user_id = @user_id AND d.settled_at IS NULL
+      UNION ALL
+      SELECT d.id,
+             ISNULL(u.full_name, u.username) AS person_name,
+             CASE WHEN d.direction = 'owed_to_me' THEN 'i_owe' ELSE 'owed_to_me' END AS direction,
+             d.amount, d.note, d.split_id, d.user_id AS linked_user_id,
+             CONVERT(VARCHAR(19), d.created_at, 126) AS created_at,
+             CONVERT(VARCHAR(19), d.settled_at, 126) AS settled_at,
+             CAST(1 AS BIT) AS is_linked_incoming
+      FROM dbo.debts AS d
+      INNER JOIN dbo.users AS u ON d.user_id = u.id
+      WHERE d.linked_user_id = @user_id AND d.settled_at IS NULL
+      ORDER BY created_at DESC, id DESC`, { user_id: userId }),
     withHistory
-      ? db.query(`SELECT TOP (50) ${DEBT_COLUMNS} FROM dbo.debts AS d
-                  WHERE d.user_id = @user_id AND d.settled_at IS NOT NULL
-                  ORDER BY d.settled_at DESC, d.id DESC`, { user_id: userId })
+      ? db.query(`
+          SELECT TOP (50) d.id, d.person_name, d.direction, d.amount, d.note, d.split_id, d.linked_user_id,
+                 CONVERT(VARCHAR(19), d.created_at, 126) AS created_at,
+                 CONVERT(VARCHAR(19), d.settled_at, 126) AS settled_at,
+                 CAST(0 AS BIT) AS is_linked_incoming
+          FROM dbo.debts AS d
+          WHERE (d.user_id = @user_id OR d.linked_user_id = @user_id) AND d.settled_at IS NOT NULL
+          ORDER BY d.settled_at DESC, d.id DESC`, { user_id: userId })
       : Promise.resolve(undefined)
   ]);
+
+  // Nhóm theo tên người
+  const peopleMap = new Map();
+  for (const d of open) {
+    const p = peopleMap.get(d.person_name) || { person_name: d.person_name, net: 0, count: 0, linked_user_id: d.linked_user_id };
+    p.net += d.direction === "owed_to_me" ? d.amount : -d.amount;
+    p.count += 1;
+    peopleMap.set(d.person_name, p);
+  }
+  const people = Array.from(peopleMap.values());
 
   const total = (direction) => open.filter((d) => d.direction === direction).reduce((sum, d) => sum + d.amount, 0);
   res.json({
@@ -81,25 +123,30 @@ router.post("/", asyncRoute(async (req, res) => {
   if (!DIRECTIONS.has(direction)) {
     throw new HttpError(400, "INVALID_DIRECTION", "Chọn \"cho mượn\" hoặc \"mượn\".");
   }
+  const linkedUserId = body.linked_user_id ? parseInt(body.linked_user_id, 10) : null;
   const rows = await db.query(`
-    INSERT INTO dbo.debts (user_id, person_name, direction, amount, note)
+    INSERT INTO dbo.debts (user_id, person_name, direction, amount, note, linked_user_id)
     OUTPUT INSERTED.id
-    VALUES (@user_id, @person_name, @direction, @amount, @note)`, {
+    VALUES (@user_id, @person_name, @direction, @amount, @note, @linked_user_id)`, {
     user_id: req.user.id,
     person_name: requireName(body.person_name),
     direction,
     amount: v.requireAmount(body.amount),
-    note: v.cleanText(body.note, 200) || null
+    note: v.cleanText(body.note, 200) || null,
+    linked_user_id: linkedUserId
   });
   const created = await db.query(`SELECT ${DEBT_COLUMNS} FROM dbo.debts AS d WHERE d.id = @id`, { id: rows[0].id });
   res.status(201).json(created[0]);
 }));
 
 router.post("/settle-person", asyncRoute(async (req, res) => {
+  const pName = requireName(req.body?.person_name);
   const rows = await db.query(`
     UPDATE dbo.debts SET settled_at = SYSDATETIME()
-    WHERE user_id = @user_id AND person_name = @person_name AND settled_at IS NULL;
-    SELECT @@ROWCOUNT AS settled;`, { user_id: req.user.id, person_name: requireName(req.body?.person_name) });
+    WHERE ((user_id = @user_id AND person_name = @person_name)
+       OR (linked_user_id = @user_id AND user_id IN (SELECT id FROM dbo.users WHERE full_name = @person_name OR username = @person_name)))
+      AND settled_at IS NULL;
+    SELECT @@ROWCOUNT AS settled;`, { user_id: req.user.id, person_name: pName });
   if (!rows[0].settled) throw new HttpError(404, "DEBT_NOT_FOUND", "Người này không còn khoản nợ nào.");
   res.json({ success: true, settled: rows[0].settled });
 }));
@@ -107,7 +154,7 @@ router.post("/settle-person", asyncRoute(async (req, res) => {
 router.post("/:id/settle", asyncRoute(async (req, res) => {
   const rows = await db.query(`
     UPDATE dbo.debts SET settled_at = SYSDATETIME()
-    WHERE id = @id AND user_id = @user_id AND settled_at IS NULL;
+    WHERE id = @id AND (user_id = @user_id OR linked_user_id = @user_id) AND settled_at IS NULL;
     SELECT @@ROWCOUNT AS settled;`, { id: v.requireId(req.params.id), user_id: req.user.id });
   if (!rows[0].settled) throw new HttpError(404, "DEBT_NOT_FOUND", "Không tìm thấy khoản nợ chưa trả này.");
   res.json({ success: true });

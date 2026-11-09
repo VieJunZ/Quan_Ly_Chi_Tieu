@@ -330,6 +330,71 @@ export function handleMockRequest(url, method, body) {
     return { answered: false, show: false };
   }
 
+  // 11. GROUPS & LINKED DEBTS MOCK
+  if (path === "/debts/search-user") {
+    return {
+      users: [
+        { id: 2, username: "viet2026", full_name: "Trương Việt" },
+        { id: 3, username: "anh_po", full_name: "Nguyễn Ngọc Ánh" },
+        { id: 4, username: "tri_db", full_name: "Vũ Minh Trí" }
+      ]
+    };
+  }
+
+  if (path === "/groups" && method === "GET") {
+    const defaultGroups = [
+      { id: 1, name: "Phòng Trọ 302", invite_code: "TRO302", member_count: 4, total_spent: 1200000, role: "owner" }
+    ];
+    return { groups: getStore("groups", defaultGroups) };
+  }
+
+  if (path === "/groups" && method === "POST") {
+    const list = getStore("groups", []);
+    const newG = {
+      id: Date.now(),
+      name: (body && body.name) || "Nhóm mới",
+      invite_code: "NHOM" + Math.floor(100 + Math.random() * 900),
+      member_count: 1,
+      total_spent: 0,
+      role: "owner"
+    };
+    list.unshift(newG);
+    setStore("groups", list);
+    return { group: newG };
+  }
+
+  if (path === "/groups/join" && method === "POST") {
+    return { message: "Đã tham gia nhóm thành công!", group_id: 1 };
+  }
+
+  if (path.startsWith("/groups/") && method === "GET") {
+    const gid = parseInt(path.split("/")[2], 10);
+    return {
+      group: { id: gid, name: "Phòng Trọ 302", invite_code: "TRO302" },
+      my_role: "owner",
+      total_spent: 1200000,
+      fair_share: 300000,
+      members: [
+        { user_id: 1, username: "me", full_name: "Bạn", role: "owner", paid: 800000 },
+        { user_id: 2, username: "anh", full_name: "Ngọc Ánh", role: "member", paid: 200000 },
+        { user_id: 3, username: "tri", full_name: "Minh Trí", role: "member", paid: 200000 },
+        { user_id: 4, username: "quynh", full_name: "Diễm Quỳnh", role: "member", paid: 0 }
+      ],
+      expenses: [
+        { id: 1, amount: 650000, category_name: "Điện nước", note: "Tiền điện phòng tháng này", payer_name: "Bạn", created_at: new Date().toISOString() },
+        { id: 2, amount: 550000, category_name: "Ăn uống", note: "Lẩu liên hoan phòng", payer_name: "Ngọc Ánh", created_at: new Date().toISOString() }
+      ],
+      settlements: [
+        { from_name: "Diễm Quỳnh", to_name: "Bạn", amount: 300000 },
+        { from_name: "Minh Trí", to_name: "Bạn", amount: 100000 }
+      ]
+    };
+  }
+
+  if (path.startsWith("/groups/") && path.endsWith("/expenses") && method === "POST") {
+    return { expense: { id: Date.now(), amount: body && body.amount, note: body && body.note, created_at: new Date().toISOString() } };
+  }
+
   // Default fallback
   return { ok: true };
 }
