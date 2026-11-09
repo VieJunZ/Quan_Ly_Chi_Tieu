@@ -31,10 +31,12 @@ jobs:
         run: |
           cd android
           gradle assembleDebug --stacktrace
+          mkdir -p ../output
+          find app/build/outputs/apk -name "*.apk" -exec cp {} ../output/thuchii.apk \;
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ThuChi-Mochi-Android-Widget-v2.0.0
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: thuchii
+          path: output/thuchii.apk
           retention-days: 30

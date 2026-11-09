@@ -21,12 +21,12 @@
 ### Các bước cài đặt:
 1. **Tải file APK về điện thoại (Miễn phí qua GitHub Actions)**:
    * Truy cập GitHub dự án: `https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/actions`
-   * Bấm vào build mới nhất -> Tải file `ThuChi-Mochi-Android-Widget-v2.0.0.zip` và giải nén lấy file `app-debug.apk` vào điện thoại.
+   * Bấm vào build mới nhất -> Tải file `thuchii.zip` và giải nén lấy file **`thuchii.apk`** vào điện thoại.
 2. **Cài đặt file APK**:
-   * Mở file `app-debug.apk` trên điện thoại.
+   * Mở file **`thuchii.apk`** trên điện thoại.
    * Nếu có cảnh báo *"Ứng dụng ngoài Google Play"* hoặc *"Tệp có thể gây hại"*, chọn **Vẫn cài đặt (Install anyway)**.
 3. **Mở ứng dụng & Kéo Widget ra màn hình**:
-   * Biểu tượng **Thu Chi** sẽ xuất hiện trên màn hình và danh sách ứng dụng.
+   * Biểu tượng **ThuChii** sẽ xuất hiện trên màn hình và danh sách ứng dụng.
    * Để đưa Widget ra màn hình chính: **Ấn giữ khoảng trống màn hình điện thoại 2 giây** -> Chọn **Tiện ích (Widgets)** -> Tìm **Thu Chi** -> Kéo Widget 2x2 hoặc 4x2 ra vị trí bạn thích!
 
 ---

@@ -19,15 +19,15 @@ Hệ thống đã được thiết lập **GitHub Actions CI/CD** tự động b
 3. Cuộn xuống phần **Artifacts** ở dưới cùng:
 4. Bấm tải về file:
    ```text
-   ThuChi-Mochi-Android-Widget-v2.0.0.zip
+   thuchii.zip
    ```
-5. Giải nén (nếu tải về máy tính thì gửi file `app-debug.apk` qua Zalo/Drive vào điện thoại).
+5. Giải nén bạn sẽ được file cài đặt: **`thuchii.apk`** (nếu tải về máy tính thì gửi qua Zalo/Drive vào điện thoại).
 
 ---
 
-## 📲 BƯỚC 2: CÀI ĐẶT FILE APK LÊN ĐIỆN THOẠI ANDROID
+## 📲 BƯỚC 2: CÀI ĐẶT FILE THUCHII.APK LÊN ĐIỆN THOẠI ANDROID
 
-1. Mở file `app-debug.apk` trên điện thoại Android của bạn.
+1. Mở file **`thuchii.apk`** trên điện thoại Android của bạn.
 2. Nếu máy hiện thông báo *"Cài đặt ứng dụng từ nguồn không xác định"*, bấm **Cài đặt** (hoặc **Vẫn cài đặt / Install anyway**).
 3. Đợi khoảng 5 giây để cài đặt hoàn tất.
 4. Mở app lần đầu để hệ thống đồng bộ dữ liệu với máy chủ Render Cloud.
