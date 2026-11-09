@@ -16,6 +16,8 @@ const ROUTES = {
   home: { nav: "home", load: () => import("./screens/home.js").then((m) => m.homeScreen) },
   history: { nav: "history", load: () => import("./screens/history.js").then((m) => m.historyScreen) },
   debts: { nav: "debts", load: () => import("./screens/debts.js").then((m) => m.debtsScreen) },
+  friends: { nav: "debts", load: () => import("./screens/debts.js").then((m) => (ctx) => m.debtsScreen(ctx, new URLSearchParams("tab=friends"))) },
+  groups: { nav: "debts", load: () => import("./screens/debts.js").then((m) => (ctx) => m.debtsScreen(ctx, new URLSearchParams("tab=groups"))) },
   wallet: { nav: "me", load: () => import("./screens/wallet.js").then((m) => m.walletScreen) },
   me: { nav: "me", load: () => import("./screens/me.js").then((m) => m.meScreen) },
   challenges: { nav: "home", load: () => import("./screens/challenges.js").then((m) => m.challengesScreen) },
