@@ -6,7 +6,7 @@
  *  - css, js, ảnh, phông chữ: trả ngay bản đã lưu rồi cập nhật ngầm cho lần mở sau.
  */
 
-const CACHE = "thuchi-shell-v25";
+const CACHE = "thuchi-shell-v26";
 const FONT_CACHE = "thuchi-fonts-v1";
 const SHELL = [
   "./",
@@ -69,13 +69,14 @@ function staleWhileRevalidate(event, cacheName) {
   return caches.match(req, { ignoreSearch: true }).then((hit) => hit || network);
 }
 
-/** Trang: ưu tiên bản mới, mạng chậm hoặc mất thì dùng bản đã lưu. */
-function networkFirst(req) {
+/** Trang: trả ngay bản đã lưu trong máy (0.05s) để mở app tức thì, đồng thời cập nhật ngầm */
+function fastShell(event, req) {
   const network = fetch(req).then((res) => saveTo(CACHE, req, res));
-  const fallback = () => caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match("./index.html"));
-  const slow = new Promise((resolve) => setTimeout(resolve, 3000)).then(fallback);
-  return Promise.race([network, slow.then((hit) => hit || network)])
-    .catch(() => fallback().then((hit) => hit || Response.error()));
+  event.waitUntil(network.catch(() => {}));
+  return caches.match(req, { ignoreSearch: true }).then((hit) => {
+    if (hit) return hit;
+    return network.catch(() => caches.match("./index.html").then((fallback) => fallback || Response.error()));
+  });
 }
 
 self.addEventListener("fetch", (event) => {
@@ -86,7 +87,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(staleWhileRevalidate(event, FONT_CACHE));
     return;
   }
-  // Dữ liệu người dùng và trang của nơi khác: để trình duyệt tự xử lý
+  // Dữ liệu người dùng (/api): để trình duyệt tự gửi nhận trực tiếp từ server
   if (url.origin !== location.origin || url.pathname.startsWith("/api/")) return;
-  event.respondWith(req.mode === "navigate" || DEV ? networkFirst(req) : staleWhileRevalidate(event, CACHE));
+  event.respondWith(req.mode === "navigate" ? fastShell(event, req) : staleWhileRevalidate(event, CACHE));
 });
