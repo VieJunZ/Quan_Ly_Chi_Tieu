@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node src/init_db.js && node src/server.js",
     "start:cluster": "node src/cluster.js",
     "dev": "node --watch src/server.js",
     "test": "node --test \"tests/**/*.test.js\""
@@ -17,9 +17,11 @@
     "express": "^4.21.2",
     "jimp": "^0.22.12",
     "jsonwebtoken": "^9.0.2",
-    "msnodesqlv8": "^5.6.0",
     "mssql": "^12.7.6",
     "multer": "^2.4.0",
     "tesseract.js": "^7.0.0"
+  },
+  "optionalDependencies": {
+    "msnodesqlv8": "^5.6.0"
   }
 }

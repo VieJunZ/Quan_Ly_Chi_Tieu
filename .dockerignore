@@ -1,0 +1,12 @@
+.git/
+.vscode/
+.idea/
+backend/node_modules/
+backend/data/
+backend/.cache/
+docs/
+*.log
+*.zip
+*.apk
+cloudflared.exe
+

@@ -14,6 +14,7 @@ const SHELL = [
   "./css/app.css",
   "./js/app.js",
   "./js/api.js",
+  "./js/mock.js",
   "./js/ui.js",
   "./js/icons.js",
   "./icon-192.png",

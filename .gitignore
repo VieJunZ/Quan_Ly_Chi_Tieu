@@ -16,3 +16,9 @@ backend/data/
 
 # Dữ liệu OCR tải về khi chạy
 backend/.cache/
+
+# Log & Build Artifacts
+*.log
+*.apk
+*.zip
+cloudflared.exe
