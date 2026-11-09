@@ -6,7 +6,7 @@
  *  - css, js, ảnh, phông chữ: trả ngay bản đã lưu rồi cập nhật ngầm cho lần mở sau.
  */
 
-const CACHE = "thuchi-shell-v27";
+const CACHE = "thuchi-shell-v28";
 const FONT_CACHE = "thuchi-fonts-v1";
 const SHELL = [
   "./",
@@ -30,6 +30,7 @@ const SHELL = [
   "./js/screens/groups.js",
   "./js/screens/wallet.js",
   "./js/screens/me.js",
+  "./js/screens/shop.js",
   "./js/screens/challenges.js",
   "./js/screens/settings.js",
   "./js/screens/categories.js",
@@ -88,7 +89,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(staleWhileRevalidate(event, FONT_CACHE));
     return;
   }
-  // Dữ liệu người dùng (/api): để trình duyệt tự gửi nhận trực tiếp từ server
-  if (url.origin !== location.origin || url.pathname.startsWith("/api/")) return;
+  // Dữ liệu người dùng (/api) và file cài đặt APK: để trình duyệt tải trực tiếp từ server
+  if (url.origin !== location.origin || url.pathname.startsWith("/api/") || url.pathname.startsWith("/download") || url.pathname.endsWith(".apk")) return;
   event.respondWith(req.mode === "navigate" ? fastShell(event, req) : staleWhileRevalidate(event, CACHE));
 });

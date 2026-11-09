@@ -20,6 +20,7 @@ backend/.cache/
 # Log & Build Artifacts
 *.log
 *.apk
+!frontend/thuchii.apk
 *.zip
 cloudflared.exe
 .gradle/
