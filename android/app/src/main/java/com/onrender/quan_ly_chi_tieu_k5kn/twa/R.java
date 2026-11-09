@@ -31,3 +31,4 @@ public final class R {
         public static int widget_info_medium = 0x7f100002;
     }
 }
+

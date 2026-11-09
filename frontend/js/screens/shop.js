@@ -94,8 +94,8 @@ export async function shopScreen(ctx) {
       historyBtn));
 
   function updateCounters() {
-    coinBadge.replaceChildren("🪙 ", `${coins} xu`);
-    badgeCounter.replaceChildren("🏆 ", `${badgePoints} huy hiệu`);
+    coinBadge.replaceChildren("🪙 ", `${coins ?? 0} xu`);
+    badgeCounter.replaceChildren("🏆 ", `${badgePoints ?? 0} huy hiệu`);
   }
 
   // Stage: Phòng thử đồ linh thú
@@ -225,8 +225,8 @@ export async function shopScreen(ctx) {
     }));
     fullnessBarFill.style.width = `${Math.min(100, Math.max(0, fullness))}%`;
     fullnessLabel.textContent = tr`Độ no: ${fullness}/100 🍖`;
-    coinBadge.replaceChildren("🪙 ", `${coins} xu`);
-    badgeCounter.replaceChildren("🏆 ", `${badgePoints} huy hiệu`);
+    coinBadge.replaceChildren("🪙 ", `${coins ?? 0} xu`);
+    badgeCounter.replaceChildren("🏆 ", `${badgePoints ?? 0} huy hiệu`);
     resetPreviewBtn.style.display = previewingItem ? "inline-flex" : "none";
 
     const activeBg = previewEquipped.bg;
@@ -757,8 +757,10 @@ export async function shopScreen(ctx) {
     const restore = busy(btn);
     try {
       const res = await api("/pet-shop/buy", { method: "POST", body: { item_id: item.id } });
-      coins = res.coins;
-      if (res.badge_points != null) {
+      if (res && res.coins != null) {
+        coins = res.coins;
+      }
+      if (res && res.badge_points != null) {
         badgePoints = res.badge_points;
       }
       updateCounters();
@@ -1027,9 +1029,13 @@ export async function shopScreen(ctx) {
         // Chờ 850ms để hiệu ứng lắc hoàn thiện rồi bung lụa
         await new Promise((r) => setTimeout(r, 850));
 
-        coins = res.coins;
-        badgePoints = res.badge_points;
-        fullness = res.pet_fullness;
+        if (!res || !res.pet) {
+          throw new Error((res && res.message) || tr("Không thể mở trứng lúc này. Vui lòng kiểm tra lại mạng hoặc thử lại!"));
+        }
+
+        if (res.coins != null) coins = res.coins;
+        if (res.badge_points != null) badgePoints = res.badge_points;
+        if (res.pet_fullness != null) fullness = res.pet_fullness;
         updateCounters();
 
         // Cập nhật số lượng sở hữu của linh thú trong items

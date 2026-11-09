@@ -22,3 +22,6 @@ backend/.cache/
 *.apk
 *.zip
 cloudflared.exe
+.gradle/
+**/android/.gradle/
+**/android/app/build/

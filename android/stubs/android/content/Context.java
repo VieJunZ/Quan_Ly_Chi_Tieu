@@ -5,3 +5,4 @@ public abstract class Context {
     public abstract SharedPreferences getSharedPreferences(String name, int mode);
     public abstract String getPackageName();
 }
+

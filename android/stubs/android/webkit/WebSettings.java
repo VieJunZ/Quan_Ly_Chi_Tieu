@@ -5,3 +5,4 @@ public class WebSettings {
     public void setDomStorageEnabled(boolean b) {}
     public void setDatabaseEnabled(boolean b) {}
 }
+

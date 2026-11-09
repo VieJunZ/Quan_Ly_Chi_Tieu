@@ -13,3 +13,4 @@ public class Intent {
 
     public Uri getData() { return null; }
 }
+

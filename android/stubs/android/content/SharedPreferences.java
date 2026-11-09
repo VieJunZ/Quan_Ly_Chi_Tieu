@@ -5,3 +5,4 @@ public interface SharedPreferences {
     int getInt(String key, int defValue);
     boolean getBoolean(String key, boolean defValue);
 }
+

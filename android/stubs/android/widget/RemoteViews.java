@@ -7,3 +7,4 @@ public class RemoteViews {
     public void setTextViewText(int viewId, CharSequence text) {}
     public void setOnClickPendingIntent(int viewId, PendingIntent pendingIntent) {}
 }
+
