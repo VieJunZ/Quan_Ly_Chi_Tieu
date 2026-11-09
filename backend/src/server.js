@@ -94,16 +94,13 @@ app.use("/api/challenges", challengeRoutes);
 app.use("/api/pet-shop", petShopRoutes);
 app.use("/api", notFoundHandler);
 
-// Giao diện web
+// Giao diện web & mobile app
 if (fs.existsSync(FRONTEND_DIR)) {
-  // Giao diện mới nằm ở /app; giao diện cũ của nhóm vẫn mở được ở /index.html
-  app.get("/", (req, res) => res.redirect("/app/"));
-  app.get("/mobile.html", (req, res) => res.redirect("/app/mobile.html"));
-  app.get(/^\/app$/,(req, res) => res.redirect(301, "/app/"));
   seoRoutes(app);
-  // /app: nén sẵn, giữ trong RAM, có ETag (xem static.middleware.js)
-  app.use("/app", createStaticServer(path.join(FRONTEND_DIR, "app")));
-  app.use(express.static(FRONTEND_DIR, { extensions: ["html"] }));
+  const staticServer = createStaticServer(FRONTEND_DIR);
+  // Phục vụ ứng dụng tại cả / và /app/ để tương thích hoàn toàn
+  app.use("/app", staticServer);
+  app.use("/", staticServer);
 }
 
 app.use(notFoundHandler);

@@ -1,3 +1,13 @@
+---
+title: Quản Lý Thu Chi
+emoji: 💰
+colorFrom: purple
+colorTo: pink
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 💰 SỔ CHI TIÊU (Thu Chi) - HỆ THỐNG QUẢN LÝ TÀI CHÍNH CÁ NHÂN CHO SINH VIÊN
 
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B_LTS-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)

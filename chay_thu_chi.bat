@@ -96,12 +96,12 @@ echo Máy chủ sẵn sàng.
 
 echo.
 echo ===== 4/4 Mở app
-set "URL=http://localhost:%PORT%/app/"
-if /i "%MODE%"=="dienthoai" set "URL=http://localhost:%PORT%/app/mobile.html"
+set "URL=http://localhost:%PORT%/"
+if /i "%MODE%"=="dienthoai" set "URL=http://localhost:%PORT%/mobile.html"
 start "" "%URL%"
 echo Máy tính : %URL%
 for /f "delims=" %%i in ('powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' -and $_.PrefixOrigin -ne 'WellKnown' } | Select-Object -First 1).IPAddress"') do set "LAN_IP=%%i"
-if defined LAN_IP echo Điện thoại: http://%LAN_IP%:%PORT%/app/   (điện thoại và máy tính chung wifi)
+if defined LAN_IP echo Điện thoại: http://%LAN_IP%:%PORT%/   (điện thoại và máy tính chung wifi)
 echo.
 echo Mẹo: bấm "Dùng thử" để xem ngay với dữ liệu mẫu, không cần đăng ký.
 echo Hướng dẫn chi tiết: HUONG_DAN_THU_CHI.md
