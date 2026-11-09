@@ -339,6 +339,32 @@ export function handleMockRequest(url, method, body) {
   }
 
   // 11. GROUPS & LINKED DEBTS MOCK
+  if (path === "/friends" && method === "GET") {
+    const defaultFriends = [
+      { id: 2, username: "VieJunZ", name: "VieJunZ", added_at: new Date().toISOString() },
+      { id: 3, username: "rong.thanh.hoa", name: "Rồng Thanh Hóa", added_at: new Date().toISOString() }
+    ];
+    return { friends: getStore("friends", defaultFriends) };
+  }
+
+  if (path === "/friends" && method === "POST") {
+    const list = getStore("friends", []);
+    const target = (body && (body.target || body.friend_id)) || "ban_moi";
+    const newFriend = { id: Date.now(), username: String(target).replace(/^[#@]/, ""), name: String(target), added_at: new Date().toISOString() };
+    if (!list.some((f) => f.username === newFriend.username || f.id === newFriend.id)) {
+      list.push(newFriend);
+      setStore("friends", list);
+    }
+    return { message: "Đã thêm vào danh sách bạn bè!", friend: newFriend };
+  }
+
+  if (path.startsWith("/friends/") && method === "DELETE") {
+    const fid = parseInt(path.split("/")[2], 10);
+    const list = getStore("friends", []).filter((f) => f.id !== fid);
+    setStore("friends", list);
+    return { message: "Đã xóa khỏi danh sách bạn bè." };
+  }
+
   if (path === "/debts/search-user") {
     const rawQ = (params.get("q") || "").replace(/^[#@]/, "").trim().toLowerCase();
     const mockUsers = [

@@ -59,3 +59,4 @@ android/
                     ├── widget_info_small.xml        (Cấu hình kích thước 2x2)
                     └── widget_info_medium.xml       (Cấu hình kích thước 4x2)
 ```
+

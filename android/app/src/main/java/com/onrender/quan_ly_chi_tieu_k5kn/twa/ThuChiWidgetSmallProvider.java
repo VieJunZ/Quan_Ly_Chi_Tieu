@@ -53,3 +53,4 @@ public class ThuChiWidgetSmallProvider extends AppWidgetProvider {
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 }
+

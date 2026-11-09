@@ -9,3 +9,4 @@
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:description="@string/widget_medium_desc" />
+

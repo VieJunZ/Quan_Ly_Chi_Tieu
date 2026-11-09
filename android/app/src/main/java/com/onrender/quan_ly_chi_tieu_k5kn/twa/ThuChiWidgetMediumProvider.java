@@ -71,3 +71,4 @@ public class ThuChiWidgetMediumProvider extends AppWidgetProvider {
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 }
+
