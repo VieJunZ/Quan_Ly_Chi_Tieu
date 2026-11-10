@@ -160,7 +160,7 @@ export function shiftDate(iso, days) {
  * @param {FormData} [options.form] - gửi dạng multipart (ảnh bill)
  * @param {object} [options.query]
  */
-export async function api(path, { method = "GET", body, form, query, fresh = false } = {}) {
+export async function api(path, { method = "GET", body, form, query, fresh = false, silentAuth = false } = {}) {
   let url = `/api${path}`;
   if (query) {
     const params = new URLSearchParams();
@@ -252,7 +252,9 @@ async function send(url, method, body, form) {
     const error = new ApiError(res.status, data);
     if (res.status === 401 && memoryToken && (error.code === "TOKEN_INVALID" || error.code === "SESSION_REVOKED")) {
       session.clear();
-      window.dispatchEvent(new CustomEvent("sochi:signed-out", { detail: error.message }));
+      if (!silentAuth) {
+        window.dispatchEvent(new CustomEvent("sochi:signed-out", { detail: error.message }));
+      }
     }
     throw error;
   }
