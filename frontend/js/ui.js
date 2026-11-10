@@ -299,7 +299,7 @@ export function toast(message, kind = "info", ms = 3200, action) {
    ------------------------------------------------------------------------ */
 const openSheets = [];
 
-export function openSheet({ title, content, onClose, label } = {}) {
+export function openSheet({ title, content, body: bodyContent, onClose, label } = {}) {
   const backdrop = h("div", { class: "sheet-backdrop" });
   const handle = h("div", { class: "sheet-handle", "aria-hidden": "true" });
   const body = h("div", { class: "sheet-body" });
@@ -359,7 +359,8 @@ export function openSheet({ title, content, onClose, label } = {}) {
   function setContent(...nodes) {
     body.replaceChildren(...nodes.flat().filter(Boolean));
   }
-  if (content) setContent(content);
+  const initialContent = content || bodyContent;
+  if (initialContent) setContent(initialContent);
   document.body.append(backdrop, sheet);
   openSheets.push(api);
   requestAnimationFrame(() => {

@@ -361,9 +361,9 @@ export async function settingsScreen(ctx) {
       border: "1px solid rgba(168, 85, 247, 0.35)"
     }
   },
-  h("div", { class: "row between items-center" },
-    h("div", { class: "stack", style: { gap: "4px" } },
-      h("div", { class: "row items-center", style: { gap: "8px" } },
+  h("div", { class: "row between", style: { flexWrap: "wrap", gap: "12px", alignItems: "center" } },
+    h("div", { class: "stack grow", style: { gap: "4px", minWidth: "200px" } },
+      h("div", { class: "row", style: { gap: "8px", alignItems: "center" } },
         icon("download", 18),
         h("strong", null, tr("Cài đặt App Android (thuchii.apk)"))),
       h("span", { class: "faint", style: { fontSize: "12.5px" } }, tr("Bản APK chính thức kèm 2 Widget màn hình chính"))),

@@ -27,7 +27,7 @@ function avatar(name, size = 40) {
 /** Hộp thoại tạo nhóm mới */
 export function openCreateGroup(ctx, onDone) {
   const nameField = field({ label: tr("Tên nhóm (ví dụ: Phòng 302, Đi Đà Lạt)"), name: "name", maxlength: 100 });
-  const saveBtn = h("button", { class: "btn primary full", type: "button" }, icon("plus", 18), tr("Tạo nhóm ngay"));
+  const saveBtn = h("button", { class: "btn block", type: "button" }, icon("plus", 18), tr("Tạo nhóm ngay"));
 
   const sheet = openSheet({
     title: tr("Tạo Quỹ Nhóm Mới"),
@@ -68,7 +68,7 @@ export function openJoinGroup(ctx, onDone) {
   codeField.input.style.letterSpacing = "2px";
   codeField.input.style.fontWeight = "700";
 
-  const joinBtn = h("button", { class: "btn primary full", type: "button" }, icon("user-plus", 18), tr("Tham gia nhóm"));
+  const joinBtn = h("button", { class: "btn block", type: "button" }, icon("user-plus", 18), tr("Tham gia nhóm"));
 
   const sheet = openSheet({
     title: tr("Tham Gia Nhóm Bằng Mã"),
@@ -110,7 +110,7 @@ function openAddGroupExpense(ctx, group, onDone) {
     [tr("Ăn uống"), tr("Điện nước"), tr("Đồ dùng phòng"), tr("Đi lại"), tr("Khác")].map((c) => h("option", { value: c }, c))
   );
 
-  const saveBtn = h("button", { class: "btn primary full", type: "button" }, icon("check", 18), tr("Lưu khoản chi nhóm"));
+  const saveBtn = h("button", { class: "btn block", type: "button" }, icon("check", 18), tr("Lưu khoản chi nhóm"));
 
   const sheet = openSheet({
     title: tr`Thêm chi tiêu: ${group.name}`,
@@ -277,10 +277,10 @@ export function renderGroupsSection(ctx, groups) {
   const container = h("div", { class: "stack", style: { gap: "14px" } });
 
   // 2 nút thao tác
-  const createBtn = h("button", { class: "btn primary", type: "button" }, icon("plus-circle", 18), tr("Tạo nhóm mới"));
+  const createBtn = h("button", { class: "btn small", type: "button", style: { padding: "0 10px" } }, icon("plus-circle", 16), tr("Tạo nhóm mới"));
   createBtn.addEventListener("click", () => openCreateGroup(ctx));
 
-  const joinBtn = h("button", { class: "btn soft", type: "button" }, icon("user-plus", 18), tr("Nhập mã vào nhóm"));
+  const joinBtn = h("button", { class: "btn small soft", type: "button", style: { padding: "0 10px" } }, icon("user-plus", 16), tr("Nhập mã vào"));
   joinBtn.addEventListener("click", () => openJoinGroup(ctx));
 
   container.append(h("div", { class: "two-col" }, createBtn, joinBtn));

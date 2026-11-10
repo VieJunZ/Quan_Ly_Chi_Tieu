@@ -189,9 +189,9 @@ export async function meScreen(ctx, params) {
       padding: "16px"
     }
   },
-  h("div", { class: "row between items-center" },
-    h("div", { class: "stack", style: { gap: "4px" } },
-      h("div", { class: "row items-center", style: { gap: "8px" } },
+  h("div", { class: "row between", style: { flexWrap: "wrap", gap: "12px", alignItems: "center" } },
+    h("div", { class: "stack grow", style: { gap: "4px", minWidth: "200px" } },
+      h("div", { class: "row", style: { gap: "8px", alignItems: "center" } },
         icon("download", 18),
         h("strong", null, tr("Tải App Android (thuchii.apk)"))),
       h("span", { class: "faint", style: { fontSize: "12px" } }, tr("Bản mới nhất có 2 Widget kéo ra màn hình chính"))),
@@ -199,7 +199,7 @@ export async function meScreen(ctx, params) {
       class: "btn primary small pill",
       href: "/download/thuchii.apk",
       download: "thuchii.apk",
-      style: { textDecoration: "none", padding: "8px 14px", fontWeight: "800", whiteSpace: "nowrap" }
+      style: { textDecoration: "none", padding: "8px 16px", fontWeight: "800", whiteSpace: "nowrap" }
     }, "📥 " + tr("Tải APK")))));
 
   screen.append(h("section", { class: "card" },
