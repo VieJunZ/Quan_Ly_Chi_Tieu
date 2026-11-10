@@ -66,7 +66,12 @@ function fromSqlError(error) {
     return new HttpError(status, code, message);
   }
   if (number === 547) return new HttpError(400, "CONSTRAINT_VIOLATION", "Dữ liệu không hợp lệ.");
-  if (number === 2627 || number === 2601) return new HttpError(409, "DUPLICATE", "Dữ liệu đã tồn tại.");
+  if (number === 2627 || number === 2601) {
+    if (/users/i.test(message) || /uq_users_username/i.test(message)) {
+      return new HttpError(409, "USER_ALREADY_EXISTS", "Tên đăng nhập đã có người dùng (không phân biệt chữ hoa/thường).", { field: "username" });
+    }
+    return new HttpError(409, "DUPLICATE", "Dữ liệu đã tồn tại.");
+  }
   return null;
 }
 

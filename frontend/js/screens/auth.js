@@ -315,10 +315,10 @@ export function registerScreen(ctx) {
       session.save(data);
       ctx.mount(recoveryCodeScreen(ctx, data.recovery_code, tr("Tạo tài khoản thành công!")));
     } catch (error) {
-      if (error.code === "USER_ALREADY_EXISTS") {
+      if (error.code === "USER_ALREADY_EXISTS" || error.code === "DUPLICATE") {
         const base = username.input.value.trim().slice(0, 25);
         const alt = `${base}${Math.floor(10 + Math.random() * 89)}`;
-        username.setHint(tr`Tên này có người dùng rồi. Thử "${alt}" nhé?`, "error");
+        username.setHint(tr`Tên đăng nhập này đã được sử dụng (kể cả chữ hoa hay chữ thường). Thử "${alt}" nhé?`, "error");
         username.input.focus();
       } else {
         showFieldError(error, { username, password: pwBlock.pw, confirm_password: pwBlock.confirm }, formError);
@@ -479,7 +479,14 @@ export function openUpgradeSheet(ctx) {
       }, "Xong"));
     } catch (error) {
       restore();
-      showFieldError(error, { username, password: pwBlock.pw, confirm_password: pwBlock.confirm }, formError);
+      if (error.code === "USER_ALREADY_EXISTS" || error.code === "DUPLICATE") {
+        const base = username.input.value.trim().slice(0, 25);
+        const alt = `${base}${Math.floor(10 + Math.random() * 89)}`;
+        username.setHint(tr`Tên đăng nhập này đã có người dùng (kể cả hoa/thường). Thử "${alt}" nhé?`, "error");
+        username.input.focus();
+      } else {
+        showFieldError(error, { username, password: pwBlock.pw, confirm_password: pwBlock.confirm }, formError);
+      }
     }
   });
   sheet.setContent(form);

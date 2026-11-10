@@ -58,20 +58,28 @@ router.post("/register", authLimiter, asyncRoute(async (req, res) => {
   const cleanPassword = auth.validateNewPassword(password, confirmPassword, cleanUsername);
 
   if (await auth.findUserByUsername(cleanUsername)) {
-    throw new HttpError(409, "USER_ALREADY_EXISTS", "Tên đăng nhập đã có người dùng.", { field: "username" });
+    throw new HttpError(409, "USER_ALREADY_EXISTS", "Tên đăng nhập đã có người dùng (hệ thống không phân biệt chữ hoa/thường).", { field: "username" });
   }
 
   const passwordHash = await auth.hashPassword(cleanPassword);
-  const result = await db.withTransaction(async (tx) => {
-    const rows = await db.query(`
-      INSERT INTO dbo.users (username, password_hash, password_changed_at)
-      OUTPUT inserted.id
-      VALUES (@username, @hash, SYSDATETIME())`, { username: cleanUsername, hash: passwordHash }, tx);
-    const userId = rows[0].id;
-    const recoveryCode = await auth.issueRecoveryCode(userId, tx);
-    const session = await auth.createSession({ id: userId }, req, tx);
-    return { userId, recoveryCode, session };
-  });
+  let result;
+  try {
+    result = await db.withTransaction(async (tx) => {
+      const rows = await db.query(`
+        INSERT INTO dbo.users (username, password_hash, password_changed_at)
+        OUTPUT inserted.id
+        VALUES (@username, @hash, SYSDATETIME())`, { username: cleanUsername, hash: passwordHash }, tx);
+      const userId = rows[0].id;
+      const recoveryCode = await auth.issueRecoveryCode(userId, tx);
+      const session = await auth.createSession({ id: userId }, req, tx);
+      return { userId, recoveryCode, session };
+    });
+  } catch (err) {
+    if (err && (err.number === 2627 || err.number === 2601)) {
+      throw new HttpError(409, "USER_ALREADY_EXISTS", "Tên đăng nhập đã có người dùng (hệ thống không phân biệt chữ hoa/thường).", { field: "username" });
+    }
+    throw err;
+  }
 
   const user = await auth.findUserById(result.userId);
   res.status(201).json(sessionResponse(user, result.session, { recovery_code: result.recoveryCode }));
