@@ -906,7 +906,13 @@ export function renderStageBackdrop(themeKey) {
   const theme = getStageTheme(themeKey);
   if (!theme || !theme.backdropSvg) return null;
   const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice" class="stage-backdrop-svg" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;">${theme.backdropSvg}</svg>`;
-  return new DOMParser().parseFromString(markup, "image/svg+xml").documentElement;
+  try {
+    const doc = new DOMParser().parseFromString(markup, "image/svg+xml");
+    if (!doc || !doc.documentElement) return null;
+    return document.importNode(doc.documentElement, true);
+  } catch {
+    return null;
+  }
 }
 
 const SKINS = {
