@@ -38,8 +38,19 @@ const DEFAULT_CATEGORIES = [
   { id: 13, name: "Thu nhập khác", type: "income", icon: "plus-circle", color: "lime", is_default: true, hidden: 0 }
 ];
 
+const MOCK_VERSION = 3;
+
 function initSeedData() {
-  if (getStore("initialized", false)) return;
+  if (getStore("mock_v", 0) < MOCK_VERSION) {
+    try {
+      Object.keys(localStorage).forEach((k) => {
+        if (k.startsWith(STORAGE_KEY_PREFIX)) localStorage.removeItem(k);
+      });
+      setStore("mock_v", MOCK_VERSION);
+    } catch {}
+  } else if (getStore("initialized", false)) {
+    return;
+  }
 
   const now = new Date();
   const pad = (n) => String(n).padStart(2, "0");

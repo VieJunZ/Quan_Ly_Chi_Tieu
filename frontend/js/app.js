@@ -229,7 +229,19 @@ async function boot() {
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
+    navigator.serviceWorker.register("./sw.js").then((reg) => {
+      // Tự động kiểm tra bản cập nhật mới trên server mỗi khi mở app
+      reg.update().catch(() => {});
+    }).catch(() => {});
+  });
+
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    // Khi có Service Worker mới kích hoạt, tự động tải lại để người dùng luôn có phiên bản mới nhất
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
   });
 }
 

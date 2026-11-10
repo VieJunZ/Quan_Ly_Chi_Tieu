@@ -374,6 +374,34 @@ export async function settingsScreen(ctx) {
       style: { textDecoration: "none", padding: "8px 16px", fontWeight: "800", whiteSpace: "nowrap" }
     }, "📥 " + tr("Tải file .APK")))));
 
+  const reloadBtn = h("button", { class: "btn soft block", type: "button" }, icon("refresh-cw", 18), tr("Làm mới bộ nhớ đệm & Cập nhật mới nhất"));
+  reloadBtn.addEventListener("click", async () => {
+    const restore = busy(reloadBtn);
+    try {
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      Object.keys(localStorage).forEach((k) => {
+        if (k.startsWith("thuchi.mock.")) localStorage.removeItem(k);
+      });
+      toast(tr("Đang tải lại dữ liệu mới nhất..."), "ok");
+      setTimeout(() => {
+        window.location.reload(true);
+      }, 300);
+    } catch {
+      window.location.reload(true);
+    }
+  });
+  screen.append(h("section", { class: "card stack" },
+    h("div", { class: "card-title" }, icon("sparkles", 20), tr("Phiên bản ứng dụng")),
+    h("p", { class: "faint mt-0", style: { fontSize: "12.5px" } }, tr("Nếu thiết bị chưa hiển thị tính năng mới nhất hoặc bị lưu cache cũ, bấm nút bên dưới để đồng bộ tức thì:")),
+    reloadBtn));
+
   // Góp ý: không phải chờ 1 ngày mới được hỏi, muốn nói lúc nào cũng được
   screen.append(h("section", { class: "card" },
     h("div", { class: "card-title" }, icon("message-circle-heart", 20), tr("Góp ý cho app")),
