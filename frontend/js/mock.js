@@ -191,7 +191,11 @@ export function handleMockRequest(url, method, body) {
     const spentToday = todayTxs.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount || 0), 0);
     const totalIncome = txs.filter((t) => t.type === "income").reduce((s, t) => s + Number(t.amount || 0), 0);
     const totalExpense = txs.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount || 0), 0);
-    const budget = getStore("budget", { amount: 3500000 }).amount;
+    const rawBudget = getStore("budget", { amount: 3500000 });
+    const budgetAmount = Number(typeof rawBudget === "object" && rawBudget !== null ? rawBudget.amount : rawBudget) || 3500000;
+    const dailyAllowance = Math.round(budgetAmount / 30);
+    const leftToday = Math.max(0, dailyAllowance - spentToday);
+    const remainingMonth = budgetAmount - totalExpense;
     const pet = getStore("pet", { mood: "happy", level: 3, exp: 140, next_level_exp: 200, name: "Mochi" });
     const streak = getStore("streak", 5);
 
@@ -201,12 +205,15 @@ export function handleMockRequest(url, method, body) {
       received_today: totalIncome,
       transaction_count: todayTxs.length,
       budget: {
-        amount: budget,
+        has_budget: true,
+        budget: budgetAmount,
+        amount: budgetAmount,
         spent_month: totalExpense,
-        remaining_month: budget - totalExpense,
-        daily_allowance: Math.round(budget / 30),
-        left_today: Math.max(0, Math.round(budget / 30) - spentToday),
-        days_left: 20
+        remaining_month: remainingMonth,
+        daily_allowance: dailyAllowance,
+        left_today: leftToday,
+        days_left: 20,
+        days_in_month: 30
       },
       balance: totalIncome - totalExpense,
       pet,
@@ -255,11 +262,38 @@ export function handleMockRequest(url, method, body) {
   // 5. BUDGET
   if (path === "/budget") {
     if (method === "PUT") {
-      setStore("budget", { amount: Number(body.amount || 3500000) });
-      return { ok: true };
+      const amt = Number(body?.amount || 3500000) || 3500000;
+      setStore("budget", { amount: amt });
+      return {
+        ok: true,
+        has_budget: true,
+        budget: amt,
+        amount: amt,
+        spent_month: 1355000,
+        spent: 1355000,
+        remaining_month: amt - 1355000,
+        remaining: amt - 1355000,
+        days_left: 20,
+        days_in_month: 30,
+        daily_allowance: Math.round(amt / 30),
+        left_today: Math.max(0, Math.round(amt / 30) - 45000)
+      };
     }
-    const b = getStore("budget", { amount: 3500000 });
-    return { amount: b.amount, spent: 1355000, remaining: b.amount - 1355000 };
+    const rawB = getStore("budget", { amount: 3500000 });
+    const bAmt = Number(typeof rawB === "object" && rawB !== null ? rawB.amount : rawB) || 3500000;
+    return {
+      has_budget: true,
+      budget: bAmt,
+      amount: bAmt,
+      spent_month: 1355000,
+      spent: 1355000,
+      remaining_month: bAmt - 1355000,
+      remaining: bAmt - 1355000,
+      days_left: 20,
+      days_in_month: 30,
+      daily_allowance: Math.round(bAmt / 30),
+      left_today: Math.max(0, Math.round(bAmt / 30) - 45000)
+    };
   }
 
   // 6. DEBTS
@@ -494,7 +528,16 @@ export function handleMockRequest(url, method, body) {
 
   // 10. WALLET & SURVEY
   if (path === "/wallet") {
-    return { cash: 250000, bank: 3200000, system_balance: 3450000, diff: 0 };
+    return {
+      cash: 250000,
+      bank: 3200000,
+      system_balance: 3450000,
+      expected_balance: 3450000,
+      ledger_balance: 3450000,
+      owed_to_me: 45000,
+      i_owe: 30000,
+      diff: 0
+    };
   }
 
   if (path === "/wallet/check") {

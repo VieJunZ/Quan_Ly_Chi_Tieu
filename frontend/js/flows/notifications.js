@@ -91,8 +91,11 @@ export async function fetchNotifications() {
       }
 
       // Cảnh báo ngân sách tháng > 80%
-      if (mini.budget.amount > 0) {
-        const pct = (mini.budget.spent_month / mini.budget.amount) * 100;
+      const bAmount = Number(mini?.budget?.amount ?? mini?.budget?.budget ?? 0) || 0;
+      const bSpent = Number(mini?.budget?.spent_month ?? mini?.budget?.spent ?? 0) || 0;
+      if (bAmount > 0) {
+        const rawPct = (bSpent / bAmount) * 100;
+        const pct = Number.isFinite(rawPct) ? Math.round(rawPct) : 0;
         if (pct >= 85) {
           items.push({
             id: `budget_month_over_${t.slice(0, 7)}`,
@@ -100,7 +103,7 @@ export async function fetchNotifications() {
             type: "warn",
             icon: "triangle-alert",
             title: tr("Sắp chạm trần ngân sách tháng"),
-            desc: tr`Đã tiêu ${Math.round(pct)}% ngân sách tháng (${money(mini.budget.spent_month)} / ${money(mini.budget.amount)}).`,
+            desc: tr`Đã tiêu ${pct}% ngân sách tháng (${money(bSpent)} / ${money(bAmount)}).`,
             link: "#/me?budget=1",
             actionText: tr("Kiểm tra")
           });

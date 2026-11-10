@@ -167,7 +167,8 @@ function categoryBreakdown(dash) {
   const total = expenses.reduce((s, c) => s + c.total, 0);
   const list = h("div", { class: "stack", style: { gap: "10px" } });
   for (const c of expenses.slice(0, 6)) {
-    const pct = total ? (c.total / total) * 100 : 0;
+    const rawPct = total > 0 ? (Number(c.total || 0) / total) * 100 : 0;
+    const pct = Number.isFinite(rawPct) ? Math.max(0, Math.min(100, Math.round(rawPct))) : 0;
     const bar = h("span", { style: { background: categoryColor(c.category_color) } });
     requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.width = `${pct}%`)));
     list.append(h("div", { class: "row" },
@@ -177,7 +178,7 @@ function categoryBreakdown(dash) {
           h("strong", { style: { fontSize: "14px" } }, c.category_name),
           h("span", { style: { fontWeight: 700 } }, money(c.total))),
         h("div", { class: "progress mt-8" }, bar),
-        h("small", { class: "faint" }, tr`${Math.round(pct)}% · ${c.transaction_count} khoản`))));
+        h("small", { class: "faint" }, tr`${pct}% · ${c.transaction_count} khoản`))));
   }
   return h("section", { class: "card" },
     h("div", { class: "card-title" }, icon("chart-pie", 20), tr("Chi theo danh mục")),

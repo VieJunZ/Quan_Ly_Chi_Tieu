@@ -51,15 +51,18 @@ function buildWidget({ onClose }) {
       spent.textContent = money(m.spent_today || 0);
       const b = m.budget;
       if (b) {
-        const allowance = Math.max(0, b.daily_allowance || 0);
-        const left = b.left_today || 0;
-        const over = left < 0 || (allowance === 0 && m.spent_today > 0);
+        const allowance = Math.max(0, Number(b.daily_allowance) || 0);
+        const left = Number(b.left_today) || 0;
+        const spentVal = Number(m.spent_today) || 0;
+        const over = left < 0 || (allowance === 0 && spentVal > 0);
         sub.replaceChildren(over
           ? h("span", { class: "mini-over" }, tr`Lố ${money(Math.abs(left))} rồi, chậm lại nha`)
           : h("span", null, tr("Còn được tiêu "), h("b", null, money(Math.max(0, left)))));
         progress.hidden = false;
         progress.classList.toggle("over", over);
-        bar.style.width = `${allowance > 0 ? Math.min(100, ((m.spent_today || 0) / allowance) * 100) : 100}%`;
+        const rawPct = allowance > 0 ? (spentVal / allowance) * 100 : 100;
+        const safeWidth = Number.isFinite(rawPct) ? Math.max(0, Math.min(100, Math.round(rawPct))) : 100;
+        bar.style.width = `${safeWidth}%`;
       } else {
         progress.hidden = true;
         sub.textContent = tr`${m.transaction_count || 0} khoản · thu +${moneyShort(m.received_today || 0)}`;
