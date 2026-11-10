@@ -160,18 +160,22 @@ export function celebrate(ov) {
 
 /** Thử thách đang chạy (tối đa 3) hoặc lời mời nhận thử thách đầu tiên. */
 export function challengeStrip(ctx, ov) {
-  if (!ov) return null;
+  if (!ov || !ov.stats || !Array.isArray(ov.active)) return null;
+  const badgesEarned = ov.stats.badges ?? 0;
+  const badgesTotal = ov.stats.badges_total ?? 10;
   const head = h("div", { class: "row between" },
     h("h2", { style: { fontSize: "16px" } }, tr("Thử thách")),
-    h("a", { class: "link", href: "#/challenges" }, tr`${ov.stats.badges}/${ov.stats.badges_total} huy hiệu`));
+    h("a", { class: "link", href: "#/challenges" }, tr`${badgesEarned}/${badgesTotal} huy hiệu`));
 
   if (!ov.active.length) {
-    const top = ov.suggestions.find((s) => !s.running && s.unit !== "streak" && s.unit !== "days") || ov.suggestions[0];
+    const suggestions = Array.isArray(ov.suggestions) ? ov.suggestions : [];
+    const top = suggestions.find((s) => !s.running && s.unit !== "streak" && s.unit !== "days") || suggestions[0];
     if (!top) return null;
-    const goal = top.targets[7] && (top.targets[7].medium || top.targets[7].light);
+    const targets = top.targets || {};
+    const goal = targets[7] && (targets[7].medium || targets[7].light);
     return h("section", { class: "card stack" }, head,
       h("a", { class: "ch-invite", href: `#/challenges?key=${encodeURIComponent(top.key)}` },
-        h("span", { class: "ch-icon" }, icon(top.icon, 22)),
+        h("span", { class: "ch-icon" }, icon(top.icon || "trophy", 22)),
         h("span", { class: "grow" },
           h("strong", null, goal ? goal.title : top.name),
           h("small", null, top.reason)),

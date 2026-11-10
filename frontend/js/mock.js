@@ -187,7 +187,16 @@ export function handleMockRequest(url, method, body) {
     return {
       today: todayIso,
       spent_today: spentToday,
-      daily_allowance: Math.round(budget / 30),
+      received_today: totalIncome,
+      transaction_count: todayTxs.length,
+      budget: {
+        amount: budget,
+        spent_month: totalExpense,
+        remaining_month: budget - totalExpense,
+        daily_allowance: Math.round(budget / 30),
+        left_today: Math.max(0, Math.round(budget / 30) - spentToday),
+        days_left: 20
+      },
       balance: totalIncome - totalExpense,
       pet,
       streak,
@@ -203,6 +212,7 @@ export function handleMockRequest(url, method, body) {
       total_income: totalIncome,
       total_expense: totalExpense,
       balance: totalIncome - totalExpense,
+      recent_transactions: txs.slice(0, 10),
       category_breakdown: [
         { id: 1, name: "Ăn uống", total_amount: 115000, percentage: 60, color: "amber", icon: "utensils" },
         { id: 2, name: "Nhà cửa", total_amount: 1200000, percentage: 35, color: "blue", icon: "home" },
@@ -243,8 +253,26 @@ export function handleMockRequest(url, method, body) {
 
   // 6. DEBTS
   if (path === "/debts") {
-    const debts = getStore("debts", []);
-    if (method === "GET") return debts;
+    const debts = getStore("debts", [
+      { id: 1, person_name: "Hoàng", direction: "owed_to_me", amount: 45000, note: "Tiền trà sữa hôm qua", created_at: new Date().toISOString().slice(0, 10), status: "pending" },
+      { id: 2, person_name: "Tuấn", direction: "i_owe", amount: 30000, note: "Gửi xe tháng", created_at: new Date().toISOString().slice(0, 10), status: "pending" }
+    ]);
+    if (method === "GET") {
+      const open = debts.filter((d) => d.status === "pending");
+      const history = debts.filter((d) => d.status === "settled");
+      const owedToMe = open.filter((d) => d.direction === "owed_to_me" || d.direction === "they_owe_me").reduce((s, d) => s + (d.amount || 0), 0);
+      const iOwe = open.filter((d) => d.direction === "i_owe" || d.direction === "i_owe_them").reduce((s, d) => s + (d.amount || 0), 0);
+      return {
+        owed_to_me: owedToMe,
+        i_owe: iOwe,
+        open,
+        history,
+        people: [
+          { person_name: "Hoàng", net_amount: 45000, open_count: 1 },
+          { person_name: "Tuấn", net_amount: -30000, open_count: 1 }
+        ]
+      };
+    }
     if (method === "POST") {
       const newDebt = { id: Date.now(), ...body, created_at: new Date().toISOString().slice(0, 10), status: "pending" };
       debts.unshift(newDebt);
@@ -266,10 +294,52 @@ export function handleMockRequest(url, method, body) {
     if (method === "POST") {
       return { ok: true, id: Date.now() };
     }
-    return [
-      { id: 1, key: "tea", title: "Cắt giảm 40% trà sữa", days: 14, days_left: 9, target_amount: 150000, current_amount: 60000, status: "active" },
-      { id: 2, key: "cook", title: "Tự nấu ăn tiết kiệm", days: 7, days_left: 4, target_amount: 200000, current_amount: 70000, status: "active" }
-    ];
+    const todayIso = new Date().toISOString();
+    return {
+      active: [
+        {
+          id: 1,
+          key: "tea",
+          title: "Cắt giảm 40% trà sữa",
+          icon: "coffee",
+          days: 14,
+          days_left: 9,
+          end_date: new Date(Date.now() + 9 * 86400000).toISOString(),
+          status: "active",
+          progress: { unit: "money", value: 60000, target: 150000, left: 90000, per_day: 10000 }
+        },
+        {
+          id: 2,
+          key: "cook",
+          title: "Tự nấu ăn tiết kiệm",
+          icon: "utensils",
+          days: 7,
+          days_left: 4,
+          end_date: new Date(Date.now() + 4 * 86400000).toISOString(),
+          status: "active",
+          progress: { unit: "money", value: 70000, target: 200000, left: 130000, per_day: 32500 }
+        }
+      ],
+      finished: [],
+      suggestions: [
+        {
+          key: "tea",
+          name: "Cắt trà sữa",
+          icon: "coffee",
+          reason: "Tiết kiệm 150k mỗi tuần",
+          targets: { 7: { light: { title: "Uống ít hơn 2 ly trà sữa" }, medium: { title: "Uống ít hơn 1 ly trà sữa" } } }
+        }
+      ],
+      badges: [
+        { key: "streak3", name: "Chiến thần ghi chép", earned: true }
+      ],
+      stats: {
+        badges: 3,
+        badges_total: 10,
+        active: 2,
+        won: 1
+      }
+    };
   }
 
   if (path === "/challenges/insights") {

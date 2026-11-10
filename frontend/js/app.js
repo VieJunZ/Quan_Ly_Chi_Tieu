@@ -192,7 +192,7 @@ window.addEventListener("sochi:signed-out", (e) => {
 
 async function checkSession() {
   try {
-    const me = await api("/auth/me", { fresh: true });
+    const me = await api("/auth/me", { fresh: true, silentAuth: true });
     session.save({ user: me });
     return true;
   } catch (error) {
