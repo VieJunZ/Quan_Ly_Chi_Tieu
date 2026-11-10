@@ -6,7 +6,7 @@
  *  - css, js, ảnh, phông chữ: trả ngay bản đã lưu rồi cập nhật ngầm cho lần mở sau.
  */
 
-const CACHE = "thuchi-shell-v31";
+const CACHE = "thuchi-shell-v32";
 const FONT_CACHE = "thuchi-fonts-v1";
 const SHELL = [
   "./",
@@ -72,14 +72,23 @@ function staleWhileRevalidate(event, cacheName) {
   return caches.match(req, { ignoreSearch: true }).then((hit) => hit || network);
 }
 
-/** Trang: trả ngay bản đã lưu trong máy (0.05s) để mở app tức thì, đồng thời cập nhật ngầm */
+/** Trang: ưu tiên nạp bản mới từ máy chủ khi có mạng (tối đa 1.5s), mất mạng thì dùng bản đã lưu để mở app tức thì */
 function fastShell(event, req) {
-  const network = fetch(req).then((res) => saveTo(CACHE, req, res));
-  event.waitUntil(network.catch(() => {}));
-  return caches.match(req, { ignoreSearch: true }).then((hit) => {
-    if (hit) return hit;
-    return network.catch(() => caches.match("./index.html").then((fallback) => fallback || Response.error()));
-  });
+  const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 1500));
+  return Promise.race([fetch(req), timeoutPromise])
+    .then((res) => {
+      if (res && res.ok) {
+        saveTo(CACHE, req, res);
+        return res;
+      }
+      return caches.match(req, { ignoreSearch: true }).then((hit) => hit || res);
+    })
+    .catch(() => {
+      return caches.match(req, { ignoreSearch: true }).then((hit) => {
+        if (hit) return hit;
+        return caches.match("./index.html").then((fallback) => fallback || Response.error());
+      });
+    });
 }
 
 self.addEventListener("fetch", (event) => {
