@@ -6,7 +6,7 @@
  *  - css, js, ảnh, phông chữ: trả ngay bản đã lưu rồi cập nhật ngầm cho lần mở sau.
  */
 
-const CACHE = "thuchi-shell-v32";
+const CACHE = "thuchi-shell-v33";
 const FONT_CACHE = "thuchi-fonts-v1";
 const SHELL = [
   "./",

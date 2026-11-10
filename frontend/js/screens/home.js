@@ -100,18 +100,22 @@ function moneyCard(ctx, mini) {
       setBtn);
   }
 
-  const allowance = Math.max(0, budget.daily_allowance || 0);
-  const leftToday = budget.left_today || 0;
-  const pct = allowance > 0 ? Math.max(0, Math.min(100, (leftToday / allowance) * 100)) : 0;
-  const ringColor = leftToday < 0 ? "#ff5f8f" : pct < 25 ? "#ff9f5a" : "var(--violet)";
-  const ring = h("div", { class: "ring", style: { "--ring-color": ringColor, "--ring": `${shown.ring || 0}%` }, role: "img", "aria-label": tr`Còn ${Math.round(pct)}% hạn mức hôm nay` }, `${Math.round(pct)}%`);
-  shown.ring = pct;
-  requestAnimationFrame(() => requestAnimationFrame(() => ring.style.setProperty("--ring", `${pct}%`)));
+  const allowance = Math.max(0, Number(budget.daily_allowance) || 0);
+  const leftToday = Number(budget.left_today) || 0;
+  const rawPct = allowance > 0 ? (leftToday / allowance) * 100 : 0;
+  const safePct = Number.isFinite(rawPct) ? Math.max(0, Math.min(100, Math.round(rawPct))) : 0;
+  const ringColor = leftToday < 0 ? "#ff5f8f" : safePct < 25 ? "#ff9f5a" : "var(--violet)";
+  const ring = h("div", { class: "ring", style: { "--ring-color": ringColor, "--ring": `${shown.ring || 0}%` }, role: "img", "aria-label": tr`Còn ${safePct}% hạn mức hôm nay` }, `${safePct}%`);
+  shown.ring = safePct;
+  requestAnimationFrame(() => requestAnimationFrame(() => ring.style.setProperty("--ring", `${safePct}%`)));
 
   const leftEl = h("div", { class: `money-mid ${leftToday < 0 ? "neg" : ""}` });
   rolling("left", leftEl, leftToday, { duration: 1200 });
 
-  const monthPct = budget.amount > 0 ? Math.min(100, (budget.spent_month / budget.amount) * 100) : 0;
+  const bAmount = Number(budget.amount) || 0;
+  const bSpent = Number(budget.spent_month) || 0;
+  const rawMonthPct = bAmount > 0 ? (bSpent / bAmount) * 100 : 0;
+  const monthPct = Number.isFinite(rawMonthPct) ? Math.max(0, Math.min(100, Math.round(rawMonthPct))) : 0;
   const bar = h("span", { style: { width: `${shown.bar || 0}%` } });
   shown.bar = monthPct;
   requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.width = `${monthPct}%`)));

@@ -89,7 +89,8 @@ export async function walletScreen(ctx) {
       save.disabled = true;
       return;
     }
-    const diff = Math.round(actual - w.expected_balance);
+    const expected = Number(w.expected_balance ?? w.system_balance ?? 0) || 0;
+    const diff = Math.round(actual - expected);
     save.disabled = false;
     if (Math.abs(diff) < 1000) {
       recordRow.hidden = true;

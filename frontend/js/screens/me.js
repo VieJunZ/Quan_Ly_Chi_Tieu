@@ -27,20 +27,26 @@ async function budgetCard(ctx, focus) {
   const card = h("section", { class: "card stack", id: "budget" });
   card.append(h("div", { class: "card-title", style: { marginBottom: 0 } }, icon("target", 20), tr("Ngân sách tháng này")));
 
-  if (b.has_budget) {
-    const pct = b.budget > 0 ? Math.min(100, (b.spent_month / b.budget) * 100) : 0;
+  if (b && (b.has_budget || b.budget || b.amount)) {
+    const bAmt = Number(b.budget ?? b.amount ?? 0) || 0;
+    const bSpent = Number(b.spent_month ?? b.spent ?? 0) || 0;
+    const rawPct = bAmt > 0 ? (bSpent / bAmt) * 100 : 0;
+    const pct = Number.isFinite(rawPct) ? Math.max(0, Math.min(100, Math.round(rawPct))) : 0;
+    const dailyAllow = Number(b.daily_allowance) || 0;
+    const remainingMonth = Number(b.remaining_month ?? b.remaining ?? 0) || 0;
+    const daysLeft = Number(b.days_left) || 0;
     card.append(
       h("div", { class: "row" },
         h("div", { class: "grow" },
           h("div", { class: "faint" }, tr`Mỗi ngày được tiêu${b.is_inherited ? tr(" (theo tháng trước)") : ""}`),
-          h("div", { class: "money-mid" }, money(Math.max(0, b.daily_allowance)))),
+          h("div", { class: "money-mid" }, money(Math.max(0, dailyAllow)))),
         h("div", { style: { textAlign: "right" } },
           h("div", { class: "faint" }, tr("Còn trong tháng")),
-          h("strong", { style: { color: b.remaining_month < 0 ? "var(--expense)" : "inherit" } }, money(b.remaining_month)))),
-      h("div", { class: `progress ${b.remaining_month < 0 ? "over" : ""}` }, h("span", { style: { width: `${pct}%` } })),
+          h("strong", { style: { color: remainingMonth < 0 ? "var(--expense)" : "inherit" } }, money(remainingMonth)))),
+      h("div", { class: `progress ${remainingMonth < 0 ? "over" : ""}` }, h("span", { style: { width: `${pct}%` } })),
       h("div", { class: "row faint", style: { justifyContent: "space-between" } },
-        h("span", null, tr`Đã chi ${moneyShort(b.spent_month)} / ${moneyShort(b.budget)}`),
-        h("span", null, tr`còn ${b.days_left} ngày`)),
+        h("span", null, tr`Đã chi ${moneyShort(bSpent)} / ${moneyShort(bAmt)}`),
+        h("span", null, tr`còn ${daysLeft} ngày`)),
       h("p", { class: "faint mt-0" }, tr("Hôm nay tiêu ít thì mức các ngày còn lại tự tăng, tiêu lố thì tự giảm. Không cần tính nhẩm.")));
   } else {
     card.append(h("p", { class: "muted mt-0" }, tr("Đặt một con số cho cả tháng, app chia ra mỗi ngày được tiêu bao nhiêu và tự cân lại mỗi ngày.")));
@@ -48,7 +54,9 @@ async function budgetCard(ctx, focus) {
 
   // Gợi ý từ tháng trước
   const chips = h("div", { class: "chips" });
-  const amount = field({ label: tr("Số tiền cả tháng"), name: "budget", inputmode: "decimal", autocomplete: "off", value: b.has_budget && !b.is_inherited ? new Intl.NumberFormat("vi-VN").format(b.budget) : "", hint: tr("Gõ 3tr, 2tr5... đều được") });
+  const hasBudgetVal = b && (b.has_budget || b.budget || b.amount) && !b.is_inherited;
+  const initialBudget = Number(b?.budget ?? b?.amount ?? 0);
+  const amount = field({ label: tr("Số tiền cả tháng"), name: "budget", inputmode: "decimal", autocomplete: "off", value: hasBudgetVal && initialBudget > 0 ? new Intl.NumberFormat("vi-VN").format(initialBudget) : "", hint: tr("Gõ 3tr, 2tr5... đều được") });
   const pick = (value) => {
     amount.input.value = new Intl.NumberFormat("vi-VN").format(value);
     amount.input.dispatchEvent(new Event("input"));
@@ -66,9 +74,10 @@ async function budgetCard(ctx, focus) {
   }
   amount.input.addEventListener("input", () => {
     const v = parseMoneyInput(amount.input.value);
+    const daysInMonth = Number(b?.days_in_month) || 30;
     if (!amount.input.value) amount.setHint(tr("Gõ 3tr, 2tr5... đều được"));
     else if (!v) amount.setHint(tr("Số tiền chưa đúng"), "error");
-    else amount.setHint(tr`= ${money(v)} · khoảng ${money(Math.floor(v / b.days_in_month))}/ngày`, "ok");
+    else amount.setHint(tr`= ${money(v)} · khoảng ${money(Math.floor(v / daysInMonth))}/ngày`, "ok");
   });
 
   const save = h("button", { class: "btn block", type: "button" }, icon("check", 18), b.has_budget && !b.is_inherited ? tr("Cập nhật ngân sách") : tr("Đặt ngân sách"));
