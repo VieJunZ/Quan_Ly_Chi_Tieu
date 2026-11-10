@@ -233,12 +233,12 @@ body:has(.sheet) .blob {
 }
 
 .screen {
-  padding: 18px 16px calc(var(--nav-h) + 40px);
+  padding: max(18px, calc(env(safe-area-inset-top) + 8px)) 16px calc(var(--nav-h) + 40px + env(safe-area-inset-bottom));
   view-transition-name: screen;
 }
 
 .screen.no-nav {
-  padding-bottom: 32px;
+  padding-bottom: max(32px, calc(env(safe-area-inset-bottom) + 20px));
 }
 
 .screen-head {
@@ -392,8 +392,17 @@ body:has(.sheet) .blob {
   pointer-events: none;
 }
 
-.btn.block {
+.btn.block,
+.btn.full {
   width: 100%;
+}
+
+.btn.pill {
+  border-radius: 999px;
+}
+
+.items-center {
+  align-items: center;
 }
 
 .btn.soft {
@@ -678,10 +687,15 @@ body:has(.sheet) .blob {
 
 .segmented button {
   min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border: 0;
   border-radius: 14px;
   background: transparent;
   font-weight: 600;
+  font-size: 13.5px;
   color: var(--ink-soft);
   transition: background 0.25s, color 0.25s, transform 0.4s var(--spring);
 }
@@ -776,8 +790,8 @@ body:has(.sheet) .blob {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 28px 22px 36px;
-  gap: 22px;
+  padding: max(28px, calc(env(safe-area-inset-top) + 14px)) 22px max(36px, calc(env(safe-area-inset-bottom) + 14px));
+  gap: 20px;
   view-transition-name: screen;
 }
 
@@ -1403,10 +1417,10 @@ body:has(.sheet) .blob {
 /* Thông báo nhỏ */
 .toast-wrap {
   position: fixed;
-  top: max(14px, env(safe-area-inset-top));
+  top: max(16px, calc(env(safe-area-inset-top) + 12px));
   left: 50%;
   translate: -50% 0;
-  z-index: 90;
+  z-index: 100;
   display: grid;
   gap: 8px;
   width: min(420px, calc(100% - 24px));
@@ -2197,8 +2211,8 @@ a.menu-item {
 .segmented button svg {
   width: 16px;
   height: 16px;
-  vertical-align: -3px;
-  margin-right: 4px;
+  flex: none;
+  margin: 0;
 }
 
 .two-col {
