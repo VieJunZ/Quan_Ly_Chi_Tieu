@@ -15,6 +15,7 @@
 
 Dự án bao gồm hệ thống tài liệu kỹ thuật và hướng dẫn chuyên sâu:
 
+- 📱 **[docs/HUONG_DAN_SU_DUNG_VA_CAI_DAT_APP.md](./docs/HUONG_DAN_SU_DUNG_VA_CAI_DAT_APP.md)**: Hướng dẫn cài đặt (iOS, Android APK/PWA) và cẩm nang sử dụng chi tiết từng tính năng.
 - 📱 **[HUONG_DAN_CAI_DAT_APP.md](./HUONG_DAN_CAI_DAT_APP.md)**: Hướng dẫn cài đặt ứng dụng trên Android (APK / PWA), iPhone/iPad (iOS) và máy tính (Windows).
 - 📌 **[README.md](./README.md)**: Trang giới thiệu tổng quan chính thức hiển thị tại trang chủ GitHub repository.
 - 📖 **[HUONG_DAN_THU_CHI.md](./HUONG_DAN_THU_CHI.md)**: Cẩm nang sử dụng chi tiết từng phân hệ (Giọng nói NLP, OCR hóa đơn, Thú cưng ví tiền, Chia nợ nhóm, Thử thách tài chính, PWA).

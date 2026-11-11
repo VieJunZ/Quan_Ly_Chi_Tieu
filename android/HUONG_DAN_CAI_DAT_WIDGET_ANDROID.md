@@ -7,21 +7,16 @@
 
 ---
 
-## 🚀 BƯỚC 1: TẢI FILE APK ĐÃ TÍCH HỢP WIDGET (MIỄN PHÍ 0Đ)
+## 🚀 BƯỚC 1: TẢI FILE APK ĐÃ TÍCH HỢP WIDGET (TẢI TRỰC TIẾP TỪ WEB)
 
-Hệ thống đã được thiết lập **GitHub Actions CI/CD** tự động biên dịch APK trên máy chủ đám mây của GitHub (hoàn toàn miễn phí, không tốn 1 xu):
+Bạn có thể tải trực tiếp file cài đặt APK về máy mà không cần tài khoản hay thao tác phức tạp:
 
-1. Mở trình duyệt trên máy tính hoặc điện thoại, truy cập vào GitHub của dự án:
+1. Mở trình duyệt trên điện thoại Android, truy cập đường link tải trực tiếp:
    ```text
-   https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/actions
+   https://quan-ly-chi-tieu-k5kn.onrender.com/thuchii.apk
    ```
-2. Bấm vào lượt chạy mới nhất có tên **"Build Android APK with Native Widgets"** (hoặc commit mới nhất).
-3. Cuộn xuống phần **Artifacts** ở dưới cùng:
-4. Bấm tải về file:
-   ```text
-   thuchii.zip
-   ```
-5. Giải nén bạn sẽ được file cài đặt: **`thuchii.apk`** (nếu tải về máy tính thì gửi qua Zalo/Drive vào điện thoại).
+2. Hoặc mở web app `https://quan-ly-chi-tieu-k5kn.onrender.com`, vào tab **Tôi** ➔ chọn **Cài đặt** ➔ bấm nút **"Tải ứng dụng Android (APK)"**.
+3. File cài đặt **`thuchii.apk`** sẽ tự động được tải về mục *Tải về (Downloads)* trên điện thoại của bạn.
 
 ---
 
