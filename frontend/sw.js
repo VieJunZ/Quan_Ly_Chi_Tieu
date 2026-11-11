@@ -6,7 +6,7 @@
  *  - css, js, ảnh, phông chữ: trả ngay bản đã lưu rồi cập nhật ngầm cho lần mở sau.
  */
 
-const CACHE = "thuchi-shell-v33";
+const CACHE = "thuchi-shell-v34";
 const FONT_CACHE = "thuchi-fonts-v1";
 const SHELL = [
   "./",
@@ -72,23 +72,36 @@ function staleWhileRevalidate(event, cacheName) {
   return caches.match(req, { ignoreSearch: true }).then((hit) => hit || network);
 }
 
-/** Trang: ưu tiên nạp bản mới từ máy chủ khi có mạng (tối đa 1.5s), mất mạng thì dùng bản đã lưu để mở app tức thì */
-function fastShell(event, req) {
-  const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 1500));
-  return Promise.race([fetch(req), timeoutPromise])
-    .then((res) => {
-      if (res && res.ok) {
-        saveTo(CACHE, req, res);
-        return res;
-      }
-      return caches.match(req, { ignoreSearch: true }).then((hit) => hit || res);
-    })
-    .catch(() => {
-      return caches.match(req, { ignoreSearch: true }).then((hit) => {
-        if (hit) return hit;
-        return caches.match("./index.html").then((fallback) => fallback || Response.error());
-      });
-    });
+/** Trang: ưu tiên nạp bản mới từ máy chủ khi có mạng, mất mạng thì dùng bản đã lưu để mở app tức thì.
+ * Trên thiết bị mới chưa có cache: kiên nhẫn chờ mạng, không timeout ép trả Response.error().
+ */
+async function fastShell(event, req) {
+  const cached = (await caches.match(req, { ignoreSearch: true })) || (await caches.match("./index.html"));
+  if (cached) {
+    try {
+      const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 2500));
+      const netRes = await Promise.race([
+        fetch(req).then((res) => {
+          if (res && res.ok) saveTo(CACHE, req, res);
+          return res;
+        }),
+        timeoutPromise
+      ]);
+      if (netRes && netRes.ok) return netRes;
+    } catch {}
+    return cached;
+  }
+
+  // Máy mới tinh chưa có cache: tải từ mạng, thành công thì cất vào cache
+  try {
+    const netRes = await fetch(req);
+    if (netRes && netRes.ok) saveTo(CACHE, req, netRes);
+    return netRes;
+  } catch (err) {
+    const fallback = await caches.match("./index.html");
+    if (fallback) return fallback;
+    throw err;
+  }
 }
 
 self.addEventListener("fetch", (event) => {

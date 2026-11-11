@@ -148,29 +148,37 @@ export function haptic(pattern = 12) {
   }
 }
 
-const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduceMotion = () => {
+  try {
+    return Boolean(typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  } catch {
+    return false;
+  }
+};
 
 /** Số chạy từ giá trị cũ tới giá trị mới (requestAnimationFrame, easeOutExpo). */
 export function countUp(el, to, { duration = 1100, format = money } = {}) {
-  const from = Number(el.dataset.value || 0);
-  el.dataset.value = to;
-  if (reduceMotion() || from === to) {
-    el.textContent = format(to);
+  const safeTo = Number.isFinite(Number(to)) ? Number(to) : 0;
+  const from = Number.isFinite(Number(el.dataset.value)) ? Number(el.dataset.value) : 0;
+  el.dataset.value = safeTo;
+  if (reduceMotion() || from === safeTo) {
+    el.textContent = format(safeTo);
     return;
   }
   const start = performance.now();
   const step = (now) => {
     const t = Math.min(1, (now - start) / duration);
     const eased = t === 1 ? 1 : 1 - 2 ** (-10 * t);
-    el.textContent = format(from + (to - from) * eased);
+    const curVal = from + (safeTo - from) * eased;
+    el.textContent = format(Number.isFinite(curVal) ? curVal : safeTo);
     if (t < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
 }
 
-/** Đổi màn hình có hiệu ứng View Transitions (trình duyệt không hỗ trợ thì đổi thẳng). */
+/** Đổi màn hình có hiệu ứng View Transitions (trình duyệt không hỗ trợ hoặc Safari lỗi thì đổi thẳng an toàn). */
 export function withTransition(update) {
-  if (document.startViewTransition && !reduceMotion() && document.visibilityState === "visible") {
+  if (typeof document !== "undefined" && document.startViewTransition && !reduceMotion() && document.visibilityState === "visible") {
     // Chốt an toàn: nếu trình duyệt chưa kịp vẽ khung hình (tab nền) thì vẫn đổi màn hình
     let done = false;
     const once = () => {
@@ -179,14 +187,21 @@ export function withTransition(update) {
         update();
       }
     };
-    const timer = setTimeout(once, 200);
-    const vt = document.startViewTransition(() => {
-      clearTimeout(timer);
+    try {
+      const timer = setTimeout(once, 250);
+      const vt = document.startViewTransition(() => {
+        clearTimeout(timer);
+        once();
+      });
+      if (vt) {
+        vt.ready?.catch?.(() => {});
+        vt.updateCallbackDone?.catch?.(() => {});
+        return vt.finished?.catch?.(() => {}) || Promise.resolve();
+      }
+    } catch {
       once();
-    });
-    vt.ready.catch(() => {});
-    vt.updateCallbackDone.catch(() => {});
-    return vt.finished.catch(() => {});
+      return Promise.resolve();
+    }
   }
   update();
   return Promise.resolve();
@@ -336,7 +351,9 @@ export function openSheet({ title, content, body: bodyContent, onClose, label } 
   let startY = null;
   handle.addEventListener("pointerdown", (e) => {
     startY = e.clientY;
-    handle.setPointerCapture(e.pointerId);
+    try {
+      handle.setPointerCapture?.(e.pointerId);
+    } catch {}
     sheet.style.transition = "none";
   });
   handle.addEventListener("pointermove", (e) => {
@@ -435,7 +452,9 @@ export function slideToConfirm({ label = tr("Trượt để xác nhận"), onCon
     startX = e.clientX;
     max = wrap.clientWidth - knob.offsetWidth - 10;
     wrap.classList.remove("snap");
-    knob.setPointerCapture(e.pointerId);
+    try {
+      knob.setPointerCapture?.(e.pointerId);
+    } catch {}
   });
   knob.addEventListener("pointermove", (e) => {
     if (startX === null) return;

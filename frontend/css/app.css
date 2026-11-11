@@ -107,6 +107,7 @@ html {
 
 body {
   margin: 0;
+  min-height: 100vh;
   min-height: 100dvh;
   font-family: var(--font);
   font-size: 15px;
@@ -114,6 +115,7 @@ body {
   color: var(--ink);
   background: var(--bg);
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button,
@@ -122,6 +124,7 @@ select,
 textarea {
   font: inherit;
   color: inherit;
+  touch-action: manipulation;
 }
 
 button {
@@ -228,6 +231,7 @@ body:has(.sheet) .blob {
 #app {
   max-width: 480px;
   margin: 0 auto;
+  min-height: 100vh;
   min-height: 100dvh;
   position: relative;
 }
@@ -786,6 +790,7 @@ body:has(.sheet) .blob {
    Màn chào + đăng nhập
    ------------------------------------------------------------------------ */
 .welcome {
+  min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -1356,6 +1361,7 @@ body:has(.sheet) .blob {
   bottom: 0;
   z-index: 61;
   width: min(480px, 100%);
+  max-height: 92vh;
   max-height: 92dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -2388,6 +2394,7 @@ a.menu-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 6px;
+  max-height: 40vh;
   max-height: 40dvh;
   overflow-y: auto;
 }
@@ -2602,6 +2609,7 @@ a.menu-item {
 .photo-full {
   display: block;
   width: 100%;
+  max-height: 75vh;
   max-height: 75dvh;
   object-fit: contain;
   border-radius: 18px;
@@ -2685,6 +2693,7 @@ a.menu-item {
 
 /* Lớp phủ đang tải toàn màn hình */
 .splash {
+  min-height: 100vh;
   min-height: 100dvh;
   display: grid;
   place-items: center;

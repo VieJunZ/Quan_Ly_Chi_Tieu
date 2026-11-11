@@ -19,11 +19,13 @@ const CACHE_MAX_AGE_MS = 3 * 24 * 3600 * 1000;
 // Vừa tải xong trong khoảng này thì không hỏi lại máy chủ nữa
 const REVALIDATE_AFTER_MS = 2000;
 
+const memStorage = new Map();
+
 function storageGet(key) {
   try {
     return localStorage.getItem(key);
   } catch {
-    return null;
+    return memStorage.get(key) || null;
   }
 }
 
@@ -31,17 +33,28 @@ function storageSet(key, value) {
   try {
     if (value === null) localStorage.removeItem(key);
     else localStorage.setItem(key, value);
-  } catch {
-    /* Trình duyệt chặn lưu trữ: phiên chỉ còn trong bộ nhớ */
-  }
+  } catch {}
+  if (value === null) memStorage.delete(key);
+  else memStorage.set(key, String(value));
 }
 
 let memoryToken = storageGet(TOKEN_KEY);
 let memoryUser = null;
 try {
-  memoryUser = JSON.parse(storageGet(USER_KEY) || "null");
+  const raw = storageGet(USER_KEY);
+  memoryUser = raw ? JSON.parse(raw) : null;
 } catch {
   memoryUser = null;
+}
+
+function getUser() {
+  if (!memoryUser) return null;
+  return memoryUser.user || memoryUser;
+}
+
+export function isDemoUser() {
+  const u = getUser();
+  return Boolean(u && u.is_demo);
 }
 
 export const session = {
@@ -49,7 +62,7 @@ export const session = {
     return memoryToken;
   },
   get user() {
-    return memoryUser;
+    return getUser();
   },
   save({ token, user }) {
     if (token) {
@@ -57,8 +70,10 @@ export const session = {
       storageSet(TOKEN_KEY, token);
     }
     if (user) {
-      memoryUser = user;
-      storageSet(USER_KEY, JSON.stringify(user));
+      // Chuẩn hoá luôn lưu đối tượng phẳng, tránh lồng { user: { user: ... } }
+      const flat = user.user ? { ...user.user, ...user, user: undefined } : user;
+      memoryUser = flat;
+      storageSet(USER_KEY, JSON.stringify(flat));
     }
   },
   clear() {
@@ -77,7 +92,8 @@ const inflight = new Map();
 let cacheOwner = null;
 
 function ownerKey() {
-  return memoryUser && memoryUser.id ? String(memoryUser.id) : (memoryUser && memoryUser.is_demo ? "demo" : null);
+  const u = getUser();
+  return u && u.id ? String(u.id) : (u && u.is_demo ? "demo" : null);
 }
 
 function loadCache() {
@@ -172,7 +188,7 @@ export async function api(path, { method = "GET", body, form, query, fresh = fal
   }
 
   // Chế độ dùng thử hoặc endpoint demo: Xử lý 100% bằng Mock cục bộ trên máy, KHÔNG lưu hay gửi lên Cloud Database
-  if (path === "/auth/demo" || (memoryUser && memoryUser.is_demo && path !== "/auth/register" && path !== "/auth/login")) {
+  if (path === "/auth/demo" || (isDemoUser() && path !== "/auth/register" && path !== "/auth/login")) {
     return handleMockRequest(url, method, body);
   }
 
