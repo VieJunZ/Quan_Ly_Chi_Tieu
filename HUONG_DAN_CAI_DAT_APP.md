@@ -19,11 +19,14 @@
 Ứng dụng Android được đóng gói chuẩn **Native Android Wrapper & TWA**, mang lại trải nghiệm toàn màn hình và hỗ trợ **2 Widget kéo thả trực tiếp lên màn hình chính (2x2 và 4x2)**.
 
 ### Các bước cài đặt:
-1. **Tải file APK về điện thoại (Miễn phí qua GitHub Actions)**:
-   * Truy cập GitHub dự án: `https://github.com/VieJunZ/Quan_Ly_Chi_Tieu/actions`
-   * Bấm vào build mới nhất -> Tải file `thuchii.zip` và giải nén lấy file **`thuchii.apk`** vào điện thoại.
+1. **Tải file APK trực tiếp về điện thoại**:
+   * Mở trình duyệt trên điện thoại truy cập đường link tải trực tiếp:
+     ```text
+     https://quan-ly-chi-tieu-k5kn.onrender.com/thuchii.apk
+     ```
+   * Hoặc trong ứng dụng web, vào tab **Tôi** ➔ chọn **Cài đặt** ➔ bấm nút **"Tải ứng dụng Android (APK)"**.
 2. **Cài đặt file APK**:
-   * Mở file **`thuchii.apk`** trên điện thoại.
+   * Mở file **`thuchii.apk`** vừa tải về trên điện thoại.
    * Nếu có cảnh báo *"Ứng dụng ngoài Google Play"* hoặc *"Tệp có thể gây hại"*, chọn **Vẫn cài đặt (Install anyway)**.
 3. **Mở ứng dụng & Kéo Widget ra màn hình**:
    * Biểu tượng **ThuChii** sẽ xuất hiện trên màn hình và danh sách ứng dụng.
