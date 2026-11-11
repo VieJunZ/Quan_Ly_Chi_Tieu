@@ -6,17 +6,19 @@
  */
 
 const STORAGE_KEY_PREFIX = "thuchi.mock.";
+const mockMemoryStore = new Map();
 
 function getStore(key, defaultVal) {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_PREFIX + key);
-    return raw ? JSON.parse(raw) : defaultVal;
-  } catch {
-    return defaultVal;
-  }
+    if (raw !== null && raw !== undefined) return JSON.parse(raw);
+  } catch {}
+  if (mockMemoryStore.has(key)) return mockMemoryStore.get(key);
+  return defaultVal;
 }
 
 function setStore(key, val) {
+  mockMemoryStore.set(key, val);
   try {
     localStorage.setItem(STORAGE_KEY_PREFIX + key, JSON.stringify(val));
   } catch {}
@@ -43,11 +45,14 @@ const MOCK_VERSION = 3;
 function initSeedData() {
   if (getStore("mock_v", 0) < MOCK_VERSION) {
     try {
-      Object.keys(localStorage).forEach((k) => {
-        if (k.startsWith(STORAGE_KEY_PREFIX)) localStorage.removeItem(k);
-      });
-      setStore("mock_v", MOCK_VERSION);
+      if (typeof localStorage !== "undefined") {
+        Object.keys(localStorage).forEach((k) => {
+          if (k.startsWith(STORAGE_KEY_PREFIX)) localStorage.removeItem(k);
+        });
+      }
     } catch {}
+    mockMemoryStore.clear();
+    setStore("mock_v", MOCK_VERSION);
   } else if (getStore("initialized", false)) {
     return;
   }
@@ -104,12 +109,11 @@ export function handleMockRequest(url, method, body) {
 
   if (path === "/auth/me") {
     return {
-      user: {
-        id: null,
-        username: "KhachTraiNghiem",
-        display_name: "Khách trải nghiệm",
-        is_demo: true
-      }
+      id: null,
+      username: "KhachTraiNghiem",
+      display_name: "Khách trải nghiệm",
+      is_demo: true,
+      has_recovery_code: false
     };
   }
 

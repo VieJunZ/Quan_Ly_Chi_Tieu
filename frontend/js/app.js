@@ -235,9 +235,15 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
     }).catch(() => {});
   });
 
+  let hadController = Boolean(navigator.serviceWorker.controller);
   let refreshing = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    // Khi có Service Worker mới kích hoạt, tự động tải lại để người dùng luôn có phiên bản mới nhất
+    // Chỉ tự động tải lại khi đã có controller trước đó (tức là cập nhật từ phiên bản cũ sang mới)
+    // Thiết bị mới vào lần đầu (hadController = false) tuyệt đối không tự động reload làm gián đoạn trải nghiệm
+    if (!hadController) {
+      hadController = true;
+      return;
+    }
     if (!refreshing) {
       refreshing = true;
       window.location.reload();
