@@ -309,17 +309,33 @@ export function handleMockRequest(url, method, body) {
     if (method === "GET") {
       const open = debts.filter((d) => d.status === "pending");
       const history = debts.filter((d) => d.status === "settled");
-      const owedToMe = open.filter((d) => d.direction === "owed_to_me" || d.direction === "they_owe_me").reduce((s, d) => s + (d.amount || 0), 0);
-      const iOwe = open.filter((d) => d.direction === "i_owe" || d.direction === "i_owe_them").reduce((s, d) => s + (d.amount || 0), 0);
+      const owedToMe = open.filter((d) => d.direction === "owed_to_me" || d.direction === "they_owe_me").reduce((s, d) => s + (Number(d.amount) || 0), 0);
+      const iOwe = open.filter((d) => d.direction === "i_owe" || d.direction === "i_owe_them").reduce((s, d) => s + (Number(d.amount) || 0), 0);
+      
+      const peopleMap = new Map();
+      for (const d of open) {
+        const p = peopleMap.get(d.person_name) || {
+          person_name: d.person_name,
+          net: 0,
+          net_amount: 0,
+          count: 0,
+          open_count: 0,
+          linked_user_id: d.linked_user_id
+        };
+        const amt = Number(d.amount) || 0;
+        p.net += (d.direction === "owed_to_me" || d.direction === "they_owe_me") ? amt : -amt;
+        p.net_amount = p.net;
+        p.count += 1;
+        p.open_count = p.count;
+        peopleMap.set(d.person_name, p);
+      }
+
       return {
         owed_to_me: owedToMe,
         i_owe: iOwe,
         open,
         history,
-        people: [
-          { person_name: "Hoàng", net_amount: 45000, open_count: 1 },
-          { person_name: "Tuấn", net_amount: -30000, open_count: 1 }
-        ]
+        people: Array.from(peopleMap.values())
       };
     }
     if (method === "POST") {
@@ -330,12 +346,48 @@ export function handleMockRequest(url, method, body) {
     }
   }
 
+  if (path.match(/^\/debts\/\d+\/settle$/) && method === "POST") {
+    const id = parseInt(path.split("/")[2], 10);
+    const debts = getStore("debts", []);
+    const item = debts.find((d) => d.id === id);
+    if (item) {
+      item.status = "settled";
+      item.settled_at = new Date().toISOString();
+      setStore("debts", debts);
+    }
+    return { success: true };
+  }
+
+  if (path === "/debts/settle-person" && method === "POST") {
+    const pName = body?.person_name;
+    const debts = getStore("debts", []);
+    let count = 0;
+    for (const d of debts) {
+      if (d.person_name === pName && d.status === "pending") {
+        d.status = "settled";
+        d.settled_at = new Date().toISOString();
+        count++;
+      }
+    }
+    setStore("debts", debts);
+    return { success: true, settled: count };
+  }
+
+  if (path.match(/^\/debts\/\d+$/) && method === "DELETE") {
+    const id = parseInt(path.split("/")[2], 10);
+    const debts = getStore("debts", []).filter((d) => d.id !== id);
+    setStore("debts", debts);
+    return { success: true, deleted_id: id };
+  }
+
   if (path === "/debts/splits") {
     return [];
   }
 
   if (path === "/debts/people") {
-    return ["Hoàng", "Tuấn", "Linh", "Minh"];
+    const debts = getStore("debts", []);
+    const names = [...new Set(debts.map((d) => d.person_name).concat(["Hoàng", "Tuấn", "Linh", "Minh"]))];
+    return names;
   }
 
   // 7. CHALLENGES
@@ -558,18 +610,94 @@ export function handleMockRequest(url, method, body) {
       { id: 2, username: "VieJunZ", name: "VieJunZ", added_at: new Date().toISOString() },
       { id: 3, username: "rong.thanh.hoa", name: "Rồng Thanh Hóa", added_at: new Date().toISOString() }
     ];
-    return { friends: getStore("friends", defaultFriends) };
+    const defaultIncoming = [
+      { request_id: 101, from_user_id: 4, username: "sinhvien_it", name: "Sinh Viên IT", created_at: new Date().toISOString() }
+    ];
+    return {
+      friends: getStore("friends", defaultFriends),
+      incoming_requests: getStore("friend_incoming", defaultIncoming),
+      outgoing_requests: getStore("friend_outgoing", [])
+    };
   }
 
   if (path === "/friends" && method === "POST") {
-    const list = getStore("friends", []);
-    const target = (body && (body.target || body.friend_id)) || "ban_moi";
-    const newFriend = { id: Date.now(), username: String(target).replace(/^[#@]/, ""), name: String(target), added_at: new Date().toISOString() };
-    if (!list.some((f) => f.username === newFriend.username || f.id === newFriend.id)) {
-      list.push(newFriend);
-      setStore("friends", list);
+    const target = String((body && (body.target || body.friend_id)) || "ban_moi").replace(/^[#@]/, "").trim();
+    const friends = getStore("friends", [
+      { id: 2, username: "VieJunZ", name: "VieJunZ", added_at: new Date().toISOString() },
+      { id: 3, username: "rong.thanh.hoa", name: "Rồng Thanh Hóa", added_at: new Date().toISOString() }
+    ]);
+    const incoming = getStore("friend_incoming", [
+      { request_id: 101, from_user_id: 4, username: "sinhvien_it", name: "Sinh Viên IT", created_at: new Date().toISOString() }
+    ]);
+    const outgoing = getStore("friend_outgoing", []);
+
+    // 1. Đã là bạn bè
+    if (friends.some((f) => f.username.toLowerCase() === target.toLowerCase() || String(f.id) === target)) {
+      return { status: "already_friends", message: `Bạn và @${target} đã là bạn bè rồi.` };
     }
-    return { message: "Đã thêm vào danh sách bạn bè!", friend: newFriend };
+
+    // 2. Nếu đối phương đã gửi lời mời cho mình -> Tự động chấp nhận luôn!
+    const incIdx = incoming.findIndex((i) => i.username.toLowerCase() === target.toLowerCase() || String(i.from_user_id) === target);
+    if (incIdx !== -1) {
+      const matched = incoming[incIdx];
+      incoming.splice(incIdx, 1);
+      setStore("friend_incoming", incoming);
+      const newFriend = { id: matched.from_user_id || Date.now(), username: matched.username, name: matched.name, added_at: new Date().toISOString() };
+      friends.push(newFriend);
+      setStore("friends", friends);
+      return { status: "accepted", message: `@${target} cũng đã gửi lời mời cho bạn. Hai bạn đã chính thức trở thành bạn bè!`, friend: newFriend };
+    }
+
+    // 3. Nếu đã gửi lời mời trước đó
+    if (outgoing.some((o) => o.username.toLowerCase() === target.toLowerCase() || String(o.to_user_id) === target)) {
+      return { status: "pending_outgoing", message: `Bạn đã gửi lời mời kết bạn tới @${target} rồi. Đang chờ đối phương xác nhận.` };
+    }
+
+    // 4. Tạo lời mời kết bạn mới vào outgoing
+    const newOut = { request_id: Date.now(), to_user_id: Date.now(), username: target, name: target, created_at: new Date().toISOString() };
+    outgoing.push(newOut);
+    setStore("friend_outgoing", outgoing);
+    return { status: "pending", message: `Đã gửi lời mời kết bạn tới @${target}! Vui lòng chờ đối phương xác nhận.`, friend: newOut };
+  }
+
+  if (path.match(/^\/friends\/(?:requests\/)?\d+\/accept$/) && method === "POST") {
+    const parts = path.split("/");
+    const id = parseInt(parts[2] === "requests" ? parts[3] : parts[2], 10);
+    const incoming = getStore("friend_incoming", [
+      { request_id: 101, from_user_id: 4, username: "sinhvien_it", name: "Sinh Viên IT", created_at: new Date().toISOString() }
+    ]);
+    const friends = getStore("friends", [
+      { id: 2, username: "VieJunZ", name: "VieJunZ", added_at: new Date().toISOString() },
+      { id: 3, username: "rong.thanh.hoa", name: "Rồng Thanh Hóa", added_at: new Date().toISOString() }
+    ]);
+    const idx = incoming.findIndex((r) => r.request_id === id || r.from_user_id === id);
+    if (idx !== -1) {
+      const req = incoming[idx];
+      incoming.splice(idx, 1);
+      setStore("friend_incoming", incoming);
+      const newFriend = { id: req.from_user_id || req.request_id, username: req.username, name: req.name, added_at: new Date().toISOString() };
+      if (!friends.some((f) => f.id === newFriend.id)) {
+        friends.push(newFriend);
+        setStore("friends", friends);
+      }
+      return { success: true, message: `Đã đồng ý kết bạn với @${req.username}!`, friend: newFriend };
+    }
+    return { success: true, message: "Đã đồng ý kết bạn!" };
+  }
+
+  if (path.match(/^\/friends\/(?:requests\/)?\d+\/decline$/) && method === "POST") {
+    const parts = path.split("/");
+    const id = parseInt(parts[2] === "requests" ? parts[3] : parts[2], 10);
+    const incoming = getStore("friend_incoming", []).filter((r) => r.request_id !== id && r.from_user_id !== id);
+    setStore("friend_incoming", incoming);
+    return { success: true, message: "Đã từ chối lời mời kết bạn." };
+  }
+
+  if (path.startsWith("/friends/requests/") && method === "DELETE") {
+    const id = parseInt(path.split("/")[3], 10);
+    const outgoing = getStore("friend_outgoing", []).filter((o) => o.request_id !== id && o.to_user_id !== id);
+    setStore("friend_outgoing", outgoing);
+    return { success: true, message: "Đã thu hồi lời mời kết bạn." };
   }
 
   if (path.startsWith("/friends/") && method === "DELETE") {

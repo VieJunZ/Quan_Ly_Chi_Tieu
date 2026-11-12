@@ -105,9 +105,18 @@ router.get("/", asyncRoute(async (req, res) => {
   // Nhóm theo tên người
   const peopleMap = new Map();
   for (const d of open) {
-    const p = peopleMap.get(d.person_name) || { person_name: d.person_name, net: 0, count: 0, linked_user_id: d.linked_user_id };
+    const p = peopleMap.get(d.person_name) || {
+      person_name: d.person_name,
+      net: 0,
+      net_amount: 0,
+      count: 0,
+      open_count: 0,
+      linked_user_id: d.linked_user_id
+    };
     p.net += d.direction === "owed_to_me" ? d.amount : -d.amount;
+    p.net_amount = p.net;
     p.count += 1;
+    p.open_count = p.count;
     peopleMap.set(d.person_name, p);
   }
   const people = Array.from(peopleMap.values());
