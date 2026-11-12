@@ -2350,3 +2350,26 @@ BEGIN
     PRINT N'Đã tạo bảng group_expenses.';
 END
 GO
+
+-- 5. Bảng dbo.user_friends (Danh sách bạn bè / Kết bạn 2 chiều có xác nhận)
+IF OBJECT_ID(N'dbo.user_friends', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.user_friends (
+        id         INT IDENTITY(1, 1) NOT NULL,
+        user_id    INT                NOT NULL,
+        friend_id  INT                NOT NULL,
+        status     VARCHAR(20)        NOT NULL CONSTRAINT df_friends_status DEFAULT 'pending',
+        created_at DATETIME2(0)       NOT NULL CONSTRAINT df_friends_created_at DEFAULT SYSDATETIME(),
+        updated_at DATETIME2(0)       NULL,
+
+        CONSTRAINT pk_user_friends PRIMARY KEY (id),
+        CONSTRAINT uq_friend_pair UNIQUE (user_id, friend_id),
+        CONSTRAINT ck_not_self_friend CHECK (user_id <> friend_id),
+        CONSTRAINT fk_friends_user FOREIGN KEY (user_id) REFERENCES dbo.users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_friends_friend FOREIGN KEY (friend_id) REFERENCES dbo.users(id)
+    );
+    CREATE INDEX ix_friends_user_id ON dbo.user_friends(user_id);
+    CREATE INDEX ix_friends_friend_id ON dbo.user_friends(friend_id);
+    PRINT N'Đã tạo bảng user_friends.';
+END
+GO

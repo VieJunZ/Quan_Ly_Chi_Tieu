@@ -95,7 +95,7 @@ function openReminder(name, items) {
    Chi tiết một người
    ------------------------------------------------------------------------ */
 function openPerson(ctx, person, items) {
-  const net = person.net_amount;
+  const net = Number(person.net_amount ?? person.net ?? 0);
   const theyOwe = net > 0;
   const sheet = openSheet({ title: person.person_name });
   const list = h("div", { class: "tx-list" });
@@ -197,7 +197,7 @@ async function openNewDebt(ctx, known, preselectedFriend = null) {
 
   try {
     const fRes = await api("/friends");
-    friendsList = fRes.friends || [];
+    friendsList = Array.isArray(fRes) ? fRes : (fRes.friends || []);
   } catch {}
 
   const seg = h("div", { class: "segmented" });
@@ -436,7 +436,7 @@ async function openSplit(ctx, known) {
   let friendsList = [];
   try {
     const fRes = await api("/friends");
-    friendsList = fRes.friends || [];
+    friendsList = Array.isArray(fRes) ? fRes : (fRes.friends || []);
   } catch {}
 
   const title = field({ label: tr("Đi gì thế? (lẩu, trà sữa...)"), name: "title", maxlength: 200 });
@@ -601,18 +601,21 @@ async function openSplit(ctx, known) {
 /* ---------------------------------------------------------------------------
    Quản lý bạn bè
    ------------------------------------------------------------------------ */
-function renderFriendsSection(ctx, friends) {
+function renderFriendsSection(ctx, data) {
   const container = h("div", { class: "stack", style: { gap: "16px" } });
+  const friends = Array.isArray(data) ? data : (data?.friends || []);
+  const incoming = Array.isArray(data?.incoming_requests) ? data.incoming_requests : [];
+  const outgoing = Array.isArray(data?.outgoing_requests) ? data.outgoing_requests : [];
 
   // 1. Thẻ Kết bạn mới
   const targetInput = field({
     label: tr("Tên đăng nhập (@username) hoặc User ID (#2)"),
     name: "target_user",
     autocomplete: "off",
-    placeholder: tr("Ví dụ: 2, #2 hoặc @rong.thanh.hoa"),
-    hint: tr("Nhập ID hoặc tên đăng nhập của người bạn muốn kết bạn")
+    placeholder: tr("Ví dụ: 2, #2 hoặc @VieJunZ"),
+    hint: tr("Gửi lời mời kết bạn để kết nối 2 chiều và ghi nợ tự động")
   });
-  const addBtn = h("button", { class: "btn block", type: "button" }, icon("user-plus", 18), tr("Kết bạn ngay"));
+  const addBtn = h("button", { class: "btn block", type: "button" }, icon("user-plus", 18), tr("Gửi lời mời kết bạn"));
 
   addBtn.addEventListener("click", async () => {
     const val = targetInput.input.value.trim();
@@ -625,7 +628,9 @@ function renderFriendsSection(ctx, friends) {
     try {
       const res = await api("/friends", { method: "POST", body: { target: val } });
       haptic(15);
-      confetti({ count: 60 });
+      if (res.status === "accepted") {
+        confetti({ count: 80 });
+      }
       toast(res.message, "ok");
       targetInput.input.value = "";
       ctx.refresh();
@@ -637,19 +642,124 @@ function renderFriendsSection(ctx, friends) {
   });
 
   const addCard = h("section", { class: "card stack", style: { gap: "10px" } },
-    h("div", { class: "card-title", style: { marginBottom: 0 } }, icon("user-plus", 18), tr("Kết bạn mới")),
+    h("div", { class: "card-title", style: { marginBottom: 0 } }, icon("user-plus", 18), tr("Thêm bạn bè mới")),
     targetInput.el,
     addBtn
   );
   container.append(addCard);
 
-  // 2. Danh sách Bạn bè
+  // 2. Lời mời kết bạn ĐÃ NHẬN (Cần bạn xác nhận)
+  if (incoming.length > 0) {
+    const inList = h("div", { class: "tx-list" });
+    for (const req of incoming) {
+      const acceptBtn = h("button", {
+        class: "btn small mint",
+        type: "button",
+        style: { padding: "4px 10px", fontSize: "12px", fontWeight: 700 }
+      }, icon("check", 14), tr("Đồng ý"));
+
+      acceptBtn.addEventListener("click", async () => {
+        const restore = busy(acceptBtn);
+        try {
+          const res = await api(`/friends/${req.from_user_id || req.request_id}/accept`, { method: "POST" });
+          haptic([10, 30, 10]);
+          confetti({ count: 60 });
+          toast(res.message || tr`Đã đồng ý kết bạn với @${req.username}!`, "ok");
+          ctx.refresh();
+        } catch (err) {
+          toast(err.message, "error");
+          restore();
+        }
+      });
+
+      const declineBtn = h("button", {
+        class: "btn small soft",
+        type: "button",
+        style: { padding: "4px 8px", fontSize: "12px" }
+      }, tr("Từ chối"));
+
+      declineBtn.addEventListener("click", async () => {
+        const restore = busy(declineBtn);
+        try {
+          await api(`/friends/${req.from_user_id || req.request_id}/decline`, { method: "POST" });
+          toast(tr`Đã từ chối lời mời từ @${req.username}.`, "info");
+          ctx.refresh();
+        } catch (err) {
+          toast(err.message, "error");
+          restore();
+        }
+      });
+
+      inList.append(h("div", { class: "tx", style: { padding: "10px 0" } },
+        avatar(req.name, 40),
+        h("div", { class: "tx-main" },
+          h("strong", null, req.name),
+          h("small", { class: "faint" }, `@${req.username} · ID: #${req.from_user_id}`)
+        ),
+        h("div", { class: "row", style: { gap: "6px" } }, acceptBtn, declineBtn)
+      ));
+    }
+
+    const inCard = h("section", { class: "card", style: { border: "1px solid var(--violet)", background: "rgba(139, 92, 246, 0.05)" } },
+      h("div", { class: "card-title", style: { color: "var(--violet)" } },
+        icon("bell-ring", 18),
+        tr`Lời mời kết bạn cần xác nhận (${incoming.length})`
+      ),
+      inList
+    );
+    container.append(inCard);
+  }
+
+  // 3. Lời mời kết bạn ĐÃ GỬI (Đang chờ đối phương xác nhận)
+  if (outgoing.length > 0) {
+    const outList = h("div", { class: "tx-list" });
+    for (const out of outgoing) {
+      const cancelBtn = h("button", {
+        class: "btn small soft",
+        type: "button",
+        title: tr("Thu hồi lời mời"),
+        style: { fontSize: "11px", padding: "3px 8px" }
+      }, icon("x", 12), tr("Thu hồi"));
+
+      cancelBtn.addEventListener("click", async () => {
+        const restore = busy(cancelBtn);
+        try {
+          await api(`/friends/requests/${out.request_id || out.to_user_id}`, { method: "DELETE" });
+          toast(tr("Đã thu hồi lời mời kết bạn."), "info");
+          ctx.refresh();
+        } catch (err) {
+          toast(err.message, "error");
+          restore();
+        }
+      });
+
+      outList.append(h("div", { class: "tx", style: { padding: "8px 0" } },
+        avatar(out.name, 36),
+        h("div", { class: "tx-main" },
+          h("strong", null, out.name),
+          h("small", { class: "faint" }, `@${out.username} · `, h("span", { style: { color: "var(--amber)", fontWeight: 600 } }, tr("Chờ xác nhận ⏳")))
+        ),
+        cancelBtn
+      ));
+    }
+
+    const outCard = h("section", { class: "card" },
+      h("div", { class: "card-title", style: { fontSize: "14px" } },
+        icon("clock", 16),
+        tr`Lời mời đã gửi (${outgoing.length})`
+      ),
+      outList
+    );
+    container.append(outCard);
+  }
+
+  // 4. Danh sách Bạn bè chính thức
   const friendList = h("div", { class: "tx-list" });
   if (!friends || friends.length === 0) {
     friendList.append(h("div", { class: "card empty" },
       icon("users", 32),
-      h("strong", null, tr("Chưa có bạn bè nào")),
-      h("p", { class: "faint mt-0", style: { fontSize: "13px" } }, tr("Kết bạn bằng ID hoặc @username để ghi nợ 2 chiều và chia tiền nhóm 1 chạm siêu nhanh!"))
+      h("strong", null, tr("Chưa có bạn bè chính thức")),
+      h("p", { class: "faint mt-0", style: { fontSize: "13px" } }, tr("Khi đối phương đồng ý lời mời kết bạn, hai bạn sẽ trở thành bạn bè để ghi nợ và chia tiền 1 chạm!"))
     ));
   } else {
     for (const f of friends) {
@@ -736,7 +846,7 @@ export async function debtsScreen(ctx, params) {
   if (currentTab === "friends") {
     try {
       const res = await api("/friends");
-      screen.append(renderFriendsSection(ctx, res.friends || []));
+      screen.append(renderFriendsSection(ctx, res));
     } catch (err) {
       screen.append(h("div", { class: "card empty" }, icon("wifi-off"), err.message,
         h("button", { class: "btn small", type: "button", onclick: () => ctx.refresh() }, tr("Thử lại"))));
@@ -783,18 +893,20 @@ export async function debtsScreen(ctx, params) {
   // Theo từng người
   const peopleCard = h("section", { class: "card" }, h("div", { class: "card-title" }, icon("users-round", 20), tr("Theo từng người")));
   const list = h("div", { class: "tx-list" });
-  const people = (data.people || []).filter((p) => p.open_count > 0);
+  const people = (data.people || []).filter((p) => Number(p.open_count ?? p.count ?? 0) > 0);
   if (!people.length) {
     list.append(h("div", { class: "empty" }, icon("party-popper"), tr("Không nợ ai, không ai nợ. Sạch sẽ!")));
   }
   for (const p of people) {
-    const items = data.open.filter((d) => d.person_name === p.person_name);
+    const items = (data.open || []).filter((d) => d.person_name === p.person_name);
+    const openCnt = Number(p.open_count ?? p.count ?? 0);
+    const netAmt = Number(p.net_amount ?? p.net ?? 0);
     const row = h("button", { class: "tx", type: "button" },
       avatar(p.person_name),
       h("span", { class: "tx-main" },
         h("strong", null, p.person_name),
-        h("small", null, p.net_amount > 0 ? tr`Nợ bạn · ${p.open_count} khoản` : p.net_amount < 0 ? tr`Bạn nợ · ${p.open_count} khoản` : tr`Huề · ${p.open_count} khoản`)),
-      h("span", { class: `tx-amt ${p.net_amount >= 0 ? "income" : "expense"}` }, money(Math.abs(p.net_amount))));
+        h("small", null, netAmt > 0 ? tr`Nợ bạn · ${openCnt} khoản` : netAmt < 0 ? tr`Bạn nợ · ${openCnt} khoản` : tr`Huề · ${openCnt} khoản`)),
+      h("span", { class: `tx-amt ${netAmt >= 0 ? "income" : "expense"}` }, money(Math.abs(netAmt))));
     row.addEventListener("click", () => openPerson(ctx, p, items));
     list.append(row);
   }
