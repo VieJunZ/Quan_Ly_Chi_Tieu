@@ -57,8 +57,6 @@ Dự án bao gồm hệ thống tài liệu kỹ thuật và hướng dẫn chuy
 
 ## 1. KIẾN TRÚC HỆ THỐNG & SƠ ĐỒ KỸ THUẬT
 
-Hệ thống được thiết kế theo kiến trúc **Monorepo tinh gọn**, loại bỏ các thành phần cồng kềnh, tối ưu hóa độ trễ phản hồi dưới 50ms và hỗ trợ hoàn toàn ngoại tuyến cho các tác vụ then chốt:
-
 ```mermaid
 flowchart TD
     subgraph CLIENT["📱 CLIENT (Mobile PWA / Web Desktop)"]
